@@ -577,26 +577,16 @@ function refreshSeats() {
   $('combo').textContent = `${S.combo} 回つづいた`;
   updateHint();
 }
+/**
+ * 案内文は「自分が選んだもの」の確認だけ出す。
+ * 誰の番か・何と言うべきかを書くと、そこを見るだけで勝ててしまうので出さない。
+ */
 function updateHint() {
-  if (S.phase === 'call') {
-    if (isHuman(S.oya)) {
-      const who = solo() ? 'あなた' : nameOf(S.oya);
-      const verb = S.mode === 'voice' ? '言って' : '選んで';
-      if (S.pendingWord && S.pendingTarget == null) setHint(`「${S.pendingWord}」→ 指す人をタップ！`, true);
-      else if (S.pendingTarget != null) setHint(`${nameOf(S.pendingTarget)}に何と言う？`, true);
-      else setHint(`${who}が親！ 言葉を${verb}、指す人をタップ`, true);
-    } else setHint(`${nameOf(S.oya)}の番…`);
-  } else if (S.phase === 'respond') {
-    const hs = [...S.need.keys()].filter(isHuman);
-    if (!hs.length) return setHint('…見守る');
-    const word = S.need.get(hs[0]);
-    if (solo()) return setHint(S.mode === 'voice' ? `「${word}」と言え！` : `「${word}」！`, true);
-    if (word === W.CS) {
-      return setHint(S.mode === 'voice' ? 'みんなで「ちんちん侍」！'
-        : `「ちんちん侍」！ ${hs.map(nameOf).join('・')}は自分のアイコンをタップ`, true);
-    }
-    setHint(`${nameOf(hs[0])}、「${word}」！`, true);
+  if (S.phase === 'call' && isHuman(S.oya)) {
+    if (S.pendingWord && S.pendingTarget == null) return setHint(`「${S.pendingWord}」→ 指す人は？`);
+    if (S.pendingTarget != null) return setHint(`${nameOf(S.pendingTarget)}を指した → 言葉は？`);
   }
+  setHint('');
 }
 
 /* ================= タイマー ================= */
