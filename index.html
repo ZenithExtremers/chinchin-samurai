@@ -153,6 +153,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .seat.oya .avatar { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(201,154,46,.35), var(--shadow); }
 .seat.target .avatar { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(179,38,30,.3), var(--shadow); }
 .seat.pickable .avatar { animation: pulse 1s infinite; }
+.seat.first .avatar { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(179,38,30,.3), var(--shadow); }
 .seat.picked .avatar { border-color: var(--accent); border-width: 5px; }
 @keyframes pulse { 50% { transform: scale(1.06); } }
 .tag {
@@ -592,6 +593,8 @@ function refreshSeats() {
     el.classList.toggle('target', S.guide && S.phase === 'respond' && S.call && S.call.target === i); // 赤丸は指された人だけ
     const pickable = humanOya && i !== S.oya && isAlive(i);
     el.classList.toggle('pickable', S.guide && pickable && S.pendingTarget == null);
+    // 勝負の最初の親だけは、案内なしでも赤丸で分かるようにする
+    el.classList.toggle('first', S.phase === 'call' && S.firstOya && S.oya === i);
     el.classList.toggle('picked', pickable && S.pendingTarget === i);
     if (death()) el.classList.toggle('dead', !isAlive(i));
     $('sc' + i).textContent = isAlive(i) ? `切腹 ${p.sep}回` : '脱落';
@@ -742,6 +745,7 @@ function startGame(oya) {
   S.combo = 0;
   $('centerWord').textContent = 'いざ！';
   drawArrow(null);
+  S.firstOya = true;
   beginCall(oya);
 }
 
@@ -760,6 +764,7 @@ function beginCall(p) {
 
 /** 親が言葉を言って target を指した */
 function makeCall(p, word, target) {
+  S.firstOya = false;
   S.call = { from: p, word, target };
   S.combo++;
   $('centerWord').textContent = word;
@@ -837,8 +842,8 @@ function seppuku(p, why) {
   later(SEPPUKU_PAUSE, () => {
     seatEl(p).classList.add('dead');
     refreshSeats();
-    playLine(p, '切腹');
-    if (S.movie) playCutMovie(p); else gong();
+    if (S.movie) playCutMovie(p);
+    else { gong(); playLine(p, W.SHAKI); }
   });
   $('ovTitle').textContent = '切腹';
   $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
@@ -884,7 +889,7 @@ function playCutMovie(p) {
   $('cutBot').innerHTML = svg;
   const cut = $('cut');
   cut.classList.remove('show'); void cut.offsetWidth; cut.classList.add('show');
-  setTimeout(() => { beep(1800, 0.12, 'sawtooth', 0.05); gong(); }, 450); // 斬った瞬間にゴーン
+  setTimeout(() => { beep(1800, 0.12, 'sawtooth', 0.05); gong(); playLine(p, W.SHAKI); }, 450); // 斬った瞬間にゴーン＋シャキーン
   clearTimeout(playCutMovie.t);
   playCutMovie.t = setTimeout(() => cut.classList.remove('show'), 2300);
 }
@@ -914,6 +919,7 @@ function continueDeath() {
   S.combo = 0;
   $('centerWord').textContent = 'つづき！';
   drawArrow(null);
+  S.firstOya = true;
   beginCall(S.nextOya);
 }
 
