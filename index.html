@@ -103,8 +103,13 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .cut .top { clip-path: polygon(0 0, 100% 0, 100% 38%, 0 66%); }
 .cut .bot { clip-path: polygon(0 66%, 100% 38%, 100% 100%, 0 100%); }
 /* 斬れたら少しずれて、そのまま重力で画面の下へ落ちていく */
-.cut.show .top { animation: cuttop 1.35s cubic-bezier(.55,0,1,.45) .62s forwards; }
-.cut.show .bot { animation: cutbot 1.25s cubic-bezier(.55,0,1,.45) .62s forwards; }
+/* 斬れるまでは切れていない1枚（.whole）を出し、斬れた瞬間に上下2枚へ差し替える（継ぎ目の線が見えないように） */
+.cut .top, .cut .bot { visibility: hidden; }
+.cut.show .whole { animation: cuthide 0s .62s forwards; }
+.cut.show .top { animation: cutshow 0s .62s forwards, cuttop 1.35s cubic-bezier(.55,0,1,.45) .62s forwards; }
+.cut.show .bot { animation: cutshow 0s .62s forwards, cutbot 1.25s cubic-bezier(.55,0,1,.45) .62s forwards; }
+@keyframes cuthide { to { visibility: hidden; } }
+@keyframes cutshow { to { visibility: visible; } }
 @keyframes cuttop { 14% { transform: translate(-6px, -4px) rotate(-2deg); } to { transform: translate(-70px, 115vh) rotate(-40deg); } }
 @keyframes cutbot { 12% { transform: translate(5px, 4px) rotate(1deg); } to { transform: translate(50px, 115vh) rotate(28deg); } }
 .cut .blade { position: absolute; left: -15%; top: calc(70.2% - 2.5px); width: 130%; height: 5px; background: var(--accent); border-radius: 3px;
@@ -400,6 +405,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 <div class="cut" id="cut" aria-hidden="true">
   <div class="flash"></div>
   <div class="body">
+    <div class="half whole" id="cutWhole"></div>
     <div class="half top" id="cutTop"></div>
     <div class="half bot" id="cutBot"></div>
     <div class="blade"></div>
@@ -890,6 +896,7 @@ function showOverlay(final) {
 /** 切腹ムービー：アバターが斜めにスパッと斬れる */
 function playCutMovie(p) {
   const svg = seatAvatar(p);
+  $('cutWhole').innerHTML = svg;
   $('cutTop').innerHTML = svg;
   $('cutBot').innerHTML = svg;
   const cut = $('cut');
