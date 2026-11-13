@@ -296,6 +296,10 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
         <input type="checkbox" id="ttsChk" checked>
       </div>
       <div class="row">
+        <label for="guideChk">案内を出す（初心者向け）<small>誰の番か・何と言えばいいかを画面の下に出す</small></label>
+        <input type="checkbox" id="guideChk">
+      </div>
+      <div class="row">
         <label for="movieChk">切腹ムービー</label>
         <input type="checkbox" id="movieChk" checked>
       </div>
@@ -455,7 +459,7 @@ function layoutSeats(n) {
 
 /* ================= 状態 ================= */
 const S = {
-  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, movie: true, feint: false, overlayDelay: 450, rule: 'normal', alive: new Set(), tts: true, humans: 1,
+  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, movie: true, feint: false, guide: false, overlayDelay: 450, rule: 'normal', alive: new Set(), tts: true, humans: 1,
   players: [],
   phase: 'idle',     // idle | call | respond | over
   oya: 0,
@@ -578,15 +582,32 @@ function refreshSeats() {
   updateHint();
 }
 /**
- * 案内文は「自分が選んだもの」の確認だけ出す。
- * 誰の番か・何と言うべきかを書くと、そこを見るだけで勝ててしまうので出さない。
+ * 案内文。初心者向けがオフのときは「自分が選んだもの」の確認だけ出す
+ * （誰の番か・何と言うべきかを書くと、そこを見るだけで勝ててしまうため）。
  */
 function updateHint() {
   if (S.phase === 'call' && isHuman(S.oya)) {
-    if (S.pendingWord && S.pendingTarget == null) return setHint(`「${S.pendingWord}」→ 指す人は？`);
-    if (S.pendingTarget != null) return setHint(`${nameOf(S.pendingTarget)}を指した → 言葉は？`);
+    if (S.pendingWord && S.pendingTarget == null) return setHint(`「${S.pendingWord}」→ 指す人は？`, S.guide);
+    if (S.pendingTarget != null) return setHint(`${nameOf(S.pendingTarget)}を指した → 言葉は？`, S.guide);
   }
-  setHint('');
+  if (!S.guide) return setHint('');
+  // ---- 初心者向けの案内 ----
+  if (S.phase === 'call') {
+    if (isHuman(S.oya)) {
+      const who = solo() ? 'あなた' : nameOf(S.oya);
+      setHint(`${who}が親！ 言葉を${S.mode === 'voice' ? '言って' : '選んで'}、指す人をタップ`, true);
+    } else setHint(`${nameOf(S.oya)}の番…`);
+  } else if (S.phase === 'respond') {
+    const hs = [...S.need.keys()].filter(isHuman);
+    if (!hs.length) return setHint('…見守る');
+    const word = S.need.get(hs[0]);
+    if (solo()) return setHint(S.mode === 'voice' ? `「${word}」と言え！` : `「${word}」！`, true);
+    if (word === W.CS) {
+      return setHint(S.mode === 'voice' ? 'みんなで「ちんちん侍」！'
+        : `「ちんちん侍」！ ${hs.map(nameOf).join('・')}は自分のアイコンをタップ`, true);
+    }
+    setHint(`${nameOf(hs[0])}、「${word}」！`, true);
+  } else setHint('');
 }
 
 /* ================= タイマー ================= */
@@ -1194,12 +1215,13 @@ $('startBtn').addEventListener('click', () => {
   S.cpuSafe = $('safeChk').checked;
   S.movie = $('movieChk').checked;
   S.feint = $('feintChk').checked;
+  S.guide = $('guideChk').checked;
   saveSettings();
   setupPlayers();
   layoutSeats(S.total);
   $('title').classList.remove('active');
   $('game').classList.add('active');
-  $('modeLabel').textContent = (S.mode === 'voice' ? '音声入力' : 'セリフボタン') + (death() ? '・デスマッチ' : '') + (solo() ? '' : `・${S.humans}人`) + (S.cpuSafe ? '・CPU不敗' : '');
+  $('modeLabel').textContent = (S.mode === 'voice' ? '音声入力' : 'セリフボタン') + (death() ? '・デスマッチ' : '') + (solo() ? '' : `・${S.humans}人`) + (S.cpuSafe ? '・CPU不敗' : '') + (S.guide ? '・案内あり' : '');
   $('pad').hidden = S.mode === 'voice';
   $('voicebox').hidden = S.mode !== 'voice';
   $('heard').textContent = '';
@@ -1229,7 +1251,7 @@ segInit('ruleSeg', (v) => {
 
 /** 設定を覚えておく（次に開いたときも同じ設定） */
 const SEGS = { modeSeg: 'mode', totalSeg: 'total', humanSeg: 'humans', ruleSeg: 'rule', cpuSeg: 'cpu', diffSeg: 'diff' };
-const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk'];
+const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk'];
 function saveSettings() {
   const v = { profiles: PROFILES };
   Object.entries(SEGS).forEach(([id, key]) => { v[key] = String(S[key]); });
