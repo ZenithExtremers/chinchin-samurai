@@ -227,7 +227,14 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button data-v="3">3人</button>
       <button data-v="4">4人</button>
     </div>
-    <h2>むずかしさ</h2>
+    <h2>CPUの強さ</h2>
+    <div class="seg" id="cpuSeg">
+      <button data-v="weak">弱い</button>
+      <button data-v="normal" class="on">普通</button>
+      <button data-v="strong">強い</button>
+    </div>
+    <p class="note" id="cpuNote" style="margin:-8px 0 14px"></p>
+    <h2>制限時間</h2>
     <div class="seg" id="diffSeg">
       <button data-v="easy">ゆっくり</button>
       <button data-v="normal" class="on">ふつう</button>
@@ -316,11 +323,18 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 const W = { CHIN: 'ちんちん', OCHIN: 'おちんちん', SAMU: '侍', CS: 'ちんちん侍', BIRO: 'びろーん', SHAKI: 'シャキーン' };
 const CALLS = [W.CHIN, W.OCHIN, W.SAMU, W.CS];
 const REACTION = { [W.OCHIN]: W.BIRO, [W.SAMU]: W.SHAKI };
-const CALL_WEIGHTS = [[W.CHIN, 34], [W.OCHIN, 24], [W.SAMU, 26], [W.CS, 16]];
-const DIFF = {
-  easy:   { limit: 4200, miss: 0.08 },
-  normal: { limit: 3000, miss: 0.05 },
-  hard:   { limit: 2000, miss: 0.03 },
+const DIFF = { easy: { limit: 4200 }, normal: { limit: 3000 }, hard: { limit: 2000 } };
+/**
+ * CPUの強さ。n は今何回つづいているか。
+ * 弱い：いつも30%で失敗 / 普通：n% で失敗 / 強い：20回までは失敗0%で「ちんちん」を高速で回し、21回目から (n-20)%
+ */
+const CPU_LEVEL = {
+  weak:   { miss: () => 0.30, speed: [0.25, 0.55], weights: [[W.CHIN, 34], [W.OCHIN, 24], [W.SAMU, 26], [W.CS, 16]],
+            note: 'いつも30%の確率で失敗する' },
+  normal: { miss: (n) => Math.min(1, n / 100), speed: [0.2, 0.5], weights: [[W.CHIN, 34], [W.OCHIN, 24], [W.SAMU, 26], [W.CS, 16]],
+            note: '最初は失敗しない。続いた回数がそのまま失敗確率（10回目なら10%）' },
+  strong: { miss: (n) => Math.min(1, Math.max(0, n - 20) / 100), speed: [0.08, 0.2], weights: [[W.CHIN, 75], [W.OCHIN, 8], [W.SAMU, 9], [W.CS, 8]],
+            note: '20回までは失敗しない。「ちんちん」を高速で回してくる。21回目から（回数−20）%で失敗' },
 };
 const VOICE_EXTRA = 1600; // 音声認識の遅延ぶん猶予を足す
 const SEAT_POS = [[50, 84], [15, 50], [50, 16], [85, 50]];
@@ -329,7 +343,7 @@ const CPU_NAMES = ['たろう', 'はなこ', 'じろう'];
 
 /* ================= 状態 ================= */
 const S = {
-  mode: 'button', diff: 'normal', tts: true, humans: 1,
+  mode: 'button', diff: 'normal', cpu: 'normal', tts: true, humans: 1,
   players: [],
   phase: 'idle',     // idle | call | respond | over
   oya: 0,
@@ -422,7 +436,7 @@ function refreshSeats() {
   S.players.forEach((p, i) => {
     const el = seatEl(i);
     el.classList.toggle('oya', S.phase === 'call' && S.oya === i);
-    el.classList.toggle('target', S.phase === 'respond' && S.need.has(i));
+    el.classList.toggle('target', S.phase === 'respond' && S.call && S.call.target === i); // 赤丸は指された人だけ
     const pickable = humanOya && i !== S.oya;
     el.classList.toggle('pickable', pickable && S.pendingTarget == null);
     el.classList.toggle('picked', pickable && S.pendingTarget === i);
@@ -650,27 +664,27 @@ function seppuku(p, why) {
 
 /* ================= CPU ================= */
 function pickWeighted() {
-  const total = CALL_WEIGHTS.reduce((s, [, w]) => s + w, 0);
+  const weights = CPU_LEVEL[S.cpu].weights;
+  const total = weights.reduce((s, [, w]) => s + w, 0);
   let r = Math.random() * total;
-  for (const [word, w] of CALL_WEIGHTS) { if ((r -= w) < 0) return word; }
+  for (const [word, w] of weights) { if ((r -= w) < 0) return word; }
   return W.CHIN;
 }
+const cpuMisses = () => Math.random() < CPU_LEVEL[S.cpu].miss(S.combo);
+const cpuDelay = () => { const [a, b] = CPU_LEVEL[S.cpu].speed; return rand(S.limitMs * a, S.limitMs * b); };
 function cpuCall(p) {
-  const lim = S.limitMs;
-  later(rand(lim * 0.2, lim * 0.5), () => {
-    if (Math.random() < DIFF[S.diff].miss * 0.6) {
-      say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); // うっかり
-      return;
-    }
+  const miss = cpuMisses();
+  if (miss && Math.random() < 0.5) return; // 固まって時間切れ
+  later(cpuDelay(), () => {
+    if (miss) { say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); return; } // うっかり
     const others = [0, 1, 2, 3].filter((i) => i !== p);
     say(p, pickWeighted(), others[Math.floor(Math.random() * others.length)]);
   });
 }
 function cpuRespond(p, expect) {
-  const lim = S.limitMs;
-  const miss = Math.random() < DIFF[S.diff].miss;
+  const miss = cpuMisses();
   if (miss && Math.random() < 0.5) return; // 固まって時間切れ
-  later(rand(lim * 0.18, lim * 0.5), () => {
+  later(cpuDelay(), () => {
     if (miss) {
       const wrong = [W.BIRO, W.SHAKI, W.CS, W.CHIN].filter((w) => w !== expect);
       say(p, wrong[Math.floor(Math.random() * wrong.length)]);
@@ -887,6 +901,8 @@ segInit('modeSeg', (v) => {
 });
 segInit('humanSeg', (v) => { S.humans = +v; $('humanNote').hidden = S.humans === 1; });
 segInit('diffSeg', (v) => { S.diff = v; });
+segInit('cpuSeg', (v) => { S.cpu = v; $('cpuNote').textContent = CPU_LEVEL[v].note; });
+$('cpuNote').textContent = CPU_LEVEL[S.cpu].note;
 
 $('startBtn').addEventListener('click', () => {
   $('titleMsg').textContent = '';
