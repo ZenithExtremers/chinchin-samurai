@@ -122,7 +122,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   background: radial-gradient(circle, rgba(201,154,46,.18), rgba(201,154,46,.05) 70%);
   border: 2px dashed var(--line);
 }
-#arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; color: var(--accent); }
+#arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; color: var(--accent); z-index: 4; } /* アイコンより手前に描いて、矢印の先が隠れないように */
 .center {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 44%;
   text-align: center; pointer-events: none;
@@ -354,11 +354,11 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     <div class="mat"></div>
     <svg id="arrow" viewBox="0 0 100 100" preserveAspectRatio="none">
       <defs>
-        <marker id="head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+        <marker id="head" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="currentColor"></path>
         </marker>
       </defs>
-      <line id="arrowLine" x1="50" y1="50" x2="50" y2="50" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" marker-end="url(#head)" opacity="0"></line>
+      <line id="arrowLine" x1="50" y1="50" x2="50" y2="50" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" marker-end="url(#head)" opacity="0"></line>
     </svg>
     <div class="center">
       <div class="word" id="centerWord"></div>
@@ -553,16 +553,31 @@ function setHint(text, warn) {
   $('hint').textContent = text;
   $('hint').classList.toggle('warn', !!warn);
 }
+/** アイコン（円）の中心と半径を、ステージに対する % で返す（アニメの transform の影響を受けない） */
+function avatarCircle(i) {
+  const stage = $('stage'), seat = seatEl(i), av = seat.querySelector('.avatar');
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const left = SEAT_POS[i][0] / 100 * W - seat.offsetWidth / 2;
+  const top = SEAT_POS[i][1] / 100 * H - seat.offsetHeight / 2;
+  return {
+    x: (left + av.offsetLeft + av.offsetWidth / 2) / W * 100,
+    y: (top + av.offsetTop + av.offsetHeight / 2) / H * 100,
+    r: av.offsetWidth / 2 / W * 100,
+  };
+}
+let lastArrow = null;
 function drawArrow(from, to) {
   const line = $('arrowLine');
+  lastArrow = from == null ? null : [from, to];
   if (from == null) { line.setAttribute('opacity', 0); return; }
-  const [x1, y1] = SEAT_POS[from], [x2, y2] = SEAT_POS[to];
-  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
-  const pad = S.total <= 4 ? 14 : 12;
-  line.setAttribute('x1', x1 + dx / len * pad); line.setAttribute('y1', y1 + dy / len * pad);
-  line.setAttribute('x2', x2 - dx / len * pad); line.setAttribute('y2', y2 - dy / len * pad);
+  const a = avatarCircle(from), b = avatarCircle(to);
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  const gap = 1.5; // 円のふちから少し離す
+  line.setAttribute('x1', a.x + dx / len * (a.r + gap)); line.setAttribute('y1', a.y + dy / len * (a.r + gap));
+  line.setAttribute('x2', b.x - dx / len * (b.r + gap)); line.setAttribute('y2', b.y - dy / len * (b.r + gap));
   line.setAttribute('opacity', 1);
 }
+window.addEventListener('resize', () => { if (lastArrow) drawArrow(...lastArrow); });
 function refreshSeats() {
   const humanOya = S.phase === 'call' && isHuman(S.oya);
   S.players.forEach((p, i) => {
