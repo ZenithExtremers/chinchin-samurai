@@ -234,7 +234,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button data-v="hard">はやい</button>
     </div>
     <div class="row">
-      <label for="ttsChk">CPUのセリフを読み上げる</label>
+      <label for="ttsChk">セリフの音声を出す</label>
       <input type="checkbox" id="ttsChk" checked>
     </div>
     <p class="note" id="humanNote" hidden>
@@ -243,7 +243,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     </p>
     <p class="note" id="voiceNote" hidden>
       言葉は声で言い、指す人は画面をタップします。マイクの使用を許可してください（Chrome 推奨）。
-      CPUの読み上げをマイクが拾いやすいので、読み上げは最初オフにしています。
+      CPUの声をマイクが拾いやすいので、セリフの音声は最初オフにしています（イヤホンならオンでも大丈夫）。
     </p>
   </div>
 
@@ -308,6 +308,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
+<script src="voices.js"></script>
 <script>
 'use strict';
 
@@ -484,31 +485,58 @@ function tickTimer() {
   requestAnimationFrame(tickTimer);
 }
 
-/* ================= 読み上げ ================= */
-let ttsBusyUntil = 0;
-let jaVoice = null;
-function pickVoice() {
-  const vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-  jaVoice = vs.find((v) => v.lang && v.lang.startsWith('ja')) || null;
-}
-if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
-function speak(text) {
-  if (!S.tts || !window.speechSynthesis) return;
+/* ================= セリフ音声 ================= */
+// voices.js の VOICES（Open JTalk で作った声、席ごとに声の高さが違う）を WebAudio で鳴らす
+let ttsBusyUntil = 0; // CPUの声が鳴っている間は、マイクが拾った言葉を無視する
+let actx = null;
+const buffers = {};
+function initAudio() {
   try {
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP'; u.rate = 1.35;
-    if (jaVoice) u.voice = jaVoice;
-    ttsBusyUntil = performance.now() + 1500;
-    u.onend = () => { ttsBusyUntil = performance.now() + 350; };
-    speechSynthesis.speak(u);
-  } catch (e) { /* 読み上げなしで続行 */ }
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  } catch (e) { actx = null; return; }
+  if (typeof VOICES === 'undefined') return;
+  Object.entries(VOICES).forEach(([v, lines]) => {
+    buffers[v] = buffers[v] || {};
+    Object.entries(lines).forEach(([word, uri]) => {
+      if (buffers[v][word]) return;
+      const bin = atob(uri.split(',')[1]);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      actx.decodeAudioData(bytes.buffer, (buf) => { buffers[v][word] = buf; }, () => {});
+    });
+  });
+}
+const playing = new Set();
+function playLine(p, word) {
+  if (!S.tts || typeof VOICES === 'undefined') return;
+  const v = 'p' + p;
+  const buf = buffers[v] && buffers[v][word];
+  let dur = 1;
+  try {
+    if (actx && buf) {
+      const src = actx.createBufferSource();
+      src.buffer = buf;
+      src.connect(actx.destination);
+      src.start();
+      playing.add(src);
+      src.onended = () => playing.delete(src);
+      dur = buf.duration;
+    } else if (VOICES[v] && VOICES[v][word]) {
+      new Audio(VOICES[v][word]).play().catch(() => {});
+    }
+  } catch (e) { /* 音が出なくても続行 */ }
+  if (!isHuman(p)) ttsBusyUntil = Math.max(ttsBusyUntil, performance.now() + dur * 1000 + 350);
+}
+function stopAllLines() {
+  playing.forEach((src) => { try { src.stop(); } catch (e) { /* noop */ } });
+  playing.clear();
 }
 
 /* ================= 効果音 ================= */
-let actx = null;
 function beep(freq, dur, type = 'square', vol = 0.06) {
   try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (!actx) return;
     const o = actx.createOscillator(), g = actx.createGain();
     o.type = type; o.frequency.value = freq;
     g.gain.setValueAtTime(vol, actx.currentTime);
@@ -576,7 +604,7 @@ function makeCall(p, word, target) {
 function say(p, word, target) {
   if (S.phase !== 'call' && S.phase !== 'respond') return;
   showBubble(p, word);
-  if (!isHuman(p)) speak(word);
+  if (!isHuman(p) || S.mode === 'button') playLine(p, word); // 音声入力モードでは人間の声はマイク側
 
   if (S.phase === 'call') {
     if (p !== S.oya) return seppuku(p, `親じゃないのに「${word}」と言ってしまった（お手つき）`);
@@ -614,7 +642,7 @@ function seppuku(p, why) {
   refreshSeats();
   setHint('');
   gong();
-  speak(solo() && p === 0 ? 'せっぷく！' : `${nameOf(p)}、せっぷく！`);
+  playLine(p, '切腹');
   $('ovWho').textContent = `${nameOf(p)} の負け`;
   $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
   setTimeout(() => $('overlay').classList.add('show'), 450);
@@ -874,7 +902,7 @@ $('startBtn').addEventListener('click', () => {
   $('pad').hidden = S.mode === 'voice';
   $('voicebox').hidden = S.mode !== 'voice';
   $('heard').textContent = '';
-  beep(440, 0.01, 'sine', 0.001); // iOS で音を有効化
+  initAudio(); // クリックの中で音を有効化（iOS 対策）
   buildSeats();
   startGame(0);
 });
@@ -882,7 +910,7 @@ function toMenu() {
   newPhase();
   S.phase = 'idle';
   stopVoice();
-  if (window.speechSynthesis) speechSynthesis.cancel();
+  stopAllLines();
   $('overlay').classList.remove('show');
   $('game').classList.remove('active');
   $('title').classList.add('active');
