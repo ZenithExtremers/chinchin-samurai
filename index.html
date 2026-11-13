@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>ちんちん侍</title>
+<style>
+:root {
+  --bg: #f6efe2;
+  --panel: #fffaf0;
+  --ink: #2a2118;
+  --muted: #7a6a58;
+  --accent: #b3261e;
+  --accent-ink: #ffffff;
+  --gold: #c99a2e;
+  --line: #d9c9ad;
+  --you: #2f6f4f;
+  --seat: #fff;
+  --shadow: 0 4px 14px rgba(60, 40, 20, .15);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1d1914; --panel: #29231c; --ink: #f3e9d8; --muted: #b5a48c;
+    --accent: #e0483d; --gold: #e2b54a; --line: #4a3f31; --you: #57b386; --seat: #332b22;
+    --shadow: 0 4px 14px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1d1914; --panel: #29231c; --ink: #f3e9d8; --muted: #b5a48c;
+  --accent: #e0483d; --gold: #e2b54a; --line: #4a3f31; --you: #57b386; --seat: #332b22;
+  --shadow: 0 4px 14px rgba(0,0,0,.45);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  display: flex; flex-direction: column; align-items: center;
+  overflow-x: hidden; user-select: none; -webkit-user-select: none;
+}
+button { font-family: inherit; color: inherit; }
+.screen { width: 100%; max-width: 520px; padding: 12px 16px 20px; display: none; flex-direction: column; min-height: 100%; }
+.screen.active { display: flex; }
+
+/* ---------- タイトル ---------- */
+h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .08em; color: var(--accent); }
+.sub { text-align: center; color: var(--muted); margin: 0 0 18px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; box-shadow: var(--shadow); }
+.card h2 { font-size: 17px; margin: 0 0 10px; }
+.rules { margin: 0; padding-left: 0; list-style: none; line-height: 1.7; font-size: 15px; }
+.rules b { color: var(--accent); }
+.seg { display: flex; gap: 8px; flex-wrap: wrap; }
+.seg button {
+  flex: 1 1 0; min-width: 0; padding: 12px 6px; border-radius: 10px; border: 2px solid var(--line);
+  background: var(--seat); font-size: 15px; cursor: pointer;
+}
+.seg button.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: bold; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 15px; }
+.big {
+  width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--accent); color: var(--accent-ink);
+  font-size: 22px; font-weight: bold; letter-spacing: .1em; cursor: pointer; box-shadow: var(--shadow);
+}
+.note { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+/* ---------- ゲーム画面 ---------- */
+.topbar { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
+.topbar button { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+.stage { position: relative; width: 100%; aspect-ratio: 1 / 1; margin: 6px 0; }
+.mat {
+  position: absolute; inset: 14%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,154,46,.18), rgba(201,154,46,.05) 70%);
+  border: 2px dashed var(--line);
+}
+#arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.center {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 46%;
+  text-align: center; pointer-events: none;
+}
+.center .word { font-size: 26px; font-weight: bold; color: var(--accent); min-height: 1.3em; line-height: 1.3; }
+.center .combo { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.timer { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+.timer > div { height: 100%; width: 0; background: var(--gold); }
+
+.seat {
+  position: absolute; width: 27%; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; cursor: pointer;
+  transition: transform .15s;
+}
+.seat[data-i="0"] { left: 50%; top: 84%; }
+.seat[data-i="1"] { left: 15%; top: 50%; }
+.seat[data-i="2"] { left: 50%; top: 16%; }
+.seat[data-i="3"] { left: 85%; top: 50%; }
+.avatar {
+  width: 100%; aspect-ratio: 1 / 1; border-radius: 50%; background: var(--seat);
+  border: 3px solid var(--line); box-shadow: var(--shadow); position: relative;
+  display: flex; align-items: center; justify-content: center; transition: border-color .15s, box-shadow .15s;
+}
+.avatar svg { width: 80%; height: 80%; }
+.seat .name { font-size: 14px; font-weight: bold; margin-top: 3px; white-space: nowrap; }
+.seat .score { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.seat.you .avatar { border-color: var(--you); }
+.seat.oya .avatar { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(201,154,46,.35), var(--shadow); }
+.seat.target .avatar { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(179,38,30,.3), var(--shadow); }
+.seat.pickable .avatar { animation: pulse 1s infinite; }
+.seat.picked .avatar { border-color: var(--accent); border-width: 5px; }
+@keyframes pulse { 50% { transform: scale(1.06); } }
+.oya-tag {
+  position: absolute; top: -6px; left: -6px; background: var(--gold); color: #fff; font-size: 11px; font-weight: bold;
+  border-radius: 8px; padding: 1px 6px; display: none;
+}
+.seat.oya .oya-tag { display: block; }
+
+.bubble {
+  position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, -4px) scale(.6);
+  background: var(--panel); border: 2px solid var(--ink); border-radius: 12px;
+  padding: 4px 9px; font-size: 15px; font-weight: bold; white-space: nowrap;
+  opacity: 0; transition: opacity .12s, transform .12s; pointer-events: none; z-index: 5;
+}
+.bubble::after {
+  content: ""; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: var(--ink);
+}
+.bubble.show { opacity: 1; transform: translate(-50%, -4px) scale(1); }
+.seat[data-i="0"] .bubble { bottom: auto; top: 10%; left: auto; right: -12px; transform: translate(100%, 0) scale(.6); }
+.seat[data-i="0"] .bubble.show { transform: translate(100%, 0) scale(1); }
+.seat[data-i="0"] .bubble::after { display: none; }
+
+/* 動作アニメ */
+.seat.biro .avatar { animation: biro .6s ease-out; }
+@keyframes biro { 0% { transform: translateY(0); } 35% { transform: translateY(-28%) scaleY(1.15); } 100% { transform: translateY(0); } }
+.seat.shaki .avatar::after {
+  content: ""; position: absolute; left: -10%; top: 50%; width: 120%; height: 4px; background: var(--ink);
+  transform: rotate(-35deg) scaleX(0); transform-origin: left center; animation: slash .4s ease-out forwards; border-radius: 2px;
+}
+@keyframes slash { 60% { transform: rotate(-35deg) scaleX(1); opacity: 1; } 100% { transform: rotate(-35deg) scaleX(1); opacity: 0; } }
+.seat.allsay .avatar { animation: shake .4s; }
+@keyframes shake { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+.seat.dead .avatar { filter: grayscale(1); opacity: .6; }
+
+/* 操作パネル */
+.hint { text-align: center; font-size: 15px; min-height: 2.6em; line-height: 1.3; margin: 4px 0 8px; font-weight: bold; }
+.hint.warn { color: var(--accent); }
+.pad { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pad button {
+  padding: 14px 4px; font-size: 19px; font-weight: bold; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--panel); cursor: pointer; box-shadow: var(--shadow); touch-action: manipulation;
+}
+.pad button:active { transform: scale(.96); }
+.pad button.call { border-color: var(--accent); }
+.pad button.react { border-color: var(--gold); }
+.pad button.picked { background: var(--accent); color: var(--accent-ink); }
+.pad .wide { grid-column: 1 / -1; }
+.voicebox { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; text-align: center; box-shadow: var(--shadow); }
+.mic { font-size: 15px; font-weight: bold; }
+.mic .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
+.mic.on .dot { background: #d33; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: .3; } }
+.heard { margin-top: 6px; font-size: 14px; color: var(--muted); min-height: 1.4em; word-break: break-all; }
+.voicebox .say-list { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+/* 切腹オーバーレイ */
+.overlay {
+  position: fixed; inset: 0; background: rgba(20, 10, 5, .72); display: none; align-items: center; justify-content: center;
+  z-index: 20; padding: 16px;
+}
+.overlay.show { display: flex; }
+.overlay .box {
+  background: var(--panel); border-radius: 16px; padding: 22px 18px; width: 100%; max-width: 380px; text-align: center;
+  border: 3px solid var(--accent); animation: pop .3s ease-out;
+}
+@keyframes pop { from { transform: scale(.6); opacity: 0; } }
+.overlay .kanji { font-size: 56px; font-weight: bold; color: var(--accent); letter-spacing: .1em; }
+.overlay .who { font-size: 22px; font-weight: bold; margin: 4px 0; }
+.overlay .why { color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+.overlay .btns { display: flex; gap: 8px; }
+.overlay .btns button { flex: 1; padding: 13px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; border: 2px solid var(--line); background: var(--seat); }
+.overlay .btns button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- ===== タイトル画面 ===== -->
+<section class="screen active" id="title">
+  <h1>ちんちん侍</h1>
+  <p class="sub">言い間違えたら、切腹。</p>
+
+  <div class="card">
+    <h2>ルール</h2>
+    <ul class="rules">
+      <li><b>親</b>は4つの言葉のどれかを言って、誰かを指す</li>
+      <li><b>「ちんちん」</b> → 指された人は何も言わず、すぐ次の言葉で誰かを指す</li>
+      <li><b>「おちんちん」</b> → 指された人が<b>「びろーん」</b></li>
+      <li><b>「侍」</b> → 指された人が<b>「シャキーン」</b></li>
+      <li><b>「ちんちん侍」</b> → 親以外の<b>全員</b>で「ちんちん侍」</li>
+      <li>反応のあと、指された人が次の親になる</li>
+      <li>言い間違い・お手つき・時間切れは<b>切腹</b></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>モード</h2>
+    <div class="seg" id="modeSeg">
+      <button data-v="button" class="on">セリフボタン</button>
+      <button data-v="voice">音声入力</button>
+    </div>
+    <h2 style="margin-top:14px">むずかしさ</h2>
+    <div class="seg" id="diffSeg">
+      <button data-v="easy">ゆっくり</button>
+      <button data-v="normal" class="on">ふつう</button>
+      <button data-v="hard">はやい</button>
+    </div>
+    <div class="row">
+      <label for="ttsChk">CPUのセリフを読み上げる</label>
+      <input type="checkbox" id="ttsChk" checked style="width:22px;height:22px">
+    </div>
+    <p class="note" id="voiceNote" style="display:none">
+      音声入力モードはマイクを使います（Chrome / Safari 推奨）。言葉は声で言い、指す人は画面をタップします。
+      イヤホンを使うと、CPUの読み上げをマイクが拾いにくくなります。
+    </p>
+  </div>
+
+  <button class="big" id="startBtn">いざ、勝負！</button>
+</section>
+
+<!-- ===== ゲーム画面 ===== -->
+<section class="screen" id="game">
+  <div class="topbar">
+    <span id="modeLabel">セリフボタン</span>
+    <button id="quitBtn">やめる</button>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="mat"></div>
+    <svg id="arrow" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <marker id="head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <line id="arrowLine" x1="50" y1="50" x2="50" y2="50" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" marker-end="url(#head)" style="color:var(--accent);opacity:0"/>
+    </svg>
+    <div class="center">
+      <div class="word" id="centerWord"></div>
+      <div class="combo" id="combo">0 回つづいた</div>
+      <div class="timer"><div id="timerBar"></div></div>
+    </div>
+    <div id="seats"></div>
+  </div>
+
+  <div class="hint" id="hint"></div>
+
+  <div class="pad" id="pad">
+    <button class="call" data-w="ちんちん">ちんちん</button>
+    <button class="call" data-w="おちんちん">おちんちん</button>
+    <button class="call" data-w="侍">侍</button>
+    <button class="call" data-w="ちんちん侍">ちんちん侍</button>
+    <button class="react" data-w="びろーん">びろーん</button>
+    <button class="react" data-w="シャキーン">シャキーン</button>
+  </div>
+
+  <div class="voicebox" id="voicebox" style="display:none">
+    <div class="mic" id="mic"><span class="dot"></span><span id="micText">マイク準備中…</span></div>
+    <div class="heard" id="heard"></div>
+    <div class="say-list">言える言葉：ちんちん / おちんちん / 侍 / ちんちん侍 / びろーん / シャキーン</div>
+  </div>
+</section>
+
+<!-- ===== 切腹 ===== -->
+<div class="overlay" id="overlay">
+  <div class="box">
+    <div class="kanji">切腹</div>
+    <div class="who" id="ovWho"></div>
+    <div class="why" id="ovWhy"></div>
+    <div class="btns">
+      <button id="menuBtn">メニュー</button>
+      <button class="primary" id="nextBtn">次の勝負</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ================= 定数 ================= */
+const W = { CHIN: 'ちんちん', OCHIN: 'おちんちん', SAMU: '侍', CS: 'ちんちん侍', BIRO: 'びろーん', SHAKI: 'シャキーン' };
+const CALLS = [W.CHIN, W.OCHIN, W.SAMU, W.CS];
+const REACTION = { [W.OCHIN]: W.BIRO, [W.SAMU]: W.SHAKI };
+const CALL_WEIGHTS = [[W.CHIN, 34], [W.OCHIN, 24], [W.SAMU, 26], [W.CS, 16]];
+const DIFF = {
+  easy:   { limit: 4200, miss: 0.08 },
+  normal: { limit: 3000, miss: 0.05 },
+  hard:   { limit: 2000, miss: 0.03 },
+};
+const VOICE_EXTRA = 1600; // 音声認識の遅延ぶん猶予を足す
+const SEAT_POS = [[50, 84], [15, 50], [50, 16], [85, 50]];
+const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d'];
+const YOU = 0;
+
+/* ================= 状態 ================= */
+const S = {
+  mode: 'button', diff: 'normal', tts: true,
+  players: [
+    { name: 'あなた', cpu: false, sep: 0 },
+    { name: 'たろう', cpu: true, sep: 0 },
+    { name: 'はなこ', cpu: true, sep: 0 },
+    { name: 'じろう', cpu: true, sep: 0 },
+  ],
+  phase: 'idle',     // idle | call | respond | over
+  oya: 0,
+  call: null,        // { from, word, target }
+  need: new Map(),   // respond フェーズで、誰が何を言うべきか
+  pendingWord: null, // 自分が親のとき：言った言葉
+  pendingTarget: null,
+  combo: 0,
+  token: 0,          // フェーズごとに増やし、古いタイマーを無効化する
+  timers: [],
+  deadline: 0, limitMs: 0,
+};
+
+const $ = (id) => document.getElementById(id);
+const rand = (a, b) => a + Math.random() * (b - a);
+
+/* ================= 画面構築 ================= */
+function avatarSvg(color, i) {
+  const mouth = ['M38 66 Q50 74 62 66', 'M40 68 L60 68', 'M38 70 Q50 62 62 70', 'M40 66 Q50 76 60 66'][i];
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <rect x="44" y="4" width="12" height="22" rx="5" fill="#222"/>
+    <rect x="38" y="20" width="24" height="7" rx="3" fill="#222"/>
+    <circle cx="50" cy="58" r="32" fill="#f3d2b0" stroke="#5a3a20" stroke-width="2"/>
+    <path d="M20 46 Q50 22 80 46 L80 40 Q50 14 20 40 z" fill="#222"/>
+    <circle cx="38" cy="54" r="4" fill="#222"/><circle cx="62" cy="54" r="4" fill="#222"/>
+    <path d="M30 44 L44 47 M70 44 L56 47" stroke="#222" stroke-width="3" stroke-linecap="round"/>
+    <path d="${mouth}" stroke="#7a2a1a" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M22 92 Q50 78 78 92 L80 100 L20 100 z" fill="${color}"/>
+  </svg>`;
+}
+
+function buildSeats() {
+  $('seats').innerHTML = S.players.map((p, i) => `
+    <div class="seat ${i === YOU ? 'you' : ''}" data-i="${i}">
+      <div class="avatar">${avatarSvg(COLORS[i], i)}<span class="oya-tag">親</span>
+        <div class="bubble" id="bub${i}"></div></div>
+      <div class="name">${p.name}</div>
+      <div class="score" id="sc${i}">切腹 0</div>
+    </div>`).join('');
+  document.querySelectorAll('.seat').forEach((el) => {
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); onSeatTap(+el.dataset.i); });
+  });
+}
+const seatEl = (i) => document.querySelector(`.seat[data-i="${i}"]`);
+
+/* ================= 表示ヘルパー ================= */
+const bubbleTimers = {};
+function showBubble(i, text) {
+  const b = $('bub' + i);
+  b.textContent = text;
+  b.classList.add('show');
+  clearTimeout(bubbleTimers[i]);
+  bubbleTimers[i] = setTimeout(() => b.classList.remove('show'), 1300);
+}
+function flash(i, cls) {
+  const el = seatEl(i);
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), 700);
+}
+function setHint(text, warn) {
+  $('hint').textContent = text;
+  $('hint').classList.toggle('warn', !!warn);
+}
+function drawArrow(from, to) {
+  const line = $('arrowLine');
+  if (from == null) { line.style.opacity = 0; return; }
+  const [x1, y1] = SEAT_POS[from], [x2, y2] = SEAT_POS[to];
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+  const pad = 14;
+  line.setAttribute('x1', x1 + dx / len * pad); line.setAttribute('y1', y1 + dy / len * pad);
+  line.setAttribute('x2', x2 - dx / len * pad); line.setAttribute('y2', y2 - dy / len * pad);
+  line.style.opacity = 1;
+}
+function refreshSeats() {
+  S.players.forEach((p, i) => {
+    const el = seatEl(i);
+    el.classList.toggle('oya', S.phase === 'call' && S.oya === i);
+    el.classList.toggle('target', S.phase === 'respond' && S.need.has(i));
+    const pickable = S.phase === 'call' && S.oya === YOU && i !== YOU;
+    el.classList.toggle('pickable', pickable && S.pendingTarget == null);
+    el.classList.toggle('picked', pickable && S.pendingTarget === i);
+    $('sc' + i).textContent = `切腹 ${p.sep}`;
+  });
+  document.querySelectorAll('#pad button').forEach((b) => {
+    b.classList.toggle('picked', S.phase === 'call' && S.oya === YOU && b.dataset.w === S.pendingWord);
+  });
+  $('combo').textContent = `${S.combo} 回つづいた`;
+  updateHint();
+}
+function updateHint() {
+  if (S.phase === 'call') {
+    if (S.oya === YOU) {
+      const verb = S.mode === 'voice' ? '言って' : '選んで';
+      if (S.pendingWord && S.pendingTarget == null) setHint(`「${S.pendingWord}」→ 指す人をタップ！`, true);
+      else if (S.pendingTarget != null) setHint(`${S.players[S.pendingTarget].name}に何と言う？`, true);
+      else setHint(`あなたが親！ 言葉を${verb}、指す人をタップ`, true);
+    } else setHint(`${S.players[S.oya].name}の番…`);
+  } else if (S.phase === 'respond') {
+    const mine = S.need.get(YOU);
+    if (mine) setHint(S.mode === 'voice' ? `「${mine}」と言え！` : `「${mine}」！`, true);
+    else setHint('…見守る');
+  }
+}
+
+/* ================= タイマー ================= */
+function currentLimit() {
+  const base = DIFF[S.diff].limit + (S.mode === 'voice' ? VOICE_EXTRA : 0);
+  return Math.max(base * 0.55, base * (1 - S.combo * 0.02));
+}
+function later(ms, fn) {
+  const tok = S.token;
+  const id = setTimeout(() => { if (tok === S.token) fn(); }, ms);
+  S.timers.push(id);
+}
+function newPhase() {
+  S.token++;
+  S.timers.forEach(clearTimeout);
+  S.timers = [];
+}
+function startDeadline(ms, onTimeout) {
+  S.limitMs = ms;
+  S.deadline = performance.now() + ms;
+  later(ms, onTimeout);
+}
+function tickTimer() {
+  const bar = $('timerBar');
+  if (S.phase === 'call' || S.phase === 'respond') {
+    const left = Math.max(0, S.deadline - performance.now());
+    bar.style.width = (left / S.limitMs * 100) + '%';
+  } else bar.style.width = '0';
+  requestAnimationFrame(tickTimer);
+}
+
+/* ================= 読み上げ ================= */
+let ttsBusyUntil = 0;
+let jaVoice = null;
+function pickVoice() {
+  const vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  jaVoice = vs.find((v) => v.lang && v.lang.startsWith('ja')) || null;
+}
+if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text) {
+  if (!S.tts || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ja-JP'; u.rate = 1.35; u.pitch = 1;
+  if (jaVoice) u.voice = jaVoice;
+  ttsBusyUntil = performance.now() + 1500;
+  u.onend = () => { ttsBusyUntil = performance.now() + 350; };
+  speechSynthesis.speak(u);
+}
+
+/* ================= 効果音 ================= */
+let actx = null;
+function beep(freq, dur, type = 'square', vol = 0.06) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+    o.connect(g).connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + dur);
+  } catch (e) { /* 音が出なくても続行 */ }
+}
+function gong() { beep(110, 1.2, 'sine', 0.25); beep(165, 1.0, 'triangle', 0.12); }
+
+/* ================= ゲーム進行 ================= */
+function startRound(oya) {
+  $('overlay').classList.remove('show');
+  S.players.forEach((_, i) => seatEl(i).classList.remove('dead'));
+  S.combo = 0;
+  $('centerWord').textContent = 'いざ！';
+  drawArrow(null);
+  beginCall(oya);
+}
+
+function beginCall(p) {
+  newPhase();
+  S.phase = 'call';
+  S.oya = p;
+  S.call = null;
+  S.need = new Map();
+  S.pendingWord = null;
+  S.pendingTarget = null;
+  startDeadline(currentLimit(), () => seppuku(p, '親なのに言葉が出なかった（時間切れ）'));
+  if (S.players[p].cpu) cpuCall(p);
+  refreshSeats();
+}
+
+/** 親が言葉を言って target を指した */
+function makeCall(p, word, target) {
+  S.call = { from: p, word, target };
+  S.combo++;
+  $('centerWord').textContent = word;
+  drawArrow(p, target);
+  beep(word === W.CS ? 660 : 520, 0.08);
+
+  if (word === W.CHIN) {
+    // 何もなし：指された人がそのまま次の親
+    beginCall(target);
+    return;
+  }
+  newPhase();
+  S.phase = 'respond';
+  S.need = new Map();
+  if (word === W.CS) {
+    S.players.forEach((_, i) => { if (i !== p) S.need.set(i, W.CS); });
+  } else {
+    S.need.set(target, REACTION[word]);
+  }
+  startDeadline(currentLimit(), () => {
+    // 遅れた人が複数いたら、自分が遅れていれば自分、いなければ最初の人が切腹
+    const late = [...S.need.keys()];
+    const loser = late.includes(YOU) ? YOU : late[0];
+    seppuku(loser, `「${S.need.get(loser)}」が言えなかった（時間切れ）`);
+  });
+  S.need.forEach((w, i) => { if (S.players[i].cpu) cpuRespond(i, w); });
+  refreshSeats();
+}
+
+/** 誰かが何かを言った（ボタン・音声・CPU 共通） */
+function say(p, word, target) {
+  if (S.phase !== 'call' && S.phase !== 'respond') return;
+  showBubble(p, word);
+  if (p !== YOU) speak(word);
+
+  if (S.phase === 'call') {
+    if (p !== S.oya) return seppuku(p, `親じゃないのに「${word}」と言ってしまった（お手つき）`);
+    if (!CALLS.includes(word)) return seppuku(p, `親なのに「${word}」と言ってしまった`);
+    if (p === YOU) {
+      if (S.pendingWord) return seppuku(p, '言い直しは無効！'); // 2回言ったら言い間違い扱い
+      S.pendingWord = word;
+      if (S.pendingTarget != null) return makeCall(YOU, word, S.pendingTarget);
+      refreshSeats();
+      return;
+    }
+    return makeCall(p, word, target);
+  }
+
+  // respond
+  const expect = S.need.get(p);
+  if (!expect) return seppuku(p, `関係ないのに「${word}」と言ってしまった（お手つき）`);
+  if (expect !== word) return seppuku(p, `「${expect}」のところを「${word}」と言ってしまった`);
+  S.need.delete(p);
+  if (word === W.BIRO) flash(p, 'biro');
+  if (word === W.SHAKI) flash(p, 'shaki');
+  if (word === W.CS) flash(p, 'allsay');
+  if (S.need.size === 0) {
+    const next = S.call.target;
+    later(250, () => beginCall(next));
+    S.phase = 'respond'; // 250ms のあいだもお手つき判定は有効
+  }
+  refreshSeats();
+}
+
+function seppuku(p, why) {
+  newPhase();
+  S.phase = 'over';
+  S.players[p].sep++;
+  seatEl(p).classList.add('dead');
+  refreshSeats();
+  setHint('');
+  gong();
+  speak(p === YOU ? 'せっぷく！' : `${S.players[p].name}、せっぷく！`);
+  $('ovWho').textContent = p === YOU ? 'あなた' : S.players[p].name;
+  $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
+  $('ovWhy').style.whiteSpace = 'pre-line';
+  S.lastLoser = p;
+  setTimeout(() => $('overlay').classList.add('show'), 450);
+}
+
+/* ================= CPU ================= */
+function pickWeighted() {
+  const total = CALL_WEIGHTS.reduce((s, [, w]) => s + w, 0);
+  let r = Math.random() * total;
+  for (const [word, w] of CALL_WEIGHTS) { if ((r -= w) < 0) return word; }
+  return W.CHIN;
+}
+function cpuCall(p) {
+  const lim = S.limitMs;
+  later(rand(lim * 0.2, lim * 0.5), () => {
+    if (Math.random() < DIFF[S.diff].miss * 0.6) {
+      say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); // うっかり
+      return;
+    }
+    const others = [0, 1, 2, 3].filter((i) => i !== p);
+    say(p, pickWeighted(), others[Math.floor(Math.random() * others.length)]);
+  });
+}
+function cpuRespond(p, expect) {
+  const lim = S.limitMs;
+  const miss = Math.random() < DIFF[S.diff].miss;
+  if (miss && Math.random() < 0.5) return; // 固まって時間切れ
+  later(rand(lim * 0.18, lim * 0.5), () => {
+    if (miss) {
+      const wrong = [W.BIRO, W.SHAKI, W.CS, W.CHIN].filter((w) => w !== expect);
+      say(p, wrong[Math.floor(Math.random() * wrong.length)]);
+    } else say(p, expect);
+  });
+}
+
+/* ================= 入力：タップ ================= */
+function onSeatTap(i) {
+  if (i === YOU) return;
+  if (S.phase !== 'call' || S.oya !== YOU) return;
+  if (S.pendingTarget != null) return;
+  S.pendingTarget = i;
+  if (S.pendingWord) return makeCall(YOU, S.pendingWord, i);
+  refreshSeats();
+}
+
+/* ================= 入力：ボタン ================= */
+document.querySelectorAll('#pad button').forEach((b) => {
+  b.addEventListener('pointerdown', (e) => { e.preventDefault(); say(YOU, b.dataset.w); });
+});
+
+/* ================= 入力：音声 ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recWanted = false;
+const consumed = {}; // 結果インデックスごとに処理済みの文字数
+let pendingVoice = null;
+
+function normalize(s) {
+  s = s.replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60)); // カナ→かな
+  s = s.replace(/[珍沈陳鎮]/g, 'ちん').replace(/侍/g, 'さむらい').replace(/御/g, 'お');
+  s = s.replace(/[\sー〜~ｰっ、。．，！!？?・「」]/g, '');
+  return s;
+}
+// 長い言葉から順に判定する
+const VOICE_PATTERNS = [
+  [/ちんちん[ざさ]むらい/, W.CS],
+  [/おちんちん/, W.OCHIN],
+  [/ちんちん/, W.CHIN],
+  [/[ざさ]むらい/, W.SAMU],
+  [/し[ゃや]+き+ん/, W.SHAKI],
+  [/[びぴ]ろ+ん|[びぴ]よ+ん/, W.BIRO],
+];
+function findKeyword(text) {
+  let best = null;
+  for (const [re, word] of VOICE_PATTERNS) {
+    const m = re.exec(text);
+    if (m && (!best || m.index < best.index || (m.index === best.index && m[0].length > best.len))) {
+      best = { index: m.index, len: m[0].length, word };
+    }
+  }
+  return best;
+}
+// 「ちんちん」の後に「侍」が続くかもしれないので、末尾にある候補は少しだけ待つ
+const AMBIGUOUS_TAIL = /(ちんちん|ちん|ち|お|おち|おちん|おちんち)$/;
+
+function handleTranscript(idx, raw, isFinal) {
+  const text = normalize(raw);
+  let from = consumed[idx] || 0;
+  if (from > text.length) from = 0;
+  let rest = text.slice(from);
+  clearTimeout(pendingVoice);
+  while (true) {
+    const hit = findKeyword(rest);
+    if (!hit) break;
+    const end = hit.index + hit.len;
+    const atTail = end === rest.length;
+    if (atTail && !isFinal && (hit.word === W.CHIN || AMBIGUOUS_TAIL.test(rest.slice(0, hit.index)))) {
+      // 続きが来なければ確定
+      const word = hit.word, base = from + end;
+      pendingVoice = setTimeout(() => { consumed[idx] = base; voiceSay(word); }, 380);
+      break;
+    }
+    from += end;
+    consumed[idx] = from;
+    rest = text.slice(from);
+    voiceSay(hit.word);
+  }
+}
+function voiceSay(word) {
+  if (performance.now() < ttsBusyUntil) return; // CPUの読み上げを拾った可能性
+  say(YOU, word);
+}
+function startRec() {
+  if (!SR) return false;
+  recWanted = true;
+  rec = new SR();
+  rec.lang = 'ja-JP';
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.maxAlternatives = 1;
+  rec.onstart = () => { $('mic').classList.add('on'); $('micText').textContent = '聞いています'; };
+  rec.onresult = (e) => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      $('heard').textContent = '聞こえた：' + r[0].transcript;
+      handleTranscript(i, r[0].transcript, r.isFinal);
+    }
+  };
+  rec.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      recWanted = false;
+      $('micText').textContent = 'マイクが使えません（許可してください）';
+    }
+  };
+  rec.onend = () => {
+    $('mic').classList.remove('on');
+    for (const k in consumed) delete consumed[k];
+    if (recWanted) setTimeout(() => { try { rec.start(); } catch (e) { /* 既に起動中 */ } }, 150);
+  };
+  try { rec.start(); } catch (e) { /* noop */ }
+  return true;
+}
+function stopRec() {
+  recWanted = false;
+  if (rec) { try { rec.stop(); } catch (e) { /* noop */ } }
+  $('mic').classList.remove('on');
+}
+
+/* ================= 画面遷移 ================= */
+function segInit(id, key) {
+  $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    $(id).querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    S[key] = b.dataset.v;
+    if (key === 'mode') $('voiceNote').style.display = S.mode === 'voice' ? 'block' : 'none';
+  }));
+}
+segInit('modeSeg', 'mode');
+segInit('diffSeg', 'diff');
+
+$('startBtn').addEventListener('click', () => {
+  S.tts = $('ttsChk').checked;
+  if (S.mode === 'voice' && !SR) {
+    alert('このブラウザは音声入力に対応していません。Chrome か Safari で開いてください。セリフボタンモードで始めます。');
+    S.mode = 'button';
+  }
+  S.players.forEach((p) => { p.sep = 0; });
+  $('title').classList.remove('active');
+  $('game').classList.add('active');
+  $('modeLabel').textContent = S.mode === 'voice' ? '音声入力モード' : 'セリフボタンモード';
+  $('pad').style.display = S.mode === 'voice' ? 'none' : 'grid';
+  $('voicebox').style.display = S.mode === 'voice' ? 'block' : 'none';
+  $('heard').textContent = '';
+  if (S.mode === 'voice') startRec();
+  beep(440, 0.01, 'sine', 0.001); // iOS で音を有効化
+  buildSeats();
+  startRound(YOU);
+});
+function toMenu() {
+  newPhase();
+  S.phase = 'idle';
+  stopRec();
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  $('overlay').classList.remove('show');
+  $('game').classList.remove('active');
+  $('title').classList.add('active');
+}
+$('quitBtn').addEventListener('click', toMenu);
+$('menuBtn').addEventListener('click', toMenu);
+$('nextBtn').addEventListener('click', () => startRound(S.lastLoser ?? YOU));
+
+requestAnimationFrame(tickTimer);
+</script>
+</body>
+</html>
