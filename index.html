@@ -89,6 +89,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 /* 切腹ムービー */
 .cut { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; pointer-events: none; }
 .cut.show { display: flex; }
+.cut { transition: opacity .5s ease; }
+.cut.fade { opacity: 0; }
 .cut .flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
 .cut .body { animation: cutin .2s ease-out; }
 @keyframes cutin { from { transform: scale(.7); opacity: 0; } }
@@ -830,6 +832,7 @@ function say(p, word, target) {
 }
 
 const SEPPUKU_PAUSE = 800; // ミスしてから切腹が始まるまでの「間」
+const CUT_HOLD = 3200;     // ムービー開始から、余韻が終わって消え始めるまで
 function seppuku(p, why) {
   // ミスした瞬間にゲームを止める（タイマー・CPUも止まる）
   newPhase();
@@ -847,7 +850,7 @@ function seppuku(p, why) {
   });
   $('ovTitle').textContent = '切腹';
   $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
-  S.overlayDelay = SEPPUKU_PAUSE + (S.movie ? 2100 : 900);
+  S.overlayDelay = SEPPUKU_PAUSE + (S.movie ? CUT_HOLD + 600 : 1600); // ムービーが消えてから結果
   const isNew = recordBest(S.combo);
   $('ovNew').hidden = !isNew;
   $('ovNew').textContent = isNew ? `新記録！ ${CPU_LABEL[S.cpu]}で ${S.combo} 回` : '';
@@ -888,10 +891,13 @@ function playCutMovie(p) {
   $('cutTop').innerHTML = svg;
   $('cutBot').innerHTML = svg;
   const cut = $('cut');
-  cut.classList.remove('show'); void cut.offsetWidth; cut.classList.add('show');
+  cut.classList.remove('show', 'fade'); void cut.offsetWidth; cut.classList.add('show');
   setTimeout(() => { beep(1800, 0.12, 'sawtooth', 0.05); gong(); playLine(p, W.SHAKI); }, 450); // 斬った瞬間にゴーン＋シャキーン
   clearTimeout(playCutMovie.t);
-  playCutMovie.t = setTimeout(() => cut.classList.remove('show'), 2300);
+  // 斬れて落ちたあと少し余韻を残してから、ゆっくり消す（消えきってから結果を出す）
+  clearTimeout(playCutMovie.f);
+  playCutMovie.f = setTimeout(() => cut.classList.add('fade'), CUT_HOLD);
+  playCutMovie.t = setTimeout(() => cut.classList.remove('show', 'fade'), CUT_HOLD + 500);
 }
 
 /* ================= 保存（設定・最高記録） ================= */
@@ -1267,7 +1273,7 @@ function toMenu() {
   stopVoice();
   stopAllLines();
   $('overlay').classList.remove('show');
-  $('cut').classList.remove('show');
+  $('cut').classList.remove('show', 'fade');
   $('game').classList.remove('active');
   $('title').classList.add('active');
 }
