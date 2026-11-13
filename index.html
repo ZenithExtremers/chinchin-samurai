@@ -72,6 +72,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--accent); color: var(--accent-ink);
   font-size: 22px; font-weight: bold; letter-spacing: .1em; cursor: pointer; box-shadow: var(--shadow);
 }
+.voices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.voices button { padding: 9px 4px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); font-size: 14px; cursor: pointer; }
+.voices button:active { border-color: var(--accent); }
 .note { font-size: 13px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
 .msg { font-size: 14px; color: var(--accent); text-align: center; margin: 10px 0 0; min-height: 1em; }
 
@@ -256,6 +259,15 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     <div class="row">
       <label for="ttsChk">セリフの音声を出す</label>
       <input type="checkbox" id="ttsChk" checked>
+    </div>
+    <h2 style="margin-top:14px">声の試し聞き（「ちんちん侍」）</h2>
+    <div class="voices" id="voiceTest">
+      <button data-p="0">あなた</button>
+      <button data-p="1">たろう</button>
+      <button data-p="2">はなこ</button>
+      <button data-p="3">じろう</button>
+      <button data-p="4">さくら</button>
+      <button data-p="5">ごろう</button>
     </div>
     <p class="note" id="humanNote" hidden>
       1台のスマホをみんなで囲んで遊びます。自分の番の人が言葉ボタンを押して、指す人をタップ。
@@ -533,61 +545,52 @@ function tickTimer() {
 let ttsBusyUntil = 0; // CPUの声が鳴っている間は、マイクが拾った言葉を無視する
 let actx = null;
 const buffers = {};
-function initAudio() {
+function makeContext() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  // 24kHz で作るとデコード後の音声のメモリが半分で済む（スマホで落ちないように）
+  try { return new AC({ sampleRate: 24000 }); } catch (e) { return new AC(); }
+}
+function initAudio(seats) {
   try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    actx = actx || makeContext();
     if (actx.state === 'suspended') actx.resume();
   } catch (e) { actx = null; return; }
-  if (typeof VOICES === 'undefined') return;
-  Object.entries(VOICES).forEach(([v, lines]) => {
+  if (typeof VOICES === 'undefined' || !seats) return;
+  // 使う席の分だけ展開する
+  Object.entries(VOICES).filter(([v]) => +v.slice(1) < seats).forEach(([v, lines]) => {
     buffers[v] = buffers[v] || {};
-    Object.entries(lines).forEach(([word, tiers]) => {
+    Object.entries(lines).forEach(([word, takes]) => {
       if (buffers[v][word]) return;
-      buffers[v][word] = tiers.map(() => []);
-      tiers.forEach((takes, t) => takes.forEach((uri, n) => {
+      buffers[v][word] = [];
+      takes.forEach((uri, n) => {
         const bin = atob(uri.split(',')[1]);
         const bytes = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        actx.decodeAudioData(bytes.buffer, (buf) => { buffers[v][word][t][n] = buf; }, () => {});
-      }));
+        actx.decodeAudioData(bytes.buffer, (buf) => { buffers[v][word][n] = buf; }, () => {});
+      });
     });
   });
 }
 const playing = new Set();
-/** 制限時間が短いほど速く喋る（ふつう・序盤で1倍、最大2.4倍くらい） */
-function speechRate() {
-  const base = DIFF[S.diff].limit; // 音声入力の猶予ぶんは含めない
-  const limit = Math.max(base * 0.55, base * (1 - S.combo * 0.02));
-  return Math.max(1, Math.min(2.4, 3000 / limit));
-}
 function playLine(p, word) {
   if (!S.tts || typeof VOICES === 'undefined') return;
   const v = 'p' + p;
-  const tiers = VOICES[v] && VOICES[v][word];
-  if (!tiers) return;
-  // ゲームのテンポに合わせて喋る速さを決める（速さ違いの録音を選び、残りを再生速度で微調整）
-  const want = speechRate();
-  let t = 0;
-  VOICE_TIERS.forEach((f, i) => { if (f <= want) t = i; });
-  const rate = Math.min(1.25, want / VOICE_TIERS[t]);
-  const takes = tiers[t];
+  const takes = VOICES[v] && VOICES[v][word];
+  if (!takes) return;
   const n = Math.floor(Math.random() * takes.length); // 毎回テイクを選ぶ
-  const buf = buffers[v] && buffers[v][word] && buffers[v][word][t] && buffers[v][word][t][n];
+  const buf = buffers[v] && buffers[v][word] && buffers[v][word][n];
   let dur = 1;
   try {
     if (actx && buf) {
       const src = actx.createBufferSource();
       src.buffer = buf;
-      src.playbackRate.value = rate;
       src.connect(actx.destination);
       src.start();
       playing.add(src);
       src.onended = () => playing.delete(src);
-      dur = buf.duration / rate;
+      dur = buf.duration;
     } else {
-      const a = new Audio(takes[n]);
-      a.playbackRate = rate;
-      a.play().catch(() => {});
+      new Audio(takes[n]).play().catch(() => {});
     }
   } catch (e) { /* 音が出なくても続行 */ }
   if (!isHuman(p)) ttsBusyUntil = Math.max(ttsBusyUntil, performance.now() + dur * 1000 + 350);
@@ -845,8 +848,16 @@ function handleTranscript(seg, raw, isFinal) {
     voiceSay(hit.word);
   }
 }
+/** 今、人間の誰かが言うべき言葉か */
+function expectedForHuman(word) {
+  if (S.phase === 'call') return isHuman(S.oya) && CALLS.includes(word) && !S.pendingWord;
+  if (S.phase === 'respond') return [...S.need].some(([i, w]) => isHuman(i) && w === word);
+  return false;
+}
 function voiceSay(word) {
-  if (performance.now() < ttsBusyUntil) return; // CPUの読み上げを拾った可能性
+  // CPUが喋っている最中は、マイクがCPUの声を拾った可能性がある。
+  // そのときは「今言うべき言葉」だけ受け付け、お手つきになる言葉は無視する
+  if (performance.now() < ttsBusyUntil && !expectedForHuman(word)) return;
   humanSay(word, 'voice');
 }
 function micState(on, text) {
@@ -938,6 +949,16 @@ function stopVoice() {
 }
 $('micBtn').addEventListener('click', startVoice);
 
+// 声の試し聞き：2テイクを交互に鳴らす
+const testTake = {};
+$('voiceTest').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+  const v = 'p' + b.dataset.p;
+  if (typeof VOICES === 'undefined' || !VOICES[v]) return;
+  const takes = VOICES[v]['ちんちん侍'];
+  testTake[v] = ((testTake[v] ?? -1) + 1) % takes.length;
+  new Audio(takes[testTake[v]]).play().catch(() => {});
+}));
+
 /* ================= 画面遷移 ================= */
 function segInit(id, apply) {
   $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
@@ -976,7 +997,7 @@ $('startBtn').addEventListener('click', () => {
   $('pad').hidden = S.mode === 'voice';
   $('voicebox').hidden = S.mode !== 'voice';
   $('heard').textContent = '';
-  initAudio(); // クリックの中で音を有効化（iOS 対策）
+  initAudio(S.total); // クリックの中で音を有効化（iOS 対策）
   buildSeats();
   startGame(0);
 });

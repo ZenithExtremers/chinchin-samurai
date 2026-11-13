@@ -28,7 +28,7 @@
 ## セリフ音声
 `voices.js` に、オープンソースの日本語音声合成 Open JTalk（pyopenjtalk）で作ったセリフ音声が入っています。
 席ごとに声が違い、各セリフ2テイクから毎回ランダムに選ばれます。
-喋る速さはゲームのテンポに合わせて変わります（速さ違いの3段階の録音＋再生速度の微調整。声の高さは変わらない）。「ちんちん侍」は全員の声が重なります。
+スタート画面の「声の試し聞き」で、席ごとの声を確認できます。「ちんちん侍」は全員の声が重なります。
 
 使用した声:
 - HTS Voice "Mei", "Takumi" — © Nagoya Institute of Technology, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)（MMDAgent Project）
