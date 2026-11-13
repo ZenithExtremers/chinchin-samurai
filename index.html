@@ -203,18 +203,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   <h1>ちんちん侍</h1>
   <p class="sub">言い間違えたら、切腹。</p>
 
-  <div class="card">
-    <h2>ルール</h2>
-    <ul class="rules">
-      <li><b>親</b>は4つの言葉のどれかを言って、自分以外の誰かを指す</li>
-      <li><b>「ちんちん」</b> → 指された人は何も言わず、すぐ次の言葉で誰かを指す</li>
-      <li><b>「おちんちん」</b> → 指された人が<b>「びろーん」</b></li>
-      <li><b>「侍」</b> → 指された人が<b>「シャキーン」</b></li>
-      <li><b>「ちんちん侍」</b> → 親も含めて<b>全員</b>で「ちんちん侍」</li>
-      <li>反応のあと、指された人が次の親になる</li>
-      <li>言い間違い・お手つき・時間切れは<b>切腹</b>。一人切腹したら勝負あり</li>
-    </ul>
-  </div>
+  <button class="big" id="startBtn">いざ、勝負！</button>
+  <p class="msg" id="titleMsg" style="margin:0 0 14px"></p>
+
 
   <div class="card">
     <h2>モード</h2>
@@ -238,7 +229,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button data-v="5" hidden>5</button>
       <button data-v="6" hidden>6</button>
     </div>
-    <h2>ルール</h2>
+    <h2>対戦形式</h2>
     <div class="seg" id="ruleSeg">
       <button data-v="normal" class="on">一発勝負</button>
       <button data-v="death">デスマッチ</button>
@@ -285,8 +276,19 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     </p>
   </div>
 
-  <button class="big" id="startBtn">いざ、勝負！</button>
-  <p class="msg" id="titleMsg"></p>
+  <div class="card">
+    <h2>ルール</h2>
+    <ul class="rules">
+      <li><b>親</b>は4つの言葉のどれかを言って、自分以外の誰かを指す</li>
+      <li><b>「ちんちん」</b> → 指された人は何も言わず、すぐ次の言葉で誰かを指す</li>
+      <li><b>「おちんちん」</b> → 指された人が<b>「びろーん」</b></li>
+      <li><b>「侍」</b> → 指された人が<b>「シャキーン」</b></li>
+      <li><b>「ちんちん侍」</b> → 親も含めて<b>全員</b>で「ちんちん侍」</li>
+      <li>反応のあと、指された人が次の親になる</li>
+      <li>言い間違い・お手つき・時間切れは<b>切腹</b>。一発勝負なら一人切腹で勝負あり、デスマッチなら脱落して最後の一人まで</li>
+    </ul>
+  </div>
+
   <p class="note" style="text-align:center">
     音声：Open JTalk／HTS Voice「Mei」「Takumi」「NIT ATR503 M001」<br>
     © Nagoya Institute of Technology（Mei・Takumi は CC BY 3.0, MMDAgent Project）
