@@ -72,6 +72,41 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--accent); color: var(--accent-ink);
   font-size: 22px; font-weight: bold; letter-spacing: .1em; cursor: pointer; box-shadow: var(--shadow);
 }
+.best { text-align: center; font-size: 13px; color: var(--muted); margin: 0 0 14px; font-variant-numeric: tabular-nums; }
+.best b { color: var(--ink); }
+.toggles { display: flex; flex-direction: column; gap: 10px; }
+.row label small { display: block; font-size: 12px; color: var(--muted); }
+.plist { display: flex; flex-direction: column; gap: 8px; }
+.prow { display: grid; grid-template-columns: 48px minmax(0, 1fr) 34px 40px; gap: 8px; align-items: center; }
+.prow .face { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--line); background: var(--seat); padding: 2px; cursor: pointer; }
+.prow .face svg { width: 100%; height: 100%; display: block; }
+.prow .nm { display: flex; flex-direction: column; min-width: 0; }
+.prow .nm small { font-size: 11px; color: var(--muted); }
+.prow input { width: 100%; min-width: 0; font: inherit; font-size: 16px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--seat); color: var(--ink); }
+.prow .dot { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--seat); box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+.prow .play { height: 34px; border-radius: 8px; border: 2px solid var(--line); background: var(--seat); cursor: pointer; font-size: 13px; }
+.overlay .new { color: var(--gold); font-weight: bold; margin-bottom: 8px; }
+/* 切腹ムービー */
+.cut { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; pointer-events: none; }
+.cut.show { display: flex; }
+.cut .flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
+.cut.show .flash { animation: cutflash .5s ease-out .2s; }
+@keyframes cutflash { 10% { opacity: .85; } 100% { opacity: 0; } }
+.cut .body { position: relative; width: 220px; height: 220px; max-width: 60vw; max-height: 60vw; }
+.cut .half { position: absolute; inset: 0; border-radius: 50%; background: var(--seat); }
+.cut .half svg { width: 100%; height: 100%; }
+.cut .top { clip-path: polygon(0 0, 100% 0, 100% 38%, 0 66%); }
+.cut .bot { clip-path: polygon(0 66%, 100% 38%, 100% 100%, 0 100%); }
+.cut.show .top { animation: cuttop .7s cubic-bezier(.3,.7,.4,1) .3s forwards; }
+.cut.show .bot { animation: cutbot .7s cubic-bezier(.3,.7,.4,1) .3s forwards; }
+@keyframes cuttop { to { transform: translate(-22px, -26px) rotate(-12deg); } }
+@keyframes cutbot { to { transform: translate(18px, 30px) rotate(9deg); } }
+.cut .blade { position: absolute; left: -15%; top: 52%; width: 130%; height: 5px; background: var(--accent); border-radius: 3px;
+  transform: rotate(-15deg) scaleX(0); transform-origin: left center; box-shadow: 0 0 12px var(--accent); }
+.cut.show .blade { animation: blade .3s ease-in forwards, bladeout .4s ease-out .5s forwards; }
+@keyframes blade { to { transform: rotate(-15deg) scaleX(1); } }
+@keyframes bladeout { to { transform: rotate(-15deg) scaleX(1); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cut.show .top, .cut.show .bot, .cut.show .blade, .cut.show .flash { animation-duration: .01s; } }
 .voices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .voices button { padding: 9px 4px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); font-size: 14px; cursor: pointer; }
 .voices button:active { border-color: var(--accent); }
@@ -204,7 +239,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   <p class="sub">言い間違えたら、切腹。</p>
 
   <button class="big" id="startBtn">いざ、勝負！</button>
-  <p class="msg" id="titleMsg" style="margin:0 0 14px"></p>
+  <p class="msg" id="titleMsg" style="margin:0 0 6px"></p>
+  <div class="best" id="bestBox"></div>
 
 
   <div class="card">
@@ -253,18 +289,20 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button data-v="normal" class="on">ふつう</button>
       <button data-v="hard">はやい</button>
     </div>
-    <div class="row">
-      <label for="ttsChk">セリフの音声を出す</label>
-      <input type="checkbox" id="ttsChk" checked>
-    </div>
-    <h2 style="margin-top:14px">声の試し聞き（「ちんちん侍」）</h2>
-    <div class="voices" id="voiceTest">
-      <button data-p="0">あなた</button>
-      <button data-p="1">たろう</button>
-      <button data-p="2">はなこ</button>
-      <button data-p="3">じろう</button>
-      <button data-p="4">さくら</button>
-      <button data-p="5">ごろう</button>
+    <h2>演出</h2>
+    <div class="toggles">
+      <div class="row">
+        <label for="ttsChk">セリフの音声を出す</label>
+        <input type="checkbox" id="ttsChk" checked>
+      </div>
+      <div class="row">
+        <label for="movieChk">切腹ムービー</label>
+        <input type="checkbox" id="movieChk" checked>
+      </div>
+      <div class="row">
+        <label for="feintChk">CPUのフェイント<small>「ちんちん…」と溜めて、侍をつけるかどうか迷わせる</small></label>
+        <input type="checkbox" id="feintChk">
+      </div>
     </div>
     <p class="note" id="humanNote" hidden>
       1台のスマホをみんなで囲んで遊びます。自分の番の人が言葉ボタンを押して、指す人をタップ。
@@ -274,6 +312,12 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       言葉は声で言い、指す人は画面をタップします。マイクの使用を許可してください（Chrome 推奨）。
       CPUの声をマイクが拾いやすいので、セリフの音声は最初オフにしています（イヤホンならオンでも大丈夫）。
     </p>
+  </div>
+
+  <div class="card">
+    <h2>プレイヤー</h2>
+    <p class="note" style="margin:-4px 0 10px">顔をタップで髪型、色の丸で服の色が変わります。▶で声を試し聞き。</p>
+    <div class="plist" id="plist"></div>
   </div>
 
   <div class="card">
@@ -339,11 +383,22 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </section>
 
+<!-- ===== 切腹ムービー ===== -->
+<div class="cut" id="cut" aria-hidden="true">
+  <div class="flash"></div>
+  <div class="body">
+    <div class="half top" id="cutTop"></div>
+    <div class="half bot" id="cutBot"></div>
+    <div class="blade"></div>
+  </div>
+</div>
+
 <!-- ===== 切腹 ===== -->
 <div class="overlay" id="overlay">
   <div class="box">
     <div class="kanji" id="ovTitle">切腹</div>
     <div class="who" id="ovWho"></div>
+    <div class="new" id="ovNew" hidden></div>
     <div class="why" id="ovWhy"></div>
     <div class="btns" id="endBtns">
       <button id="menuBtn">メニュー</button>
@@ -379,7 +434,11 @@ const CPU_LEVEL = {
 };
 const VOICE_EXTRA = 1600; // 音声認識の遅延ぶん猶予を足す
 let SEAT_POS = [];
-const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d', '#c0506e', '#5b6b2f'];
+const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d', '#c0506e', '#5b6b2f', '#1f1f1f', '#c9a227', '#3a8fa0', '#9b2d20'];
+const HAIRS = ['mage', 'bozu', 'long', 'hachi']; // ちょんまげ・坊主・長髪・はちまき
+const SEAT_DEFAULTS = [['mage', 0], ['mage', 1], ['long', 2], ['hachi', 3], ['long', 4], ['bozu', 5]];
+/** 席ごとの見た目と名前（空なら自動の名前） */
+let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color }));
 const CPU_NAMES = ['たろう', 'はなこ', 'じろう', 'さくら', 'ごろう'];
 /** 円の上に、下（自分）から時計回りに並べる */
 function layoutSeats(n) {
@@ -396,7 +455,7 @@ function layoutSeats(n) {
 
 /* ================= 状態 ================= */
 const S = {
-  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, rule: 'normal', alive: new Set(), tts: true, humans: 1,
+  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, movie: true, feint: false, overlayDelay: 450, rule: 'normal', alive: new Set(), tts: true, humans: 1,
   players: [],
   phase: 'idle',     // idle | call | respond | over
   oya: 0,
@@ -419,38 +478,51 @@ const death = () => S.rule === 'death';
 const solo = () => S.humans === 1;
 const nameOf = (i) => S.players[i].name;
 
+function defaultName(i) {
+  if (i < S.humans) return solo() ? 'あなた' : `プレイヤー${i + 1}`;
+  return CPU_NAMES[i - 1];
+}
 function setupPlayers() {
   const prev = S.players;
   S.players = Array.from({ length: S.total }, (_, i) => i).map((i) => {
     const human = i < S.humans;
-    const name = human ? (solo() ? 'あなた' : `プレイヤー${i + 1}`) : CPU_NAMES[i - 1];
+    const name = PROFILES[i].name.trim() || defaultName(i);
     const old = prev[i];
     return { name, cpu: !human, sep: old && old.name === name ? old.sep : 0 };
   });
 }
 
 /* ================= 画面構築 ================= */
-function avatarSvg(color, i) {
-  const mouth = ['M38 66 Q50 74 62 66', 'M40 68 L60 68', 'M38 70 Q50 62 62 70', 'M40 66 Q50 76 60 66', 'M42 66 Q50 72 58 66', 'M38 68 Q50 66 62 70'][i];
+function avatarSvg(color, i, hair = 'mage') {
+  const mouth = ['M38 66 Q50 74 62 66', 'M40 68 L60 68', 'M38 70 Q50 62 62 70', 'M40 66 Q50 76 60 66', 'M42 66 Q50 72 58 66', 'M38 68 Q50 66 62 70'][i % 6];
+  const knot = '<rect x="44" y="4" width="12" height="22" rx="5" fill="#222"></rect><rect x="38" y="20" width="24" height="7" rx="3" fill="#222"></rect>';
+  const top = '<path d="M20 46 Q50 22 80 46 L80 40 Q50 14 20 40 z" fill="#222"></path>';
+  const back = hair === 'long' ? '<path d="M14 92 Q10 30 50 22 Q90 30 86 92 L74 92 L74 50 L26 50 L26 92 z" fill="#222"></path>' : '';
+  let front = '';
+  if (hair === 'mage') front = knot + top;
+  if (hair === 'hachi') front = knot + top + '<rect x="19" y="38" width="62" height="9" rx="3" fill="#fafafa" stroke="#999" stroke-width="1"></rect><circle cx="50" cy="42.5" r="3.5" fill="#c62828"></circle>';
+  if (hair === 'long') front = '<path d="M18 50 Q22 18 50 18 Q78 18 82 50 Q66 34 50 40 Q34 34 18 50 z" fill="#222"></path>';
+  if (hair === 'bozu') front = '<path d="M19 50 Q22 24 50 24 Q78 24 81 50 Q50 36 19 50 z" fill="#6b6f78" opacity=".55"></path>';
   return `<svg viewBox="0 0 100 100" aria-hidden="true">
-    <rect x="44" y="4" width="12" height="22" rx="5" fill="#222"></rect>
-    <rect x="38" y="20" width="24" height="7" rx="3" fill="#222"></rect>
+    ${back}
     <circle cx="50" cy="58" r="32" fill="#f3d2b0" stroke="#5a3a20" stroke-width="2"></circle>
-    <path d="M20 46 Q50 22 80 46 L80 40 Q50 14 20 40 z" fill="#222"></path>
-    <circle cx="38" cy="54" r="4" fill="#222"></circle><circle cx="62" cy="54" r="4" fill="#222"></circle>
-    <path d="M30 44 L44 47 M70 44 L56 47" stroke="#222" stroke-width="3" stroke-linecap="round" fill="none"></path>
-    <path d="${mouth}" stroke="#7a2a1a" stroke-width="3" fill="none" stroke-linecap="round"></path>
+    ${front}
+    <circle cx="38" cy="56" r="4" fill="#222"></circle><circle cx="62" cy="56" r="4" fill="#222"></circle>
+    <path d="M30 47 L44 50 M70 47 L56 50" stroke="#222" stroke-width="3" stroke-linecap="round" fill="none"></path>
+    <path d="${mouth}" stroke="#7a2a1a" stroke-width="3" fill="none" stroke-linecap="round" transform="translate(0 2)"></path>
     <path d="M22 92 Q50 78 78 92 L80 100 L20 100 z" fill="${color}"></path>
   </svg>`;
 }
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const seatAvatar = (i) => avatarSvg(COLORS[PROFILES[i].color], i, PROFILES[i].hair);
 
 function buildSeats() {
   $('seats').innerHTML = S.players.map((p, i) => `
     <div class="seat ${p.cpu ? '' : 'human'} ${i === 0 ? 'bottom' : ''}" data-i="${i}" style="left:${SEAT_POS[i][0]}%;top:${SEAT_POS[i][1]}%">
-      <div class="avatar">${avatarSvg(COLORS[i], i)}<span class="tag oya-tag">親</span>
+      <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
-      <div class="name">${p.name}</div>
+      <div class="name">${esc(p.name)}</div>
       <div class="score" id="sc${i}"></div>
     </div>`).join('');
   document.querySelectorAll('.seat').forEach((el) => {
@@ -731,6 +803,11 @@ function seppuku(p, why) {
   playLine(p, '切腹');
   $('ovTitle').textContent = '切腹';
   $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
+  S.overlayDelay = S.movie ? 1350 : 450;
+  if (S.movie) playCutMovie(p);
+  const isNew = recordBest(S.combo);
+  $('ovNew').hidden = !isNew;
+  $('ovNew').textContent = isNew ? `新記録！ ${CPU_LABEL[S.cpu]}で ${S.combo} 回` : '';
 
   if (!death()) {
     $('ovWho').textContent = `${nameOf(p)} の負け`;
@@ -756,12 +833,43 @@ function seppuku(p, why) {
   let next = p;
   do { next = (next + 1) % S.players.length; } while (!isAlive(next));
   S.nextOya = next;
-  later(2600, continueDeath);
+  later(S.overlayDelay + 2150, continueDeath);
 }
 function showOverlay(final) {
   $('endBtns').hidden = !final;
   $('contBtns').hidden = final;
-  setTimeout(() => $('overlay').classList.add('show'), 450);
+  later(S.overlayDelay, () => $('overlay').classList.add('show'));
+}
+/** 切腹ムービー：アバターが斜めにスパッと斬れる */
+function playCutMovie(p) {
+  const svg = seatAvatar(p);
+  $('cutTop').innerHTML = svg;
+  $('cutBot').innerHTML = svg;
+  const cut = $('cut');
+  cut.classList.remove('show'); void cut.offsetWidth; cut.classList.add('show');
+  beep(1800, 0.12, 'sawtooth', 0.05);
+  clearTimeout(playCutMovie.t);
+  playCutMovie.t = setTimeout(() => cut.classList.remove('show'), 1400);
+}
+
+/* ================= 保存（設定・最高記録） ================= */
+const STORE_KEY = 'chinchin-samurai-settings-v1';
+const BEST_KEY = 'chinchin-samurai-best-v1';
+const CPU_LABEL = { weak: '弱い', normal: '普通', strong: '強い' };
+function loadJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
+function saveJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* 保存できなくても遊べる */ } }
+function recordBest(n) {
+  const best = loadJSON(BEST_KEY) || {};
+  if (n <= 0 || n <= (best[S.cpu] || 0)) return false;
+  best[S.cpu] = n;
+  saveJSON(BEST_KEY, best);
+  renderBest();
+  return true;
+}
+function renderBest() {
+  const best = loadJSON(BEST_KEY) || {};
+  const parts = ['weak', 'normal', 'strong'].filter((k) => best[k]).map((k) => `${CPU_LABEL[k]} <b>${best[k]}</b>回`);
+  $('bestBox').innerHTML = parts.length ? `最高記録（つづいた回数）　${parts.join('　')}` : '最高記録はまだありません';
 }
 function continueDeath() {
   if (S.phase !== 'over') return;
@@ -788,7 +896,27 @@ function cpuCall(p) {
   later(cpuDelay(), () => {
     if (miss) { say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); return; } // うっかり
     const others = aliveList().filter((i) => i !== p);
-    say(p, pickWeighted(), others[Math.floor(Math.random() * others.length)]);
+    const target = others[Math.floor(Math.random() * others.length)];
+    if (S.feint && Math.random() < 0.3) return cpuFeint(p, target);
+    say(p, pickWeighted(), target);
+  });
+}
+/**
+ * フェイント：「ちんちん…」と言って指し、少し溜めてから「侍！」を付けるか、付けずに終わる。
+ * 溜めている間はまだCPUが親なので、早とちりして何か言うとお手つき。
+ */
+function cpuFeint(p, target) {
+  showBubble(p, `${W.CHIN}…`);
+  playLine(p, W.CHIN);
+  drawArrow(p, target);
+  later(Math.max(380, S.limitMs * 0.25), () => {
+    if (Math.random() < 0.5) {
+      showBubble(p, `${W.CHIN}…侍！`);
+      playLine(p, W.SAMU);
+      makeCall(p, W.CS, target);
+    } else {
+      makeCall(p, W.CHIN, target);
+    }
   });
 }
 function cpuRespond(p, expect) {
@@ -1005,15 +1133,43 @@ function stopVoice() {
 }
 $('micBtn').addEventListener('click', startVoice);
 
-// 声の試し聞き：2テイクを交互に鳴らす
+// ---------- プレイヤー一覧（名前・髪型・服の色・声の試し聞き） ----------
 const testTake = {};
-$('voiceTest').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-  const v = 'p' + b.dataset.p;
+function previewVoice(i) {
+  const v = 'p' + i;
   if (typeof VOICES === 'undefined' || !VOICES[v]) return;
   const takes = VOICES[v]['ちんちん侍'];
   testTake[v] = ((testTake[v] ?? -1) + 1) % takes.length;
   new Audio(takes[testTake[v]]).play().catch(() => {});
-}));
+}
+function renderPlist() {
+  $('plist').innerHTML = PROFILES.slice(0, S.total).map((pr, i) => `
+    <div class="prow" data-i="${i}">
+      <button class="face" aria-label="髪型を変える">${seatAvatar(i)}</button>
+      <div class="nm">
+        <small>${i < S.humans ? '人間' : 'CPU'}・席${i + 1}</small>
+        <input id="pname${i}" maxlength="8" value="${esc(pr.name)}" placeholder="${esc(defaultName(i))}" aria-label="席${i + 1}の名前">
+      </div>
+      <button class="dot" style="background:${COLORS[pr.color]}" aria-label="服の色を変える"></button>
+      <button class="play" aria-label="声を試し聞き">▶</button>
+    </div>`).join('');
+  $('plist').querySelectorAll('.prow').forEach((row) => {
+    const i = +row.dataset.i;
+    row.querySelector('.face').addEventListener('click', () => {
+      PROFILES[i].hair = HAIRS[(HAIRS.indexOf(PROFILES[i].hair) + 1) % HAIRS.length];
+      row.querySelector('.face').innerHTML = seatAvatar(i);
+      saveSettings();
+    });
+    row.querySelector('.dot').addEventListener('click', (e) => {
+      PROFILES[i].color = (PROFILES[i].color + 1) % COLORS.length;
+      e.currentTarget.style.background = COLORS[PROFILES[i].color];
+      row.querySelector('.face').innerHTML = seatAvatar(i);
+      saveSettings();
+    });
+    row.querySelector('input').addEventListener('input', (e) => { PROFILES[i].name = e.target.value; saveSettings(); });
+    row.querySelector('.play').addEventListener('click', () => previewVoice(i));
+  });
+}
 
 /* ================= 画面遷移 ================= */
 function segInit(id, apply) {
@@ -1027,11 +1183,12 @@ segInit('modeSeg', (v) => {
   $('voiceNote').hidden = v !== 'voice';
   $('ttsChk').checked = v !== 'voice'; // 音声モードは読み上げを最初オフ
 });
-segInit('humanSeg', (v) => { S.humans = +v; $('humanNote').hidden = S.humans === 1; });
+segInit('humanSeg', (v) => { S.humans = +v; $('humanNote').hidden = S.humans === 1; renderPlist(); });
 segInit('totalSeg', (v) => {
   S.total = +v;
   $('humanSeg').querySelectorAll('button').forEach((b) => { b.hidden = +b.dataset.v > S.total; });
   if (S.humans > S.total) $('humanSeg').querySelector(`button[data-v="${S.total}"]`).click();
+  renderPlist();
 });
 segInit('diffSeg', (v) => { S.diff = v; });
 segInit('cpuSeg', (v) => { S.cpu = v; $('cpuNote').textContent = CPU_LEVEL[v].note; });
@@ -1045,6 +1202,9 @@ $('startBtn').addEventListener('click', () => {
   }
   S.tts = $('ttsChk').checked;
   S.cpuSafe = $('safeChk').checked;
+  S.movie = $('movieChk').checked;
+  S.feint = $('feintChk').checked;
+  saveSettings();
   setupPlayers();
   layoutSeats(S.total);
   $('title').classList.remove('active');
@@ -1063,6 +1223,7 @@ function toMenu() {
   stopVoice();
   stopAllLines();
   $('overlay').classList.remove('show');
+  $('cut').classList.remove('show');
   $('game').classList.remove('active');
   $('title').classList.add('active');
 }
@@ -1076,6 +1237,41 @@ segInit('ruleSeg', (v) => {
   $('ruleNote').textContent = v === 'death' ? '切腹した人は脱落。最後の一人になるまで続ける' : '一人切腹したら勝負あり';
 });
 
+/** 設定を覚えておく（次に開いたときも同じ設定） */
+const SEGS = { modeSeg: 'mode', totalSeg: 'total', humanSeg: 'humans', ruleSeg: 'rule', cpuSeg: 'cpu', diffSeg: 'diff' };
+const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk'];
+function saveSettings() {
+  const v = { profiles: PROFILES };
+  Object.entries(SEGS).forEach(([id, key]) => { v[key] = String(S[key]); });
+  CHECKS.forEach((id) => { v[id] = $(id).checked; });
+  saveJSON(STORE_KEY, v);
+}
+function restoreSettings() {
+  const v = loadJSON(STORE_KEY);
+  if (!v) return;
+  if (Array.isArray(v.profiles)) {
+    PROFILES = PROFILES.map((d, i) => {
+      const p = v.profiles[i] || {};
+      return {
+        name: typeof p.name === 'string' ? p.name.slice(0, 8) : '',
+        hair: HAIRS.includes(p.hair) ? p.hair : d.hair,
+        color: Number.isInteger(p.color) && p.color >= 0 && p.color < COLORS.length ? p.color : d.color,
+      };
+    });
+  }
+  // 人数→人間の順に押す（人間の数は全体の人数の範囲内にする）
+  ['modeSeg', 'totalSeg', 'humanSeg', 'ruleSeg', 'cpuSeg', 'diffSeg'].forEach((id) => {
+    const b = v[SEGS[id]] != null && $(id).querySelector(`button[data-v="${v[SEGS[id]]}"]`);
+    if (b && !b.hidden) b.click();
+  });
+  CHECKS.forEach((id) => { if (typeof v[id] === 'boolean') $(id).checked = v[id]; });
+}
+document.querySelectorAll('#title .seg button').forEach((b) => b.addEventListener('click', () => saveSettings()));
+CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
+
+restoreSettings();
+renderPlist();
+renderBest();
 requestAnimationFrame(tickTimer);
 </script>
 </body>
