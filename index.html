@@ -313,7 +313,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
         <input type="checkbox" id="ttsChk" checked>
       </div>
       <div class="row">
-        <label for="bgmChk">BGM<small>和太鼓と三味線。続くほど速くなる</small></label>
+        <label for="bgmChk">BGM<small>タイトル画面で和太鼓と三味線が鳴る</small></label>
         <input type="checkbox" id="bgmChk" checked>
       </div>
       <div class="row">
@@ -744,18 +744,15 @@ function stopAllLines() {
 }
 
 /* ================= BGM（和太鼓＋三味線風、その場で合成） ================= */
-// 都節音階（D Eb G A Bb）。続いた回数が増えるほどテンポが上がり、切腹の瞬間にピタッと止まる
+// 都節音階（D Eb G A Bb）。タイトル画面だけで鳴らす
 const BGM = { timer: null, step: 0, next: 0, gain: null, noise: null };
 const SCALE = [146.83, 155.56, 196.0, 220.0, 233.08, 293.66, 311.13, 392.0, 440.0];
 const MELODY = [0, -1, 2, -1, 3, -1, 2, 1, 0, -1, -1, 4, 3, 2, 0, -1,
                 5, -1, 4, -1, 3, -1, 4, 5, 7, -1, 6, 5, 4, 3, 2, -1];
 const TAIKO = [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0];
 const KA    = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1];
-function bgmBpm() {
-  const base = DIFF[S.diff].limit;
-  const lim = Math.max(base * 0.55, base * (1 - S.combo * 0.02));
-  return Math.min(200, 96 * Math.max(1, 3000 / lim));
-}
+const BGM_BPM = 108;
+const BGM_VOLUME = 0.6;
 function noiseBuffer() {
   if (BGM.noise) return BGM.noise;
   const b = actx.createBuffer(1, actx.sampleRate * 0.3, actx.sampleRate);
@@ -799,8 +796,7 @@ function shamisen(t, freq) { // はじいた弦：鋭い立ち上がり＋少し
 }
 function bgmStep(step, t) {
   const s16 = step % 16;
-  const hot = S.combo >= 10;
-  if (TAIKO[s16] || (hot && (s16 === 14 || s16 === 3))) taiko(t, s16 === 0);
+  if (TAIKO[s16] || (step >= 16 && s16 === 14)) taiko(t, s16 === 0);
   if (KA[s16]) ka(t);
   const m = MELODY[step];
   if (m >= 0) shamisen(t, SCALE[m]);
@@ -810,15 +806,17 @@ function bgmTick() {
   const ahead = actx.currentTime + 0.12;
   while (BGM.next < ahead) {
     bgmStep(BGM.step, BGM.next);
-    BGM.next += 60 / bgmBpm() / 4; // 16分音符
+    BGM.next += 60 / BGM_BPM / 4; // 16分音符
     BGM.step = (BGM.step + 1) % MELODY.length;
   }
 }
 function bgmStart() {
   bgmStop();
-  if (!S.bgm || !actx) return;
+  if (!$('bgmChk').checked || !$('title').classList.contains('active')) return;
+  initAudio(); // 画面に触れたときに呼ばれるので、ここで音を有効にできる
+  if (!actx) return;
   BGM.gain = actx.createGain();
-  BGM.gain.gain.value = 0.22;
+  BGM.gain.gain.value = BGM_VOLUME;
   BGM.gain.connect(actx.destination);
   BGM.step = 0;
   BGM.next = actx.currentTime + 0.05;
@@ -859,7 +857,6 @@ function startGame(oya) {
   $('centerWord').textContent = 'いざ！';
   drawArrow(null);
   S.firstOya = true;
-  bgmStart();
   beginCall(oya);
 }
 
@@ -953,7 +950,6 @@ function seppuku(p, why) {
   // ミスした瞬間にゲームを止める（タイマー・CPUも止まる）
   newPhase();
   S.phase = 'over';
-  bgmStop();
   S.players[p].sep++;
   setHint('');
   flash(p, 'caught');
@@ -1042,7 +1038,6 @@ function continueDeath() {
   $('centerWord').textContent = 'つづき！';
   drawArrow(null);
   S.firstOya = true;
-  bgmStart();
   beginCall(S.nextOya);
 }
 
@@ -1380,7 +1375,6 @@ $('startBtn').addEventListener('click', () => {
   S.movie = $('movieChk').checked;
   S.feint = $('feintChk').checked;
   S.guide = $('guideChk').checked;
-  S.bgm = $('bgmChk').checked;
   saveSettings();
   setupPlayers();
   layoutSeats(S.total);
@@ -1390,6 +1384,7 @@ $('startBtn').addEventListener('click', () => {
   $('pad').hidden = S.mode === 'voice';
   $('voicebox').hidden = S.mode !== 'voice';
   $('heard').textContent = '';
+  bgmStop();
   initAudio(S.total); // クリックの中で音を有効化（iOS 対策）
   buildSeats();
   startGame(0);
@@ -1399,11 +1394,11 @@ function toMenu() {
   S.phase = 'idle';
   stopVoice();
   stopAllLines();
-  bgmStop();
   $('overlay').classList.remove('show');
   $('cut').classList.remove('show', 'fade');
   $('game').classList.remove('active');
   $('title').classList.add('active');
+  bgmStart(); // タイトルに戻ったらBGM
 }
 $('quitBtn').addEventListener('click', toMenu);
 $('menuBtn').addEventListener('click', toMenu);
@@ -1450,6 +1445,9 @@ CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
 
 restoreSettings();
 renderPlist();
+// タイトル画面で最初に触れたときからBGM（ブラウザは触れるまで音を出せない）
+$('title').addEventListener('pointerdown', () => { if (!BGM.gain) bgmStart(); });
+$('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart(); else bgmStop(); });
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
