@@ -77,7 +77,10 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .toggles { display: flex; flex-direction: column; gap: 10px; }
 .row label small { display: block; font-size: 12px; color: var(--muted); }
 .plist { display: flex; flex-direction: column; gap: 8px; }
-.prow { display: grid; grid-template-columns: 48px minmax(0, 1fr) 34px 40px; gap: 8px; align-items: center; }
+.prow { display: grid; grid-template-columns: 48px minmax(0, 1fr) 30px 54px 36px; gap: 6px; align-items: center; }
+.prow .hc { height: 34px; border-radius: 8px; border: 2px solid var(--line); background: var(--seat); cursor: pointer; font-size: 12px; padding: 0; font-variant-numeric: tabular-nums; }
+.prow .hc.on { border-color: var(--gold); font-weight: bold; }
+.prow .hc:disabled { visibility: hidden; }
 .prow .face { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--line); background: var(--seat); padding: 2px; cursor: pointer; }
 .prow .face svg { width: 100%; height: 100%; display: block; }
 .prow .nm { display: flex; flex-direction: column; min-width: 0; }
@@ -310,6 +313,10 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
         <input type="checkbox" id="ttsChk" checked>
       </div>
       <div class="row">
+        <label for="bgmChk">BGM<small>和太鼓と三味線。続くほど速くなる</small></label>
+        <input type="checkbox" id="bgmChk" checked>
+      </div>
+      <div class="row">
         <label for="guideChk">案内を出す（初心者向け）<small>誰の番か・何と言えばいいかを画面の下に出す。親の金枠・指された人の赤丸も出る</small></label>
         <input type="checkbox" id="guideChk">
       </div>
@@ -334,7 +341,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 
   <div class="card">
     <h2>プレイヤー</h2>
-    <p class="note" style="margin:-4px 0 10px">顔をタップで髪型、色の丸で服の色が変わります。▶で声を試し聞き。</p>
+    <p class="note" style="margin:-4px 0 10px">顔をタップで髪型、色の丸で服の色が変わります。「ハンデ」を押すと、その人だけ制限時間が +0.5／+1／+2 秒長くなります（人間だけ）。▶で声を試し聞き。</p>
     <div class="plist" id="plist"></div>
   </div>
 
@@ -457,7 +464,10 @@ const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d', '#c0506e', '#5b6b2f'
 const HAIRS = ['mage', 'bozu', 'long', 'hachi']; // ちょんまげ・坊主・長髪・はちまき
 const SEAT_DEFAULTS = [['mage', 0], ['mage', 1], ['long', 2], ['hachi', 3], ['long', 4], ['bozu', 5]];
 /** 席ごとの見た目と名前（空なら自動の名前） */
-let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color }));
+let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bonus: 0 }));
+const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
+/** その人のハンデ（ミリ秒）。人間だけに効く */
+const bonusMs = (i) => (isHuman(i) ? (PROFILES[i].bonus || 0) * 1000 : 0);
 const CPU_NAMES = ['たろう', 'はなこ', 'じろう', 'さくら', 'ごろう'];
 /** 円の上に、下（自分）から時計回りに並べる */
 function layoutSeats(n) {
@@ -474,7 +484,7 @@ function layoutSeats(n) {
 
 /* ================= 状態 ================= */
 const S = {
-  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, movie: true, feint: false, guide: false, overlayDelay: 450, rule: 'normal', alive: new Set(), tts: true, humans: 1,
+  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, movie: true, feint: false, guide: false, bgm: true, overlayDelay: 450, rule: 'normal', alive: new Set(), tts: true, humans: 1,
   players: [],
   phase: 'idle',     // idle | call | respond | over
   oya: 0,
@@ -485,7 +495,7 @@ const S = {
   combo: 0,
   token: 0,          // フェーズごとに増やし、古いタイマーを無効化する
   timers: [],
-  deadline: 0, limitMs: 1,
+  deadline: 0, limitMs: 1, barMs: 1,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -607,7 +617,7 @@ function refreshSeats() {
     el.classList.toggle('first', S.phase === 'call' && S.firstOya && S.oya === i);
     el.classList.toggle('picked', pickable && S.pendingTarget === i);
     if (death()) el.classList.toggle('dead', !isAlive(i));
-    $('sc' + i).textContent = isAlive(i) ? `切腹 ${p.sep}回` : '脱落';
+    $('sc' + i).textContent = isAlive(i) ? `切腹 ${p.sep}回${bonusMs(i) ? `・+${bonusMs(i) / 1000}秒` : ''}` : '脱落';
   });
   document.querySelectorAll('#pad button').forEach((b) => {
     b.classList.toggle('picked', humanOya && b.dataset.w === S.pendingWord);
@@ -659,16 +669,16 @@ function newPhase() {
   S.timers.forEach(clearTimeout);
   S.timers = [];
 }
-function startDeadline(ms, onTimeout) {
-  S.limitMs = ms;
+/** S.limitMs は基準の制限時間（CPUの速さもこれで決まる）。バーは barMs で減っていく */
+function setBar(ms) {
+  S.barMs = ms;
   S.deadline = performance.now() + ms;
-  later(ms, onTimeout);
 }
 function tickTimer() {
   const bar = $('timerBar');
   if (S.phase === 'call' || S.phase === 'respond') {
     const left = Math.max(0, S.deadline - performance.now());
-    bar.style.width = (left / S.limitMs * 100) + '%';
+    bar.style.width = (left / S.barMs * 100) + '%';
   } else bar.style.width = '0';
   requestAnimationFrame(tickTimer);
 }
@@ -733,6 +743,99 @@ function stopAllLines() {
   playing.clear();
 }
 
+/* ================= BGM（和太鼓＋三味線風、その場で合成） ================= */
+// 都節音階（D Eb G A Bb）。続いた回数が増えるほどテンポが上がり、切腹の瞬間にピタッと止まる
+const BGM = { timer: null, step: 0, next: 0, gain: null, noise: null };
+const SCALE = [146.83, 155.56, 196.0, 220.0, 233.08, 293.66, 311.13, 392.0, 440.0];
+const MELODY = [0, -1, 2, -1, 3, -1, 2, 1, 0, -1, -1, 4, 3, 2, 0, -1,
+                5, -1, 4, -1, 3, -1, 4, 5, 7, -1, 6, 5, 4, 3, 2, -1];
+const TAIKO = [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0];
+const KA    = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1];
+function bgmBpm() {
+  const base = DIFF[S.diff].limit;
+  const lim = Math.max(base * 0.55, base * (1 - S.combo * 0.02));
+  return Math.min(200, 96 * Math.max(1, 3000 / lim));
+}
+function noiseBuffer() {
+  if (BGM.noise) return BGM.noise;
+  const b = actx.createBuffer(1, actx.sampleRate * 0.3, actx.sampleRate);
+  const d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return (BGM.noise = b);
+}
+function env(g, t, peak, decay) {
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+}
+function taiko(t, strong) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(strong ? 130 : 110, t);
+  o.frequency.exponentialRampToValueAtTime(42, t + 0.3);
+  env(g, t, strong ? 1.0 : 0.7, 0.45);
+  o.connect(g).connect(BGM.gain); o.start(t); o.stop(t + 0.5);
+  const n = actx.createBufferSource(), f = actx.createBiquadFilter(), gn = actx.createGain();
+  n.buffer = noiseBuffer(); f.type = 'lowpass'; f.frequency.value = 400;
+  env(gn, t, 0.5, 0.12);
+  n.connect(f).connect(gn).connect(BGM.gain); n.start(t); n.stop(t + 0.15);
+}
+function ka(t) { // 太鼓のふち「カッ」
+  const n = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+  n.buffer = noiseBuffer(); f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 3;
+  env(g, t, 0.6, 0.05);
+  n.connect(f).connect(g).connect(BGM.gain); n.start(t); n.stop(t + 0.06);
+}
+function shamisen(t, freq) { // はじいた弦：鋭い立ち上がり＋少し上から下がる音程（さわり）
+  const o = actx.createOscillator(), f = actx.createBiquadFilter(), g = actx.createGain();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(freq * 1.015, t);
+  o.frequency.exponentialRampToValueAtTime(freq, t + 0.04);
+  f.type = 'lowpass';
+  f.frequency.setValueAtTime(3200, t);
+  f.frequency.exponentialRampToValueAtTime(700, t + 0.25);
+  env(g, t, 0.28, 0.32);
+  o.connect(f).connect(g).connect(BGM.gain); o.start(t); o.stop(t + 0.35);
+}
+function bgmStep(step, t) {
+  const s16 = step % 16;
+  const hot = S.combo >= 10;
+  if (TAIKO[s16] || (hot && (s16 === 14 || s16 === 3))) taiko(t, s16 === 0);
+  if (KA[s16]) ka(t);
+  const m = MELODY[step];
+  if (m >= 0) shamisen(t, SCALE[m]);
+}
+function bgmTick() {
+  if (!actx || !BGM.gain) return;
+  const ahead = actx.currentTime + 0.12;
+  while (BGM.next < ahead) {
+    bgmStep(BGM.step, BGM.next);
+    BGM.next += 60 / bgmBpm() / 4; // 16分音符
+    BGM.step = (BGM.step + 1) % MELODY.length;
+  }
+}
+function bgmStart() {
+  bgmStop();
+  if (!S.bgm || !actx) return;
+  BGM.gain = actx.createGain();
+  BGM.gain.gain.value = 0.22;
+  BGM.gain.connect(actx.destination);
+  BGM.step = 0;
+  BGM.next = actx.currentTime + 0.05;
+  BGM.timer = setInterval(bgmTick, 25);
+}
+function bgmStop() {
+  clearInterval(BGM.timer);
+  BGM.timer = null;
+  if (!BGM.gain) return;
+  const g = BGM.gain, now = actx.currentTime;
+  g.gain.cancelScheduledValues(now);
+  g.gain.setValueAtTime(g.gain.value, now);
+  g.gain.linearRampToValueAtTime(0, now + 0.03); // ピタッと止める（プツッと鳴らないよう30msで）
+  setTimeout(() => g.disconnect(), 200);
+  BGM.gain = null;
+}
+
 /* ================= 効果音 ================= */
 function beep(freq, dur, type = 'square', vol = 0.06) {
   try {
@@ -756,6 +859,7 @@ function startGame(oya) {
   $('centerWord').textContent = 'いざ！';
   drawArrow(null);
   S.firstOya = true;
+  bgmStart();
   beginCall(oya);
 }
 
@@ -767,7 +871,10 @@ function beginCall(p) {
   S.need = new Map();
   S.pendingWord = null;
   S.pendingTarget = null;
-  startDeadline(currentLimit(), () => seppuku(p, '親なのに言葉が出なかった（時間切れ）'));
+  S.limitMs = currentLimit();
+  const ms = S.limitMs + bonusMs(p); // 親のハンデぶん長く待つ
+  setBar(ms);
+  later(ms, () => seppuku(p, '親なのに言葉が出なかった（時間切れ）'));
   if (!isHuman(p)) cpuCall(p);
   refreshSeats();
 }
@@ -794,12 +901,13 @@ function makeCall(p, word, target) {
   } else {
     S.need.set(target, REACTION[word]);
   }
-  startDeadline(currentLimit(), () => {
-    const late = [...S.need.keys()];
-    if (!late.length) return; // 念のため：遅れた人がいなければ何もしない
-    const loser = late.find(isHuman) ?? late[0];
-    seppuku(loser, `「${S.need.get(loser)}」が言えなかった（時間切れ）`);
-  });
+  // 時間切れは一人ずつ、その人のハンデを足した時間で判定する（同じ時間なら人間が先）
+  S.limitMs = currentLimit();
+  const order = [...S.need.keys()].sort((a, b) => isHuman(b) - isHuman(a));
+  order.forEach((i) => later(S.limitMs + bonusMs(i), () => {
+    if (S.need.has(i)) seppuku(i, `「${S.need.get(i)}」が言えなかった（時間切れ）`);
+  }));
+  setBar(S.limitMs + Math.max(0, ...order.filter(isHuman).map(bonusMs)));
   S.need.forEach((w, i) => { if (!isHuman(i)) cpuRespond(i, w); });
   refreshSeats();
 }
@@ -845,6 +953,7 @@ function seppuku(p, why) {
   // ミスした瞬間にゲームを止める（タイマー・CPUも止まる）
   newPhase();
   S.phase = 'over';
+  bgmStop();
   S.players[p].sep++;
   setHint('');
   flash(p, 'caught');
@@ -933,6 +1042,7 @@ function continueDeath() {
   $('centerWord').textContent = 'つづき！';
   drawArrow(null);
   S.firstOya = true;
+  bgmStart();
   beginCall(S.nextOya);
 }
 
@@ -1198,6 +1308,7 @@ function previewVoice(i) {
   testTake[v] = ((testTake[v] ?? -1) + 1) % takes.length;
   new Audio(takes[testTake[v]]).play().catch(() => {});
 }
+const hcLabel = (b) => (b ? `+${b}秒` : 'ハンデ');
 function renderPlist() {
   $('plist').innerHTML = PROFILES.slice(0, S.total).map((pr, i) => `
     <div class="prow" data-i="${i}">
@@ -1207,6 +1318,7 @@ function renderPlist() {
         <input id="pname${i}" maxlength="8" value="${esc(pr.name)}" placeholder="${esc(defaultName(i))}" aria-label="席${i + 1}の名前">
       </div>
       <button class="dot" style="background:${COLORS[pr.color]}" aria-label="服の色を変える"></button>
+      <button class="hc ${pr.bonus ? 'on' : ''}" ${i < S.humans ? '' : 'disabled'} aria-label="ハンデ（制限時間を長くする）">${hcLabel(pr.bonus)}</button>
       <button class="play" aria-label="声を試し聞き">▶</button>
     </div>`).join('');
   $('plist').querySelectorAll('.prow').forEach((row) => {
@@ -1224,6 +1336,13 @@ function renderPlist() {
     });
     row.querySelector('input').addEventListener('input', (e) => { PROFILES[i].name = e.target.value; saveSettings(); });
     row.querySelector('.play').addEventListener('click', () => previewVoice(i));
+    row.querySelector('.hc').addEventListener('click', (e) => {
+      const k = (BONUS_STEPS.indexOf(PROFILES[i].bonus) + 1) % BONUS_STEPS.length;
+      PROFILES[i].bonus = BONUS_STEPS[k];
+      e.currentTarget.textContent = hcLabel(PROFILES[i].bonus);
+      e.currentTarget.classList.toggle('on', !!PROFILES[i].bonus);
+      saveSettings();
+    });
   });
 }
 
@@ -1261,6 +1380,7 @@ $('startBtn').addEventListener('click', () => {
   S.movie = $('movieChk').checked;
   S.feint = $('feintChk').checked;
   S.guide = $('guideChk').checked;
+  S.bgm = $('bgmChk').checked;
   saveSettings();
   setupPlayers();
   layoutSeats(S.total);
@@ -1279,6 +1399,7 @@ function toMenu() {
   S.phase = 'idle';
   stopVoice();
   stopAllLines();
+  bgmStop();
   $('overlay').classList.remove('show');
   $('cut').classList.remove('show', 'fade');
   $('game').classList.remove('active');
@@ -1296,7 +1417,7 @@ segInit('ruleSeg', (v) => {
 
 /** 設定を覚えておく（次に開いたときも同じ設定） */
 const SEGS = { modeSeg: 'mode', totalSeg: 'total', humanSeg: 'humans', ruleSeg: 'rule', cpuSeg: 'cpu', diffSeg: 'diff' };
-const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk'];
+const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk'];
 function saveSettings() {
   const v = { profiles: PROFILES };
   Object.entries(SEGS).forEach(([id, key]) => { v[key] = String(S[key]); });
@@ -1313,6 +1434,7 @@ function restoreSettings() {
         name: typeof p.name === 'string' ? p.name.slice(0, 8) : '',
         hair: HAIRS.includes(p.hair) ? p.hair : d.hair,
         color: Number.isInteger(p.color) && p.color >= 0 && p.color < COLORS.length ? p.color : d.color,
+        bonus: BONUS_STEPS.includes(p.bonus) ? p.bonus : 0,
       };
     });
   }
