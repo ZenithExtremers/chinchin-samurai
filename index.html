@@ -90,20 +90,22 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .cut { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; pointer-events: none; }
 .cut.show { display: flex; }
 .cut .flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
-.cut.show .flash { animation: cutflash .5s ease-out .2s; }
+.cut .body { animation: cutin .2s ease-out; }
+@keyframes cutin { from { transform: scale(.7); opacity: 0; } }
+.cut.show .flash { animation: cutflash .6s ease-out .62s backwards; }
 @keyframes cutflash { 10% { opacity: .85; } 100% { opacity: 0; } }
 .cut .body { position: relative; width: 220px; height: 220px; max-width: 60vw; max-height: 60vw; }
 .cut .half { position: absolute; inset: 0; border-radius: 50%; background: var(--seat); }
 .cut .half svg { width: 100%; height: 100%; }
 .cut .top { clip-path: polygon(0 0, 100% 0, 100% 38%, 0 66%); }
 .cut .bot { clip-path: polygon(0 66%, 100% 38%, 100% 100%, 0 100%); }
-.cut.show .top { animation: cuttop .7s cubic-bezier(.3,.7,.4,1) .3s forwards; }
-.cut.show .bot { animation: cutbot .7s cubic-bezier(.3,.7,.4,1) .3s forwards; }
-@keyframes cuttop { to { transform: translate(-22px, -26px) rotate(-12deg); } }
-@keyframes cutbot { to { transform: translate(18px, 30px) rotate(9deg); } }
+.cut.show .top { animation: cuttop 1.1s cubic-bezier(.5,0,.8,.4) .9s forwards; }
+.cut.show .bot { animation: cutbot 1.1s cubic-bezier(.5,0,.8,.4) .9s forwards; }
+@keyframes cuttop { 15% { transform: translate(-3px, -2px); } to { transform: translate(-30px, -10px) rotate(-14deg); opacity: .9; } }
+@keyframes cutbot { 15% { transform: translate(3px, 2px); } to { transform: translate(22px, 70px) rotate(12deg); opacity: .6; } }
 .cut .blade { position: absolute; left: -15%; top: 52%; width: 130%; height: 5px; background: var(--accent); border-radius: 3px;
   transform: rotate(-15deg) scaleX(0); transform-origin: left center; box-shadow: 0 0 12px var(--accent); }
-.cut.show .blade { animation: blade .3s ease-in forwards, bladeout .4s ease-out .5s forwards; }
+.cut.show .blade { animation: blade .16s ease-in .45s forwards, bladeout .5s ease-out .8s forwards; }
 @keyframes blade { to { transform: rotate(-15deg) scaleX(1); } }
 @keyframes bladeout { to { transform: rotate(-15deg) scaleX(1); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .cut.show .top, .cut.show .bot, .cut.show .blade, .cut.show .flash { animation-duration: .01s; } }
@@ -185,6 +187,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 }
 @keyframes slash { 60% { transform: rotate(-35deg) scaleX(1); opacity: 1; } 100% { transform: rotate(-35deg) scaleX(1); opacity: 0; } }
 .seat.allsay .avatar { animation: shake .4s; }
+.seat.caught .avatar { animation: caught .5s; box-shadow: 0 0 0 5px var(--accent); }
+@keyframes caught { 10% { transform: scale(1.12); } 30% { transform: scale(1.08) rotate(-4deg); } 50% { transform: scale(1.08) rotate(4deg); } 100% { transform: scale(1); } }
 @keyframes shake { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
 .seat.dead .avatar { filter: grayscale(1); opacity: .6; }
 @media (prefers-reduced-motion: reduce) {
@@ -820,19 +824,25 @@ function say(p, word, target) {
   refreshSeats();
 }
 
+const SEPPUKU_PAUSE = 800; // ミスしてから切腹が始まるまでの「間」
 function seppuku(p, why) {
+  // ミスした瞬間にゲームを止める（タイマー・CPUも止まる）
   newPhase();
   S.phase = 'over';
   S.players[p].sep++;
-  seatEl(p).classList.add('dead');
-  refreshSeats();
   setHint('');
-  gong();
-  playLine(p, '切腹');
+  flash(p, 'caught');
+  beep(220, 0.15, 'square', 0.05);
+  // 一瞬の間をおいてから、しっかり切腹
+  later(SEPPUKU_PAUSE, () => {
+    seatEl(p).classList.add('dead');
+    refreshSeats();
+    playLine(p, '切腹');
+    if (S.movie) playCutMovie(p); else gong();
+  });
   $('ovTitle').textContent = '切腹';
   $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
-  S.overlayDelay = S.movie ? 1350 : 450;
-  if (S.movie) playCutMovie(p);
+  S.overlayDelay = SEPPUKU_PAUSE + (S.movie ? 2100 : 900);
   const isNew = recordBest(S.combo);
   $('ovNew').hidden = !isNew;
   $('ovNew').textContent = isNew ? `新記録！ ${CPU_LABEL[S.cpu]}で ${S.combo} 回` : '';
@@ -844,7 +854,6 @@ function seppuku(p, why) {
   }
   // デスマッチ：脱落して、最後の一人になるまで続ける
   S.alive.delete(p);
-  refreshSeats();
   const left = aliveList();
   const humansLeft = left.filter(isHuman);
   if (left.length <= 1 || (S.cpuSafe && humansLeft.length === 0)) {
@@ -875,9 +884,9 @@ function playCutMovie(p) {
   $('cutBot').innerHTML = svg;
   const cut = $('cut');
   cut.classList.remove('show'); void cut.offsetWidth; cut.classList.add('show');
-  beep(1800, 0.12, 'sawtooth', 0.05);
+  setTimeout(() => { beep(1800, 0.12, 'sawtooth', 0.05); gong(); }, 450); // 斬った瞬間にゴーン
   clearTimeout(playCutMovie.t);
-  playCutMovie.t = setTimeout(() => cut.classList.remove('show'), 1400);
+  playCutMovie.t = setTimeout(() => cut.classList.remove('show'), 2300);
 }
 
 /* ================= 保存（設定・最高記録） ================= */
