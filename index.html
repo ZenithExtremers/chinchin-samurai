@@ -607,6 +607,7 @@ function makeCall(p, word, target) {
   }
   startDeadline(currentLimit(), () => {
     const late = [...S.need.keys()];
+    if (!late.length) return; // 念のため：遅れた人がいなければ何もしない
     const loser = late.find(isHuman) ?? late[0];
     seppuku(loser, `「${S.need.get(loser)}」が言えなかった（時間切れ）`);
   });
@@ -642,6 +643,9 @@ function say(p, word, target) {
   if (word === W.SHAKI) flash(p, 'shaki');
   if (word === W.CS) flash(p, 'allsay');
   if (S.need.size === 0) {
+    // 全員そろったら締め切りタイマーを止める（ギリギリに言ったとき、締め切りと重ならないように）
+    newPhase();
+    S.deadline = performance.now() + S.limitMs;
     const next = S.call.target;
     later(250, () => beginCall(next)); // 250ms のあいだもお手つき判定は有効
   }
