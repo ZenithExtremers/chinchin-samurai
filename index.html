@@ -296,7 +296,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
         <input type="checkbox" id="ttsChk" checked>
       </div>
       <div class="row">
-        <label for="guideChk">案内を出す（初心者向け）<small>誰の番か・何と言えばいいかを画面の下に出す</small></label>
+        <label for="guideChk">案内を出す（初心者向け）<small>誰の番か・何と言えばいいかを画面の下に出す。親の金枠・指された人の赤丸も出る</small></label>
         <input type="checkbox" id="guideChk">
       </div>
       <div class="row">
@@ -567,10 +567,11 @@ function refreshSeats() {
   const humanOya = S.phase === 'call' && isHuman(S.oya);
   S.players.forEach((p, i) => {
     const el = seatEl(i);
-    el.classList.toggle('oya', S.phase === 'call' && S.oya === i);
-    el.classList.toggle('target', S.phase === 'respond' && S.call && S.call.target === i); // 赤丸は指された人だけ
+    // 親の金枠・「親」マーク・指された人の赤丸・指せる人のぷくぷくは、初心者向けの案内がオンのときだけ
+    el.classList.toggle('oya', S.guide && S.phase === 'call' && S.oya === i);
+    el.classList.toggle('target', S.guide && S.phase === 'respond' && S.call && S.call.target === i); // 赤丸は指された人だけ
     const pickable = humanOya && i !== S.oya && isAlive(i);
-    el.classList.toggle('pickable', pickable && S.pendingTarget == null);
+    el.classList.toggle('pickable', S.guide && pickable && S.pendingTarget == null);
     el.classList.toggle('picked', pickable && S.pendingTarget === i);
     if (death()) el.classList.toggle('dead', !isAlive(i));
     $('sc' + i).textContent = isAlive(i) ? `切腹 ${p.sep}回` : '脱落';
