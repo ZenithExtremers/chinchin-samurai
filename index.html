@@ -238,6 +238,12 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button data-v="5" hidden>5</button>
       <button data-v="6" hidden>6</button>
     </div>
+    <h2>ルール</h2>
+    <div class="seg" id="ruleSeg">
+      <button data-v="normal" class="on">一発勝負</button>
+      <button data-v="death">デスマッチ</button>
+    </div>
+    <p class="note" id="ruleNote" style="margin:-8px 0 14px">一人切腹したら勝負あり</p>
     <h2>CPUの強さ</h2>
     <div class="seg" id="cpuSeg">
       <button data-v="weak">弱い</button>
@@ -334,12 +340,16 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 <!-- ===== 切腹 ===== -->
 <div class="overlay" id="overlay">
   <div class="box">
-    <div class="kanji">切腹</div>
+    <div class="kanji" id="ovTitle">切腹</div>
     <div class="who" id="ovWho"></div>
     <div class="why" id="ovWhy"></div>
-    <div class="btns">
+    <div class="btns" id="endBtns">
       <button id="menuBtn">メニュー</button>
       <button class="primary" id="againBtn">もう一回</button>
+    </div>
+    <div class="btns" id="contBtns" hidden>
+      <button id="menuBtn2">メニュー</button>
+      <button class="primary" id="contBtn">つづける</button>
     </div>
   </div>
 </div>
@@ -384,7 +394,7 @@ function layoutSeats(n) {
 
 /* ================= 状態 ================= */
 const S = {
-  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, tts: true, humans: 1,
+  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, rule: 'normal', alive: new Set(), tts: true, humans: 1,
   players: [],
   phase: 'idle',     // idle | call | respond | over
   oya: 0,
@@ -401,6 +411,9 @@ const S = {
 const $ = (id) => document.getElementById(id);
 const rand = (a, b) => a + Math.random() * (b - a);
 const isHuman = (i) => !S.players[i].cpu;
+const isAlive = (i) => S.alive.has(i);
+const aliveList = () => S.players.map((_, i) => i).filter(isAlive);
+const death = () => S.rule === 'death';
 const solo = () => S.humans === 1;
 const nameOf = (i) => S.players[i].name;
 
@@ -478,10 +491,11 @@ function refreshSeats() {
     const el = seatEl(i);
     el.classList.toggle('oya', S.phase === 'call' && S.oya === i);
     el.classList.toggle('target', S.phase === 'respond' && S.call && S.call.target === i); // 赤丸は指された人だけ
-    const pickable = humanOya && i !== S.oya;
+    const pickable = humanOya && i !== S.oya && isAlive(i);
     el.classList.toggle('pickable', pickable && S.pendingTarget == null);
     el.classList.toggle('picked', pickable && S.pendingTarget === i);
-    $('sc' + i).textContent = `切腹 ${p.sep}回`;
+    if (death()) el.classList.toggle('dead', !isAlive(i));
+    $('sc' + i).textContent = isAlive(i) ? `切腹 ${p.sep}回` : '脱落';
   });
   document.querySelectorAll('#pad button').forEach((b) => {
     b.classList.toggle('picked', humanOya && b.dataset.w === S.pendingWord);
@@ -617,6 +631,7 @@ function gong() { beep(110, 1.2, 'sine', 0.25); beep(165, 1.0, 'triangle', 0.12)
 /* ================= ゲーム進行 ================= */
 function startGame(oya) {
   $('overlay').classList.remove('show');
+  S.alive = new Set(S.players.map((_, i) => i));
   S.players.forEach((_, i) => seatEl(i).classList.remove('dead'));
   S.combo = 0;
   $('centerWord').textContent = 'いざ！';
@@ -654,7 +669,7 @@ function makeCall(p, word, target) {
   S.phase = 'respond';
   S.need = new Map();
   if (word === W.CS) {
-    S.players.forEach((_, i) => S.need.set(i, W.CS)); // 親も含めて全員
+    aliveList().forEach((i) => S.need.set(i, W.CS)); // 親も含めて全員（脱落者以外）
   } else {
     S.need.set(target, REACTION[word]);
   }
@@ -671,6 +686,7 @@ function makeCall(p, word, target) {
 /** 誰かが何かを言った（ボタン・音声・CPU 共通） */
 function say(p, word, target) {
   if (S.phase !== 'call' && S.phase !== 'respond') return;
+  if (!isAlive(p)) return; // 脱落した人の声やボタンは無視
   showBubble(p, word);
   if (!isHuman(p) || S.mode === 'button') playLine(p, word); // 音声入力モードでは人間の声はマイク側
 
@@ -711,9 +727,47 @@ function seppuku(p, why) {
   setHint('');
   gong();
   playLine(p, '切腹');
-  $('ovWho').textContent = `${nameOf(p)} の負け`;
+  $('ovTitle').textContent = '切腹';
   $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
+
+  if (!death()) {
+    $('ovWho').textContent = `${nameOf(p)} の負け`;
+    showOverlay(true);
+    return;
+  }
+  // デスマッチ：脱落して、最後の一人になるまで続ける
+  S.alive.delete(p);
+  refreshSeats();
+  const left = aliveList();
+  const humansLeft = left.filter(isHuman);
+  if (left.length <= 1 || (S.cpuSafe && humansLeft.length === 0)) {
+    $('ovTitle').textContent = '決着';
+    $('ovWho').textContent = left.length === 1 ? `${nameOf(left[0])} の勝ち！` : 'CPUの勝ち';
+    $('ovWhy').textContent = `最後に切腹：${nameOf(p)}（${why}）`;
+    showOverlay(true);
+    return;
+  }
+  $('ovWho').textContent = `${nameOf(p)} 脱落`;
+  $('ovWhy').textContent = `${why}\n残り ${left.length} 人：${left.map(nameOf).join('・')}`;
+  showOverlay(false);
+  // 脱落した人の次（時計回り）の生き残りが親で再開
+  let next = p;
+  do { next = (next + 1) % S.players.length; } while (!isAlive(next));
+  S.nextOya = next;
+  later(2600, continueDeath);
+}
+function showOverlay(final) {
+  $('endBtns').hidden = !final;
+  $('contBtns').hidden = final;
   setTimeout(() => $('overlay').classList.add('show'), 450);
+}
+function continueDeath() {
+  if (S.phase !== 'over') return;
+  $('overlay').classList.remove('show');
+  S.combo = 0;
+  $('centerWord').textContent = 'つづき！';
+  drawArrow(null);
+  beginCall(S.nextOya);
 }
 
 /* ================= CPU ================= */
@@ -731,7 +785,7 @@ function cpuCall(p) {
   if (miss && Math.random() < 0.5) return; // 固まって時間切れ
   later(cpuDelay(), () => {
     if (miss) { say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); return; } // うっかり
-    const others = S.players.map((_, i) => i).filter((i) => i !== p);
+    const others = aliveList().filter((i) => i !== p);
     say(p, pickWeighted(), others[Math.floor(Math.random() * others.length)]);
   });
 }
@@ -772,7 +826,7 @@ function onSeatTap(i) {
     say(i, W.CS);
     return;
   }
-  if (S.phase !== 'call' || !isHuman(S.oya) || i === S.oya) return;
+  if (S.phase !== 'call' || !isHuman(S.oya) || i === S.oya || !isAlive(i)) return;
   if (S.pendingTarget != null) return;
   S.pendingTarget = i;
   if (S.pendingWord) return makeCall(S.oya, S.pendingWord, i);
@@ -993,7 +1047,7 @@ $('startBtn').addEventListener('click', () => {
   layoutSeats(S.total);
   $('title').classList.remove('active');
   $('game').classList.add('active');
-  $('modeLabel').textContent = (S.mode === 'voice' ? '音声入力' : 'セリフボタン') + (solo() ? '' : `・${S.humans}人`) + (S.cpuSafe ? '・CPU不敗' : '');
+  $('modeLabel').textContent = (S.mode === 'voice' ? '音声入力' : 'セリフボタン') + (death() ? '・デスマッチ' : '') + (solo() ? '' : `・${S.humans}人`) + (S.cpuSafe ? '・CPU不敗' : '');
   $('pad').hidden = S.mode === 'voice';
   $('voicebox').hidden = S.mode !== 'voice';
   $('heard').textContent = '';
@@ -1013,6 +1067,12 @@ function toMenu() {
 $('quitBtn').addEventListener('click', toMenu);
 $('menuBtn').addEventListener('click', toMenu);
 $('againBtn').addEventListener('click', () => startGame(Math.floor(Math.random() * S.total)));
+$('contBtn').addEventListener('click', continueDeath);
+$('menuBtn2').addEventListener('click', toMenu);
+segInit('ruleSeg', (v) => {
+  S.rule = v;
+  $('ruleNote').textContent = v === 'death' ? '切腹した人は脱落。最後の一人になるまで続ける' : '一人切腹したら勝負あり';
+});
 
 requestAnimationFrame(tickTimer);
 </script>
