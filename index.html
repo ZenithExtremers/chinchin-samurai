@@ -80,7 +80,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .topbar button { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
 .stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 1 / 1; margin: 6px 0; }
 .mat {
-  position: absolute; inset: 14%; border-radius: 50%;
+  position: absolute; inset: var(--mat-inset, 14%); border-radius: 50%;
   background: radial-gradient(circle, rgba(201,154,46,.18), rgba(201,154,46,.05) 70%);
   border: 2px dashed var(--line);
 }
@@ -89,19 +89,18 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 44%;
   text-align: center; pointer-events: none;
 }
+.stage.many .center { width: 34%; }
+.stage.many .center .word { font-size: 21px; }
+.stage.many .seat .name { font-size: 12px; }
 .center .word { font-size: 25px; font-weight: bold; color: var(--accent); min-height: 1.3em; line-height: 1.3; }
 .center .combo { font-size: 13px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
 .timer { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
 .timer > div { height: 100%; width: 0; background: var(--gold); }
 
 .seat {
-  position: absolute; width: 27%; transform: translate(-50%, -50%);
+  position: absolute; width: var(--seat-w, 27%); transform: translate(-50%, -50%);
   display: flex; flex-direction: column; align-items: center; cursor: pointer;
 }
-.seat[data-i="0"] { left: 50%; top: 84%; }
-.seat[data-i="1"] { left: 15%; top: 50%; }
-.seat[data-i="2"] { left: 50%; top: 16%; }
-.seat[data-i="3"] { left: 85%; top: 50%; }
 .avatar {
   width: 100%; aspect-ratio: 1 / 1; border-radius: 50%; background: var(--seat);
   border: 3px solid var(--line); box-shadow: var(--shadow); position: relative;
@@ -135,9 +134,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   border: 6px solid transparent; border-top-color: var(--ink);
 }
 .bubble.show { opacity: 1; transform: translate(-50%, -4px) scale(1); }
-.seat[data-i="0"] .bubble { bottom: auto; top: 10%; left: auto; right: -12px; transform: translate(100%, 0) scale(.6); }
-.seat[data-i="0"] .bubble.show { transform: translate(100%, 0) scale(1); }
-.seat[data-i="0"] .bubble::after { display: none; }
+.seat.bottom .bubble { bottom: auto; top: 10%; left: auto; right: -12px; transform: translate(100%, 0) scale(.6); }
+.seat.bottom .bubble.show { transform: translate(100%, 0) scale(1); }
+.seat.bottom .bubble::after { display: none; }
 
 /* 動作アニメ */
 .seat.biro .avatar { animation: biro .6s ease-out; }
@@ -220,12 +219,21 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button data-v="button" class="on">セリフボタン</button>
       <button data-v="voice">音声入力</button>
     </div>
-    <h2>人間の人数（残りはCPU）</h2>
-    <div class="seg" id="humanSeg">
-      <button data-v="1" class="on">1人</button>
-      <button data-v="2">2人</button>
+    <h2>全体の人数</h2>
+    <div class="seg" id="totalSeg">
       <button data-v="3">3人</button>
-      <button data-v="4">4人</button>
+      <button data-v="4" class="on">4人</button>
+      <button data-v="5">5人</button>
+      <button data-v="6">6人</button>
+    </div>
+    <h2>そのうち人間（残りはCPU）</h2>
+    <div class="seg" id="humanSeg">
+      <button data-v="1" class="on">1</button>
+      <button data-v="2">2</button>
+      <button data-v="3">3</button>
+      <button data-v="4">4</button>
+      <button data-v="5" hidden>5</button>
+      <button data-v="6" hidden>6</button>
     </div>
     <h2>CPUの強さ</h2>
     <div class="seg" id="cpuSeg">
@@ -261,6 +269,10 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 
   <button class="big" id="startBtn">いざ、勝負！</button>
   <p class="msg" id="titleMsg"></p>
+  <p class="note" style="text-align:center">
+    音声：Open JTalk／HTS Voice「Mei」「Takumi」「NIT ATR503 M001」<br>
+    © Nagoya Institute of Technology（Mei・Takumi は CC BY 3.0, MMDAgent Project）
+  </p>
 </section>
 
 <!-- ===== ゲーム画面 ===== -->
@@ -342,13 +354,25 @@ const CPU_LEVEL = {
             note: '20回までは失敗しない。「ちんちん」を高速で回してくる。21回目から（回数−20）%で失敗' },
 };
 const VOICE_EXTRA = 1600; // 音声認識の遅延ぶん猶予を足す
-const SEAT_POS = [[50, 84], [15, 50], [50, 16], [85, 50]];
-const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d'];
-const CPU_NAMES = ['たろう', 'はなこ', 'じろう'];
+let SEAT_POS = [];
+const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d', '#c0506e', '#5b6b2f'];
+const CPU_NAMES = ['たろう', 'はなこ', 'じろう', 'さくら', 'ごろう'];
+/** 円の上に、下（自分）から時計回りに並べる */
+function layoutSeats(n) {
+  const R = n <= 4 ? 34 : 36;
+  SEAT_POS = Array.from({ length: n }, (_, i) => {
+    const a = Math.PI / 2 + i * 2 * Math.PI / n;
+    return [50 + R * Math.cos(a), 50 + R * Math.sin(a)];
+  });
+  const stage = $('stage');
+  stage.style.setProperty('--seat-w', n <= 4 ? '27%' : n === 5 ? '24%' : '22%');
+  stage.style.setProperty('--mat-inset', (50 - R) + '%');
+  stage.classList.toggle('many', n >= 5);
+}
 
 /* ================= 状態 ================= */
 const S = {
-  mode: 'button', diff: 'normal', cpu: 'normal', cpuSafe: false, tts: true, humans: 1,
+  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, tts: true, humans: 1,
   players: [],
   phase: 'idle',     // idle | call | respond | over
   oya: 0,
@@ -370,7 +394,7 @@ const nameOf = (i) => S.players[i].name;
 
 function setupPlayers() {
   const prev = S.players;
-  S.players = [0, 1, 2, 3].map((i) => {
+  S.players = Array.from({ length: S.total }, (_, i) => i).map((i) => {
     const human = i < S.humans;
     const name = human ? (solo() ? 'あなた' : `プレイヤー${i + 1}`) : CPU_NAMES[i - 1];
     const old = prev[i];
@@ -380,7 +404,7 @@ function setupPlayers() {
 
 /* ================= 画面構築 ================= */
 function avatarSvg(color, i) {
-  const mouth = ['M38 66 Q50 74 62 66', 'M40 68 L60 68', 'M38 70 Q50 62 62 70', 'M40 66 Q50 76 60 66'][i];
+  const mouth = ['M38 66 Q50 74 62 66', 'M40 68 L60 68', 'M38 70 Q50 62 62 70', 'M40 66 Q50 76 60 66', 'M42 66 Q50 72 58 66', 'M38 68 Q50 66 62 70'][i];
   return `<svg viewBox="0 0 100 100" aria-hidden="true">
     <rect x="44" y="4" width="12" height="22" rx="5" fill="#222"></rect>
     <rect x="38" y="20" width="24" height="7" rx="3" fill="#222"></rect>
@@ -395,7 +419,7 @@ function avatarSvg(color, i) {
 
 function buildSeats() {
   $('seats').innerHTML = S.players.map((p, i) => `
-    <div class="seat ${p.cpu ? '' : 'human'}" data-i="${i}">
+    <div class="seat ${p.cpu ? '' : 'human'} ${i === 0 ? 'bottom' : ''}" data-i="${i}" style="left:${SEAT_POS[i][0]}%;top:${SEAT_POS[i][1]}%">
       <div class="avatar">${avatarSvg(COLORS[i], i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
@@ -431,7 +455,7 @@ function drawArrow(from, to) {
   if (from == null) { line.setAttribute('opacity', 0); return; }
   const [x1, y1] = SEAT_POS[from], [x2, y2] = SEAT_POS[to];
   const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
-  const pad = 14;
+  const pad = S.total <= 4 ? 14 : 12;
   line.setAttribute('x1', x1 + dx / len * pad); line.setAttribute('y1', y1 + dy / len * pad);
   line.setAttribute('x2', x2 - dx / len * pad); line.setAttribute('y2', y2 - dy / len * pad);
   line.setAttribute('opacity', 1);
@@ -505,7 +529,7 @@ function tickTimer() {
 }
 
 /* ================= セリフ音声 ================= */
-// voices.js の VOICES（Open JTalk で作った声、席ごとに声の高さが違う）を WebAudio で鳴らす
+// voices.js の VOICES（席ごとに違う声、各セリフ2テイク）を WebAudio で鳴らす
 let ttsBusyUntil = 0; // CPUの声が鳴っている間は、マイクが拾った言葉を無視する
 let actx = null;
 const buffers = {};
@@ -517,12 +541,15 @@ function initAudio() {
   if (typeof VOICES === 'undefined') return;
   Object.entries(VOICES).forEach(([v, lines]) => {
     buffers[v] = buffers[v] || {};
-    Object.entries(lines).forEach(([word, uri]) => {
+    Object.entries(lines).forEach(([word, takes]) => {
       if (buffers[v][word]) return;
-      const bin = atob(uri.split(',')[1]);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      actx.decodeAudioData(bytes.buffer, (buf) => { buffers[v][word] = buf; }, () => {});
+      buffers[v][word] = [];
+      takes.forEach((uri, n) => {
+        const bin = atob(uri.split(',')[1]);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        actx.decodeAudioData(bytes.buffer, (buf) => { buffers[v][word][n] = buf; }, () => {});
+      });
     });
   });
 }
@@ -530,7 +557,10 @@ const playing = new Set();
 function playLine(p, word) {
   if (!S.tts || typeof VOICES === 'undefined') return;
   const v = 'p' + p;
-  const buf = buffers[v] && buffers[v][word];
+  const takes = VOICES[v] && VOICES[v][word];
+  if (!takes) return;
+  const n = Math.floor(Math.random() * takes.length); // 毎回テイクを選ぶ
+  const buf = buffers[v] && buffers[v][word] && buffers[v][word][n];
   let dur = 1;
   try {
     if (actx && buf) {
@@ -541,8 +571,8 @@ function playLine(p, word) {
       playing.add(src);
       src.onended = () => playing.delete(src);
       dur = buf.duration;
-    } else if (VOICES[v] && VOICES[v][word]) {
-      new Audio(VOICES[v][word]).play().catch(() => {});
+    } else {
+      new Audio(takes[n]).play().catch(() => {});
     }
   } catch (e) { /* 音が出なくても続行 */ }
   if (!isHuman(p)) ttsBusyUntil = Math.max(ttsBusyUntil, performance.now() + dur * 1000 + 350);
@@ -686,7 +716,7 @@ function cpuCall(p) {
   if (miss && Math.random() < 0.5) return; // 固まって時間切れ
   later(cpuDelay(), () => {
     if (miss) { say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); return; } // うっかり
-    const others = [0, 1, 2, 3].filter((i) => i !== p);
+    const others = S.players.map((_, i) => i).filter((i) => i !== p);
     say(p, pickWeighted(), others[Math.floor(Math.random() * others.length)]);
   });
 }
@@ -909,6 +939,11 @@ segInit('modeSeg', (v) => {
   $('ttsChk').checked = v !== 'voice'; // 音声モードは読み上げを最初オフ
 });
 segInit('humanSeg', (v) => { S.humans = +v; $('humanNote').hidden = S.humans === 1; });
+segInit('totalSeg', (v) => {
+  S.total = +v;
+  $('humanSeg').querySelectorAll('button').forEach((b) => { b.hidden = +b.dataset.v > S.total; });
+  if (S.humans > S.total) $('humanSeg').querySelector(`button[data-v="${S.total}"]`).click();
+});
 segInit('diffSeg', (v) => { S.diff = v; });
 segInit('cpuSeg', (v) => { S.cpu = v; $('cpuNote').textContent = CPU_LEVEL[v].note; });
 $('cpuNote').textContent = CPU_LEVEL[S.cpu].note;
@@ -922,6 +957,7 @@ $('startBtn').addEventListener('click', () => {
   S.tts = $('ttsChk').checked;
   S.cpuSafe = $('safeChk').checked;
   setupPlayers();
+  layoutSeats(S.total);
   $('title').classList.remove('active');
   $('game').classList.add('active');
   $('modeLabel').textContent = (S.mode === 'voice' ? '音声入力' : 'セリフボタン') + (solo() ? '' : `・${S.humans}人`) + (S.cpuSafe ? '・CPU不敗' : '');
@@ -943,7 +979,7 @@ function toMenu() {
 }
 $('quitBtn').addEventListener('click', toMenu);
 $('menuBtn').addEventListener('click', toMenu);
-$('againBtn').addEventListener('click', () => startGame(Math.floor(Math.random() * 4)));
+$('againBtn').addEventListener('click', () => startGame(Math.floor(Math.random() * S.total)));
 
 requestAnimationFrame(tickTimer);
 </script>

@@ -1,6 +1,6 @@
 # ちんちん侍
 
-4人で円になって遊ぶ飲み会ゲーム「ちんちん侍」のブラウザ版。人間1〜4人＋残りはCPU（複数人は1台を囲んで遊ぶ）。
+4人で円になって遊ぶ飲み会ゲーム「ちんちん侍」のブラウザ版。全体3〜6人、そのうち人間1〜6人＋残りはCPU（複数人は1台を囲んで遊ぶ）。
 `index.html` をブラウザで開くだけで遊べます。
 
 ## ルール
@@ -26,5 +26,9 @@
 - **音声入力**: 言葉を声で言って、指す人をタップ。Web Speech API を使うので Chrome / Safari で、`https://` か `file://` で開いてください。CPUの読み上げは初期オフ。claude.ai 上ではプラットフォームの音声入力を使います
 
 ## セリフ音声
-`voices.js` に、オープンソースの日本語音声合成 [Open JTalk](https://open-jtalk.sourceforge.net/)（pyopenjtalk）で作ったセリフ音声が入っています。
-席ごとに声の高さを変えてあり、「ちんちん侍」は全員の声が重なります。
+`voices.js` に、オープンソースの日本語音声合成 Open JTalk（pyopenjtalk）で作ったセリフ音声が入っています。
+席ごとに声が違い、各セリフ2テイクから毎回ランダムに選ばれます。「ちんちん侍」は全員の声が重なります。
+
+使用した声:
+- HTS Voice "Mei", "Takumi" — © Nagoya Institute of Technology, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)（MMDAgent Project）
+- HTS Voice "NIT ATR503 M001" — © Nagoya Institute of Technology（Open JTalk 同梱）
