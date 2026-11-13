@@ -130,7 +130,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 /* ---------- ゲーム画面 ---------- */
 .topbar { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
 .topbar button { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
-.stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 1 / 1; margin: 6px 0; }
+.stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 1 / 1; margin: 6px 0; touch-action: none; } /* フリック中に画面がスクロールしないように */
 .mat {
   position: absolute; inset: var(--mat-inset, 14%); border-radius: 50%;
   background: radial-gradient(circle, rgba(201,154,46,.18), rgba(201,154,46,.05) 70%);
@@ -330,7 +330,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       </div>
     </div>
     <p class="note" id="humanNote" hidden>
-      1台のスマホをみんなで囲んで遊びます。自分の番の人が言葉ボタンを押して、指す人をタップ。
+      1台のスマホをみんなで囲んで遊びます。自分の番の人が言葉ボタンを押して、指す人をタップ（自分のアイコンから相手の方へフリックでもOK）。
       「ちんちん侍」のときは、人間はそれぞれ<b>自分のアイコン</b>をタップします。
     </p>
     <p class="note" id="voiceNote" hidden>
@@ -348,7 +348,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   <div class="card">
     <h2>ルール</h2>
     <ul class="rules">
-      <li><b>親</b>は4つの言葉のどれかを言って、自分以外の誰かを指す</li>
+      <li><b>親</b>は4つの言葉のどれかを言って、自分以外の誰かを指す（相手をタップ、または自分のアイコンから相手の方へフリック）</li>
       <li><b>「ちんちん」</b> → 指された人は何も言わず、すぐ次の言葉で誰かを指す</li>
       <li><b>「おちんちん」</b> → 指された人が<b>「びろーん」</b></li>
       <li><b>「侍」</b> → 指された人が<b>「シャキーン」</b></li>
@@ -555,7 +555,13 @@ function buildSeats() {
       <div class="score" id="sc${i}"></div>
     </div>`).join('');
   document.querySelectorAll('.seat').forEach((el) => {
-    el.addEventListener('pointerdown', (e) => { e.preventDefault(); onSeatTap(+el.dataset.i); });
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const i = +el.dataset.i;
+      // 親（人間）が自分のアイコンに触れたら、フリックで指す
+      if (S.phase === 'call' && isHuman(S.oya) && i === S.oya && S.pendingTarget == null) return startFlick(e);
+      onSeatTap(i);
+    });
   });
 }
 const seatEl = (i) => document.querySelector(`.seat[data-i="${i}"]`);
@@ -591,9 +597,9 @@ function avatarCircle(i) {
   };
 }
 let lastArrow = null;
-function drawArrow(from, to) {
+function drawArrow(from, to, preview = false) {
   const line = $('arrowLine');
-  lastArrow = from == null ? null : [from, to];
+  if (!preview) lastArrow = from == null ? null : [from, to];
   if (from == null) { line.setAttribute('opacity', 0); return; }
   const a = avatarCircle(from), b = avatarCircle(to);
   const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
@@ -601,7 +607,7 @@ function drawArrow(from, to) {
   const head = 4 * 1.4;     // 三角の長さ（markerWidth × 線の太さ）。線は三角の根元で止め、先から棒がはみ出さないようにする
   line.setAttribute('x1', a.x + dx / len * (a.r + gap)); line.setAttribute('y1', a.y + dy / len * (a.r + gap));
   line.setAttribute('x2', b.x - dx / len * (b.r + gap + head)); line.setAttribute('y2', b.y - dy / len * (b.r + gap + head));
-  line.setAttribute('opacity', 1);
+  line.setAttribute('opacity', preview ? 0.55 : 1);
 }
 window.addEventListener('resize', () => { if (lastArrow) drawArrow(...lastArrow); });
 function refreshSeats() {
@@ -1122,6 +1128,51 @@ function onSeatTap(i) {
   S.pendingTarget = i;
   if (S.pendingWord) return makeCall(S.oya, S.pendingWord, i);
   refreshSeats();
+}
+
+/* ================= 入力：フリックで指す ================= */
+/**
+ * 親が自分のアイコンから指を払った向きに一番近い人を指す。
+ * 払っている間は、その時点で指すことになる人へ薄い矢印を出す。
+ */
+const FLICK_MIN_PX = 24;   // これより短い動きはタップ扱い（何もしない）
+const FLICK_MAX_DEG = 40;  // 払った向きと、その人の方向のずれがこれ以内なら指す
+function avatarCenter(i) {
+  const r = seatEl(i).querySelector('.avatar').getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+}
+function flickCandidate(oya, dx, dy) {
+  if (Math.hypot(dx, dy) < FLICK_MIN_PX) return null;
+  const o = avatarCenter(oya);
+  let best = null, bestDeg = FLICK_MAX_DEG;
+  aliveList().filter((i) => i !== oya).forEach((i) => {
+    const c = avatarCenter(i);
+    let deg = Math.abs(Math.atan2(dy, dx) - Math.atan2(c.y - o.y, c.x - o.x)) * 180 / Math.PI;
+    if (deg > 180) deg = 360 - deg;
+    if (deg < bestDeg) { bestDeg = deg; best = i; }
+  });
+  return best;
+}
+function startFlick(e) {
+  const oya = S.oya, x0 = e.clientX, y0 = e.clientY, before = lastArrow;
+  let cand = null;
+  const move = (ev) => {
+    if (S.phase !== 'call' || S.oya !== oya) return;
+    cand = flickCandidate(oya, ev.clientX - x0, ev.clientY - y0);
+    if (cand != null) drawArrow(oya, cand, true);
+    else if (before) drawArrow(...before); else drawArrow(null);
+  };
+  const up = (ev) => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    window.removeEventListener('pointercancel', up);
+    cand = ev.type === 'pointercancel' ? null : flickCandidate(oya, ev.clientX - x0, ev.clientY - y0);
+    if (cand != null && S.phase === 'call' && S.oya === oya) return onSeatTap(cand);
+    if (S.phase === 'call') { if (before) drawArrow(...before); else drawArrow(null); }
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
 }
 
 /* ================= 入力：ボタン ================= */
