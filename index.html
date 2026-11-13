@@ -233,7 +233,12 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button data-v="normal" class="on">普通</button>
       <button data-v="strong">強い</button>
     </div>
-    <p class="note" id="cpuNote" style="margin:-8px 0 14px"></p>
+    <p class="note" id="cpuNote" style="margin:-8px 0 10px"></p>
+    <div class="row" style="margin-bottom:4px">
+      <label for="safeChk">CPUは絶対に負けない</label>
+      <input type="checkbox" id="safeChk">
+    </div>
+    <p class="note" id="safeNote" style="margin:0 0 14px">オンにすると、CPUは言い間違えも時間切れもしません。切腹するのは人間だけ。強さはスピードと言葉の選び方だけに効きます。</p>
     <h2>制限時間</h2>
     <div class="seg" id="diffSeg">
       <button data-v="easy">ゆっくり</button>
@@ -343,7 +348,7 @@ const CPU_NAMES = ['たろう', 'はなこ', 'じろう'];
 
 /* ================= 状態 ================= */
 const S = {
-  mode: 'button', diff: 'normal', cpu: 'normal', tts: true, humans: 1,
+  mode: 'button', diff: 'normal', cpu: 'normal', cpuSafe: false, tts: true, humans: 1,
   players: [],
   phase: 'idle',     // idle | call | respond | over
   oya: 0,
@@ -674,7 +679,7 @@ function pickWeighted() {
   for (const [word, w] of weights) { if ((r -= w) < 0) return word; }
   return W.CHIN;
 }
-const cpuMisses = () => Math.random() < CPU_LEVEL[S.cpu].miss(S.combo);
+const cpuMisses = () => !S.cpuSafe && Math.random() < CPU_LEVEL[S.cpu].miss(S.combo);
 const cpuDelay = () => { const [a, b] = CPU_LEVEL[S.cpu].speed; return rand(S.limitMs * a, S.limitMs * b); };
 function cpuCall(p) {
   const miss = cpuMisses();
@@ -915,10 +920,11 @@ $('startBtn').addEventListener('click', () => {
     return;
   }
   S.tts = $('ttsChk').checked;
+  S.cpuSafe = $('safeChk').checked;
   setupPlayers();
   $('title').classList.remove('active');
   $('game').classList.add('active');
-  $('modeLabel').textContent = (S.mode === 'voice' ? '音声入力' : 'セリフボタン') + (solo() ? '' : `・${S.humans}人`);
+  $('modeLabel').textContent = (S.mode === 'voice' ? '音声入力' : 'セリフボタン') + (solo() ? '' : `・${S.humans}人`) + (S.cpuSafe ? '・CPU不敗' : '');
   $('pad').hidden = S.mode === 'voice';
   $('voicebox').hidden = S.mode !== 'voice';
   $('heard').textContent = '';
