@@ -889,6 +889,7 @@ function gong() { beep(110, 1.2, 'sine', 0.25); beep(165, 1.0, 'triangle', 0.12)
 
 /* ================= ゲーム進行 ================= */
 function startGame(oya) {
+  dropChinHold();
   $('overlay').classList.remove('show');
   S.alive = new Set(S.players.map((_, i) => i));
   S.players.forEach((_, i) => seatEl(i).classList.remove('dead'));
@@ -1013,7 +1014,8 @@ function seppuku(p, why) {
   $('ovTitle').textContent = '切腹';
   $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
   S.overlayDelay = SEPPUKU_PAUSE + (S.movie ? CUT_LEN + 150 : 1300); // ムービーが終わってから結果
-  const isNew = recordBest(S.combo);
+  // 最高記録は人間がまだ遊んでいるときだけ（デスマッチで人間が全員脱落したあとのCPUだけの回数は数えない）
+  const isNew = aliveList().some(isHuman) && recordBest(S.combo);
   $('ovNew').hidden = !isNew;
   $('ovNew').textContent = isNew ? `新記録！ ${CPU_LABEL[S.cpu]}で ${S.combo} 回` : '';
 
@@ -1055,7 +1057,7 @@ function playCutMovie(p) {
   $('cutBot').innerHTML = svg;
   const cut = $('cut');
   cut.classList.remove('show', 'fade'); void cut.offsetWidth; cut.classList.add('show');
-  setTimeout(() => { beep(1800, 0.12, 'sawtooth', 0.05); gong(); playLine(p, W.SHAKI); }, 500); // 刀が走る瞬間にゴーン＋シャキーン
+  later(500, () => { beep(1800, 0.12, 'sawtooth', 0.05); gong(); playLine(p, W.SHAKI); }); // 刀が走る瞬間にゴーン＋シャキーン（メニューに戻ったら鳴らさない）
   clearTimeout(playCutMovie.t);
   // 斬れた体が画面の下へ落ちきったら消す（そのあとに結果を出す）
   playCutMovie.t = setTimeout(() => cut.classList.remove('show', 'fade'), CUT_LEN);
@@ -1069,7 +1071,8 @@ function loadJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'n
 function saveJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* 保存できなくても遊べる */ } }
 function recordBest(n) {
   const best = loadJSON(BEST_KEY) || {};
-  if (n <= 0 || n <= (best[S.cpu] || 0)) return false;
+  const old = Number.isInteger(best[S.cpu]) ? best[S.cpu] : 0;
+  if (n <= 0 || n <= old) return false;
   best[S.cpu] = n;
   saveJSON(BEST_KEY, best);
   renderBest();
@@ -1077,11 +1080,12 @@ function recordBest(n) {
 }
 function renderBest() {
   const best = loadJSON(BEST_KEY) || {};
-  const parts = ['weak', 'normal', 'strong'].filter((k) => best[k]).map((k) => `${CPU_LABEL[k]} <b>${best[k]}</b>回`);
+  const parts = ['weak', 'normal', 'strong'].filter((k) => Number.isInteger(best[k]) && best[k] > 0).map((k) => `${CPU_LABEL[k]} <b>${best[k]}</b>回`);
   $('bestBox').innerHTML = parts.length ? `最高記録（つづいた回数）　${parts.join('　')}` : '最高記録はまだありません';
 }
 function continueDeath() {
   if (S.phase !== 'over') return;
+  dropChinHold();
   $('overlay').classList.remove('show');
   S.combo = 0;
   $('centerWord').textContent = 'つづき！';
@@ -1291,6 +1295,7 @@ function chinHoldMs() {
   return 0;
 }
 let chinHold = null; // { seg, k, timer }  seg が null なら前の発話の最後で止めている
+function dropChinHold() { if (chinHold) { clearTimeout(chinHold.timer); chinHold = null; } }
 function holdChin(seg, k) {
   chinHold = {
     seg, k,
@@ -1317,12 +1322,14 @@ function handleTranscript(seg, raw, isFinal) {
           if (last && !isFinal && mayBecomeSamurai(text.slice(hit.end))) { holdChin(seg, k); return; }
           if (last && isFinal && chinHoldMs()) { emitted[seg] = k + 1; holdChin(null, k); return; } // 次の発話の「侍」を待つ
         }
-      } else if (chinHold.seg == null) {
+      } else {
         // 前の発話が「ちんちん」で終わっていて、この発話が「侍」で始まった → 「ちんちん侍」
-        clearTimeout(chinHold.timer);
+        const prev = chinHold;
+        clearTimeout(prev.timer);
         chinHold = null;
-        if (k === 0 && hit.word === W.SAMU) { emitted[seg] = 1; voiceSay(W.CS); continue; }
-        voiceSay(W.CHIN);
+        if (prev.seg == null && k === 0 && hit.word === W.SAMU) { emitted[seg] = 1; voiceSay(W.CS); continue; }
+        if (prev.seg != null) emitted[prev.seg] = prev.k + 1;
+        voiceSay(W.CHIN); // 止めていた「ちんちん」を先に出す（順番が入れ替わらないように）
       }
     }
     if (hit.word === W.CHIN && k === list.length - 1 && chinHoldMs()) {
@@ -1416,7 +1423,7 @@ if (window.claude && typeof window.claude.use === 'function') {
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec = null, voiceWanted = false, recFails = 0;
 function startNativeRec() {
-  rec = new SR();
+  const me = (rec = new SR());
   rec.lang = 'ja-JP';
   rec.continuous = true;
   rec.interimResults = true;
@@ -1450,7 +1457,8 @@ function startNativeRec() {
     segNo += 1000; // 区切り番号を進めて、前の発話と混ざらないようにする
     // 失敗が続くときは間をあけて再挑戦（一瞬で何度も起動し直さないように）
     const wait = recFails ? Math.min(5000, 1000 * recFails) : 150;
-    if (voiceWanted) setTimeout(() => { if (voiceWanted) startNativeRec(); }, wait);
+    // 自分が今の聞き取りのときだけ再起動（メニューから始め直した直後に2つ動かないように）
+    if (voiceWanted && rec === me) setTimeout(() => { if (voiceWanted && rec === me) startNativeRec(); }, wait);
   };
   try { rec.start(); } catch (e) { /* 既に起動中 */ }
 }
@@ -1584,6 +1592,7 @@ $('startBtn').addEventListener('click', () => {
 });
 function toMenu() {
   newPhase();
+  dropChinHold();
   S.phase = 'idle';
   stopVoice();
   stopAllLines();
