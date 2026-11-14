@@ -226,6 +226,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .mic.on .dot { background: var(--accent); animation: blink 1s infinite; }
 @keyframes blink { 50% { opacity: .3; } }
 .heard { margin-top: 6px; font-size: 14px; color: var(--muted); min-height: 1.4em; word-break: break-all; }
+.micwarn { margin-top: 6px; font-size: 13px; font-weight: bold; color: var(--accent); line-height: 1.5; }
 .voicebox .say-list { font-size: 13px; color: var(--muted); margin-top: 6px; }
 .voicebox button { margin-top: 8px; padding: 8px 14px; border-radius: 10px; border: 2px solid var(--accent); background: var(--seat); font-size: 14px; font-weight: bold; cursor: pointer; }
 
@@ -403,6 +404,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   <div class="voicebox" id="voicebox" hidden>
     <div class="mic" id="mic"><span class="dot"></span><span id="micText">マイク準備中…</span></div>
     <div class="heard" id="heard"></div>
+    <div class="micwarn" id="micWarn" hidden></div>
     <div class="say-list">言える言葉：ちんちん / おちんちん / 侍 / ちんちん侍 / びろーん / シャキーン</div>
     <button id="micBtn" hidden>マイクをオンにする</button>
   </div>
@@ -1275,6 +1277,35 @@ function micState(on, text) {
   $('mic').classList.toggle('on', on);
   $('micText').textContent = text;
 }
+const MIC_MSG = {
+  busy: 'マイクが使えません。通話アプリなど、ほかのアプリがマイクを使っている可能性があります。通話を切るか、セリフボタンモードで遊んでください。',
+  denied: 'マイクが許可されていません。ブラウザの設定でこのページのマイクを許可してください。',
+  silent: '声が届いていないようです。通話中だとミュートしていてもマイクを取られていることがあります。「侍」と言って「聞こえた」に出なければ、セリフボタンモードで遊んでください。',
+  network: '音声の聞き取りサービスにつながりません。電波の良い場所で試してください。',
+  broken: 'マイクか音声の聞き取りでエラーが起きました。下のボタンでもう一度試してください。',
+};
+function micWarn(kind) {
+  $('micWarn').hidden = !kind;
+  $('micWarn').textContent = kind ? MIC_MSG[kind] : '';
+}
+// ゲームが進んでいる時間で15秒なにも聞こえなければ「声が届いていない」と出す
+// （エラーにならず無音だけ届く場合＝通話中など、に気づけるように）
+const SILENT_MS = 15000;
+let silentAcc = 0, silentTimer = null;
+function heardSomething(text) {
+  $('heard').textContent = '聞こえた：' + text;
+  silentAcc = 0;
+  if (!$('micWarn').hidden && $('micWarn').textContent !== MIC_MSG.denied) micWarn(null);
+}
+function watchSilence() {
+  clearInterval(silentTimer);
+  silentAcc = 0;
+  silentTimer = setInterval(() => {
+    if (!voiceWanted || (S.phase !== 'call' && S.phase !== 'respond')) return;
+    silentAcc += 1000;
+    if (silentAcc >= SILENT_MS && $('micWarn').hidden) micWarn('silent');
+  }, 1000);
+}
 
 // --- claude.ai 上ではプラットフォームの音声入力（dictation）を使う ---
 let dict = null;
@@ -1285,19 +1316,24 @@ if (window.claude && typeof window.claude.use === 'function') {
     dict = d;
     d.onPartial(({ text }) => {
       if (!text) return;
-      $('heard').textContent = '聞こえた：' + text;
+      heardSomething(text);
       handleTranscript(segNo, text, false);
     });
     d.onFinal(({ text }) => {
-      $('heard').textContent = '聞こえた：' + text;
+      heardSomething(text);
       handleTranscript(segNo, text, true);
       segNo++;
     });
     d.onState(({ state, reason }) => {
-      if (state === 'listening') micState(true, '聞いています');
+      if (state === 'listening') { micState(true, '聞いています'); if ($('micWarn').textContent !== MIC_MSG.silent) micWarn(null); }
       else if (state === 'starting') micState(false, 'マイク準備中…');
       else if (state === 'idle') {
         micState(false, reason === 'not_granted' ? 'マイクが許可されていません' : 'マイクは止まっています');
+        if (voiceWanted) {
+          if (reason === 'not_granted') micWarn('denied');
+          else if (reason === 'upstream_error') micWarn('broken');
+          else if (reason === 'rate_limited') micWarn('network');
+        }
         $('micBtn').hidden = !(voiceWanted && reason !== 'not_granted' && reason !== 'unavailable');
       }
     });
@@ -1306,7 +1342,7 @@ if (window.claude && typeof window.claude.use === 'function') {
 
 // --- それ以外のブラウザでは Web Speech API ---
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null, voiceWanted = false;
+let rec = null, voiceWanted = false, recFails = 0;
 function startNativeRec() {
   rec = new SR();
   rec.lang = 'ja-JP';
@@ -1315,22 +1351,34 @@ function startNativeRec() {
   const base = segNo;
   rec.onstart = () => micState(true, '聞いています');
   rec.onresult = (e) => {
+    recFails = 0;
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i];
-      $('heard').textContent = '聞こえた：' + r[0].transcript;
+      heardSomething(r[0].transcript);
       handleTranscript(base + i, r[0].transcript, r.isFinal);
     }
   };
   rec.onerror = (e) => {
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       voiceWanted = false;
-      micState(false, 'マイクが使えません（許可してください）');
+      micState(false, 'マイクが使えません');
+      micWarn('denied');
+      $('micBtn').hidden = false;
+    } else if (e.error === 'audio-capture') {
+      recFails++;
+      micWarn('busy'); // マイクがない／ほかのアプリが使っている
+    } else if (e.error === 'network') {
+      recFails++;
+      micWarn('network');
     }
+    // no-speech（しばらく無音）と aborted はふつうに起きるので何もしない
   };
   rec.onend = () => {
     micState(false, 'マイク再起動中…');
     segNo += 1000; // 区切り番号を進めて、前の発話と混ざらないようにする
-    if (voiceWanted) setTimeout(() => { if (voiceWanted) startNativeRec(); }, 150);
+    // 失敗が続くときは間をあけて再挑戦（一瞬で何度も起動し直さないように）
+    const wait = recFails ? Math.min(5000, 1000 * recFails) : 150;
+    if (voiceWanted) setTimeout(() => { if (voiceWanted) startNativeRec(); }, wait);
   };
   try { rec.start(); } catch (e) { /* 既に起動中 */ }
 }
@@ -1338,6 +1386,9 @@ function startNativeRec() {
 /** クリックの中から同期的に呼ぶこと（マイク許可のため） */
 function startVoice() {
   voiceWanted = true;
+  recFails = 0;
+  micWarn(null);
+  watchSilence();
   $('micBtn').hidden = true;
   if (dict) {
     dict.start({ language: 'ja' }).catch((err) => {
@@ -1354,6 +1405,8 @@ function startVoice() {
 }
 function stopVoice() {
   voiceWanted = false;
+  clearInterval(silentTimer);
+  micWarn(null);
   if (dict) dict.stop().catch(() => {});
   if (rec) { try { rec.stop(); } catch (e) { /* noop */ } }
   micState(false, 'マイクは止まっています');
