@@ -702,7 +702,7 @@ function makeContext() {
 function initAudio(seats) {
   try {
     actx = actx || makeContext();
-    if (actx.state === 'suspended') actx.resume();
+    if (actx.state !== 'running') actx.resume().catch(() => {}); // iOS は 'interrupted' になることもある
   } catch (e) { actx = null; return; }
   if (typeof VOICES === 'undefined' || !seats) return;
   // 使う席の分だけ展開する
@@ -1063,15 +1063,23 @@ function pickWeighted() {
   return W.CHIN;
 }
 const cpuMisses = () => !S.cpuSafe && Math.random() < CPU_LEVEL[S.cpu].miss(S.combo);
-const cpuDelay = () => { const [a, b] = CPU_LEVEL[S.cpu].speed; return rand(S.limitMs * a, S.limitMs * b); };
+/** たまにギリギリ（制限時間の55〜80%）で答えて、焦った高い声を出す。強いCPUはめったにしない */
+const CPU_LATE_RATE = { weak: 0.15, normal: 0.12, strong: 0.05 };
+const cpuDelay = (allowLate = true) => {
+  if (allowLate && Math.random() < CPU_LATE_RATE[S.cpu]) return rand(S.limitMs * 0.55, S.limitMs * 0.8);
+  const [a, b] = CPU_LEVEL[S.cpu].speed;
+  return rand(S.limitMs * a, S.limitMs * b);
+};
 function cpuCall(p) {
   const miss = cpuMisses();
   if (miss && Math.random() < 0.5) return; // 固まって時間切れ
-  later(cpuDelay(), () => {
+  // フェイントは溜める時間があるので、ギリギリには答えない（時間切れにならないように）
+  const feint = !miss && S.feint && Math.random() < 0.3;
+  later(cpuDelay(!feint), () => {
     if (miss) { say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); return; } // うっかり
     const others = aliveList().filter((i) => i !== p);
     const target = others[Math.floor(Math.random() * others.length)];
-    if (S.feint && Math.random() < 0.3) return cpuFeint(p, target);
+    if (feint) return cpuFeint(p, target);
     say(p, pickWeighted(), target);
   });
 }
@@ -1507,7 +1515,18 @@ CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
 restoreSettings();
 renderPlist();
 // タイトル画面で最初に触れたときからBGM（ブラウザは触れるまで音を出せない）
-$('title').addEventListener('pointerdown', () => { if (!BGM.gain) bgmStart(); });
+/**
+ * スマホのブラウザは「指を離したとき」でないと音を出させてくれないことがある。
+ * 触れた・離した・クリック・キー入力のどれでも試し、止まっていたら毎回再開する。
+ */
+function ensureTitleBgm() {
+  if (!$('title').classList.contains('active') || !$('bgmChk').checked) return;
+  initAudio();
+  if (!actx) return;
+  if (actx.state !== 'running') actx.resume().catch(() => {});
+  if (!BGM.gain) bgmStart();
+}
+['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach((ev) => document.addEventListener(ev, ensureTitleBgm, { passive: true }));
 $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart(); else bgmStop(); });
 renderBest();
 requestAnimationFrame(tickTimer);
