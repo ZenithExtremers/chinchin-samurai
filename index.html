@@ -74,6 +74,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 }
 .best { text-align: center; font-size: 13px; color: var(--muted); margin: 0 0 14px; font-variant-numeric: tabular-nums; }
 .best b { color: var(--ink); }
+.card h2 .soon { font-size: 11px; font-weight: bold; color: var(--accent-ink); background: var(--muted); border-radius: 6px; padding: 1px 6px; vertical-align: middle; }
 .toggles { display: flex; flex-direction: column; gap: 10px; }
 .row label small { display: block; font-size: 12px; color: var(--muted); }
 .plist { display: flex; flex-direction: column; gap: 8px; }
@@ -338,6 +339,29 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       言葉は声で言い、指す人は画面をタップします。マイクの使用を許可してください（Chrome 推奨）。
       CPUが喋っている最中にマイクが拾った言葉は、今あなたが言うべき言葉以外は無視するので、セリフの音声はオンのままで大丈夫です。
     </p>
+  </div>
+
+  <div class="card">
+    <h2>オンライン対戦の音声 <small class="soon">準備中</small></h2>
+    <p class="note" style="margin:-4px 0 10px">オンライン対戦（それぞれのスマホから参加）ができたら効きます。今の1台で遊ぶときは関係ありません。</p>
+    <div class="toggles">
+      <div class="row">
+        <label for="netCharSendChk">キャラの声を送る<small>自分が言った言葉を、自分のキャラの声で相手のスマホに鳴らす</small></label>
+        <input type="checkbox" id="netCharSendChk" checked>
+      </div>
+      <div class="row">
+        <label for="netCharRecvChk">キャラの声を受け取る<small>相手が言った言葉を、相手のキャラの声で自分のスマホに鳴らす</small></label>
+        <input type="checkbox" id="netCharRecvChk" checked>
+      </div>
+      <div class="row">
+        <label for="netLiveSendChk">生の声を送る<small>マイクの声そのものを相手に流す（音声入力モードのとき）</small></label>
+        <input type="checkbox" id="netLiveSendChk">
+      </div>
+      <div class="row">
+        <label for="netLiveRecvChk">生の声を受け取る<small>相手のマイクの声を自分のスマホで流す</small></label>
+        <input type="checkbox" id="netLiveRecvChk">
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -1581,7 +1605,7 @@ segInit('ruleSeg', (v) => {
 
 /** 設定を覚えておく（次に開いたときも同じ設定） */
 const SEGS = { modeSeg: 'mode', totalSeg: 'total', humanSeg: 'humans', ruleSeg: 'rule', cpuSeg: 'cpu', diffSeg: 'diff' };
-const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk'];
+const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'netCharSendChk', 'netCharRecvChk', 'netLiveSendChk', 'netLiveRecvChk'];
 function saveSettings() {
   const v = { profiles: PROFILES };
   Object.entries(SEGS).forEach(([id, key]) => { v[key] = String(S[key]); });
