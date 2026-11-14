@@ -2,94 +2,179 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ちんちん侍</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#b3261e">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ちんちん侍">
 <style>
+/* 座敷の畳と朱。円座の4人を中心に、下に操作盤 */
 :root {
-  --bg: #f6efe2;
+  --bg: #f4ecdc;
   --panel: #fffaf0;
   --ink: #2a2118;
-  --muted: #7a6a58;
+  --muted: #76664f;
   --accent: #b3261e;
   --accent-ink: #ffffff;
-  --gold: #c99a2e;
+  --gold: #b88a22;
   --line: #d9c9ad;
   --you: #2f6f4f;
-  --seat: #fff;
+  --seat: #fffdf7;
+  --scrim: rgba(20, 10, 5, .72);
   --shadow: 0 4px 14px rgba(60, 40, 20, .15);
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #1d1914; --panel: #29231c; --ink: #f3e9d8; --muted: #b5a48c;
     --accent: #e0483d; --gold: #e2b54a; --line: #4a3f31; --you: #57b386; --seat: #332b22;
-    --shadow: 0 4px 14px rgba(0,0,0,.45);
+    --scrim: rgba(0, 0, 0, .75); --shadow: 0 4px 14px rgba(0,0,0,.45);
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #1d1914; --panel: #29231c; --ink: #f3e9d8; --muted: #b5a48c;
   --accent: #e0483d; --gold: #e2b54a; --line: #4a3f31; --you: #57b386; --seat: #332b22;
-  --shadow: 0 4px 14px rgba(0,0,0,.45);
+  --scrim: rgba(0, 0, 0, .75); --shadow: 0 4px 14px rgba(0,0,0,.45);
+  color-scheme: dark;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; height: 100%; }
+[hidden] { display: none !important; }
+html, body { margin: 0; min-height: 100%; }
 body {
   background: var(--bg); color: var(--ink);
   font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
   display: flex; flex-direction: column; align-items: center;
   overflow-x: hidden; user-select: none; -webkit-user-select: none;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 button { font-family: inherit; color: inherit; }
-.screen { width: 100%; max-width: 520px; padding: 12px 16px 20px; display: none; flex-direction: column; min-height: 100%; }
+button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.screen { width: 100%; max-width: 500px; padding-block: 12px 20px; display: none; flex-direction: column; }
 .screen.active { display: flex; }
 
 /* ---------- タイトル ---------- */
-h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .08em; color: var(--accent); }
-.sub { text-align: center; color: var(--muted); margin: 0 0 18px; }
+h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .08em; color: var(--accent); }
+.sub { text-align: center; color: var(--muted); margin: 0 0 16px; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; box-shadow: var(--shadow); }
-.card h2 { font-size: 17px; margin: 0 0 10px; }
+.card h2 { font-size: 16px; margin: 0 0 8px; }
+.card h2 + .seg { margin-bottom: 14px; }
 .rules { margin: 0; padding-left: 0; list-style: none; line-height: 1.7; font-size: 15px; }
 .rules b { color: var(--accent); }
-.seg { display: flex; gap: 8px; flex-wrap: wrap; }
+.seg { display: flex; gap: 8px; }
 .seg button {
-  flex: 1 1 0; min-width: 0; padding: 12px 6px; border-radius: 10px; border: 2px solid var(--line);
+  flex: 1 1 0; min-width: 0; padding: 11px 4px; border-radius: 10px; border: 2px solid var(--line);
   background: var(--seat); font-size: 15px; cursor: pointer;
 }
 .seg button.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: bold; }
-.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 15px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; }
+.row input { width: 22px; height: 22px; accent-color: var(--accent); }
 .big {
   width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--accent); color: var(--accent-ink);
   font-size: 22px; font-weight: bold; letter-spacing: .1em; cursor: pointer; box-shadow: var(--shadow);
 }
-.note { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.best { text-align: center; font-size: 13px; color: var(--muted); margin: 0 0 14px; font-variant-numeric: tabular-nums; }
+.best b { color: var(--ink); }
+.card h2 .soon, .row label .soon { display: inline; }
+.card h2 .soon, .row label .soon { font-size: 11px; font-weight: bold; color: var(--accent-ink); background: var(--muted); border-radius: 6px; padding: 1px 6px; vertical-align: middle; }
+.toggles { display: flex; flex-direction: column; gap: 10px; }
+.row label small { display: block; font-size: 12px; color: var(--muted); }
+.plist { display: flex; flex-direction: column; gap: 8px; }
+.prow { display: grid; grid-template-columns: 48px minmax(0, 1fr) 30px 54px 36px; gap: 6px; align-items: center; }
+.prow .hc { height: 34px; border-radius: 8px; border: 2px solid var(--line); background: var(--seat); cursor: pointer; font-size: 12px; padding: 0; font-variant-numeric: tabular-nums; }
+.prow .hc.on { border-color: var(--gold); font-weight: bold; }
+.prow .hc:disabled { visibility: hidden; }
+.prow .face { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--line); background: var(--seat); padding: 2px; cursor: pointer; }
+.prow .face svg { width: 100%; height: 100%; display: block; }
+.prow .nm { display: flex; flex-direction: column; min-width: 0; }
+.prow .nm small { font-size: 11px; color: var(--muted); }
+.prow input { width: 100%; min-width: 0; font: inherit; font-size: 16px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--seat); color: var(--ink); }
+.prow .dot { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--seat); box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+.prow .play { height: 34px; border-radius: 8px; border: 2px solid var(--line); background: var(--seat); cursor: pointer; font-size: 13px; }
+.overlay .new { color: var(--gold); font-weight: bold; margin-bottom: 8px; }
+/* 切腹ムービー */
+.cut { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; pointer-events: none; }
+.cut.show { display: flex; }
+.cut { transition: opacity .5s ease; }
+.cut.fade { opacity: 0; }
+.cut .flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
+.cut .body { animation: cutin .2s ease-out; }
+@keyframes cutin { from { transform: scale(.7); opacity: 0; } }
+.cut.show .flash { animation: cutflash .6s ease-out .62s backwards; }
+@keyframes cutflash { 10% { opacity: .85; } 100% { opacity: 0; } }
+.cut .body { position: relative; width: 220px; height: 220px; max-width: 60vw; max-height: 60vw; }
+.cut .half { position: absolute; inset: 0; border-radius: 50%; background: var(--seat); }
+.cut .half svg { width: 100%; height: 100%; }
+/* 斬れる線：左 66% → 右 38%（傾き 0.28 = 15.64度、中心を通る）。刀の線もこれに合わせる */
+.cut .top { clip-path: polygon(0 0, 100% 0, 100% 38%, 0 66%); }
+.cut .bot { clip-path: polygon(0 66%, 100% 38%, 100% 100%, 0 100%); }
+/* 斬れたら少しずれて、そのまま重力で画面の下へ落ちていく */
+/* 斬れるまでは切れていない1枚（.whole）を出し、斬れた瞬間に上下2枚へ差し替える（継ぎ目の線が見えないように） */
+.cut .top, .cut .bot { visibility: hidden; }
+.cut.show .whole { animation: cuthide 0s .62s forwards; }
+.cut.show .top { animation: cutshow 0s .62s forwards, cuttop 1.35s cubic-bezier(.55,0,1,.45) .62s forwards; }
+.cut.show .bot { animation: cutshow 0s .62s forwards, cutbot 1.25s cubic-bezier(.55,0,1,.45) .62s forwards; }
+@keyframes cuthide { to { visibility: hidden; } }
+@keyframes cutshow { to { visibility: visible; } }
+@keyframes cuttop { 14% { transform: translate(-6px, -4px) rotate(-2deg); } to { transform: translate(-70px, 115vh) rotate(-40deg); } }
+@keyframes cutbot { 12% { transform: translate(5px, 4px) rotate(1deg); } to { transform: translate(50px, 115vh) rotate(28deg); } }
+.cut .blade { position: absolute; left: -15%; top: calc(70.2% - 2.5px); width: 130%; height: 5px; background: var(--accent); border-radius: 3px;
+  transform: rotate(-15.64deg) scaleX(0); transform-origin: left center; box-shadow: 0 0 12px var(--accent); }
+.cut.show .blade { animation: blade .16s ease-in .45s forwards, bladeout .5s ease-out .8s forwards; }
+@keyframes blade { to { transform: rotate(-15.64deg) scaleX(1); } }
+@keyframes bladeout { from { transform: rotate(-15.64deg) scaleX(1); } to { transform: rotate(-15.64deg) scaleX(1); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cut.show .top, .cut.show .bot, .cut.show .blade, .cut.show .flash { animation-duration: .01s; } }
+.voices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.voices button { padding: 9px 4px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); font-size: 14px; cursor: pointer; }
+.voices button:active { border-color: var(--accent); }
+.sub-btn { margin-top: 10px; background: var(--seat); color: var(--accent); border: 2px solid var(--accent); font-size: 18px; padding: 12px; }
+.field { width: 100%; font: inherit; font-size: 18px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); color: var(--ink); }
+.joinrow { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; }
+.joinrow .big { font-size: 18px; padding: 10px; letter-spacing: .05em; }
+.roomcode { font-size: 44px; font-weight: bold; letter-spacing: .25em; text-align: center; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ghost-btn { width: 100%; margin-top: 8px; padding: 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); font-size: 15px; cursor: pointer; }
+.members { margin: 0 0 10px; padding-left: 1.6em; line-height: 1.9; font-size: 16px; }
+.members .tag-host { font-size: 11px; color: var(--accent-ink); background: var(--gold); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
+.members .tag-cpu { color: var(--muted); }
+.ver { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+.ver button { background: none; border: none; color: var(--accent); text-decoration: underline; font-size: 12px; cursor: pointer; padding: 0 0 0 6px; }
+.notes-ver { margin: 0 0 4px; font-size: 18px; color: var(--accent); }
+.notes-date { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+.notes-list { margin: 0; padding-left: 1.2em; line-height: 1.7; font-size: 14px; }
+.note { font-size: 13px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
+.msg { font-size: 14px; color: var(--accent); text-align: center; margin: 10px 0 0; min-height: 1em; }
 
 /* ---------- ゲーム画面 ---------- */
 .topbar { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
 .topbar button { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
-.stage { position: relative; width: 100%; aspect-ratio: 1 / 1; margin: 6px 0; }
+.stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 1 / 1; margin: 6px 0; touch-action: none; } /* フリック中に画面がスクロールしないように */
 .mat {
-  position: absolute; inset: 14%; border-radius: 50%;
+  position: absolute; inset: var(--mat-inset, 14%); border-radius: 50%;
   background: radial-gradient(circle, rgba(201,154,46,.18), rgba(201,154,46,.05) 70%);
   border: 2px dashed var(--line);
 }
-#arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+#arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; color: var(--accent); z-index: 4; } /* アイコンより手前に描いて、矢印の先が隠れないように */
 .center {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 46%;
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 44%;
   text-align: center; pointer-events: none;
 }
-.center .word { font-size: 26px; font-weight: bold; color: var(--accent); min-height: 1.3em; line-height: 1.3; }
-.center .combo { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.stage.many .center { width: 34%; }
+.stage.many .center .word { font-size: 21px; }
+.stage.many .seat .name { font-size: 12px; }
+.center .word { font-size: 25px; font-weight: bold; color: var(--accent); min-height: 1.3em; line-height: 1.3; }
+.center .combo { font-size: 13px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
 .timer { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
 .timer > div { height: 100%; width: 0; background: var(--gold); }
 
 .seat {
-  position: absolute; width: 27%; transform: translate(-50%, -50%);
+  position: absolute; width: var(--seat-w, 27%); transform: translate(-50%, -50%);
   display: flex; flex-direction: column; align-items: center; cursor: pointer;
-  transition: transform .15s;
 }
-.seat[data-i="0"] { left: 50%; top: 84%; }
-.seat[data-i="1"] { left: 15%; top: 50%; }
-.seat[data-i="2"] { left: 50%; top: 16%; }
-.seat[data-i="3"] { left: 85%; top: 50%; }
 .avatar {
   width: 100%; aspect-ratio: 1 / 1; border-radius: 50%; background: var(--seat);
   border: 3px solid var(--line); box-shadow: var(--shadow); position: relative;
@@ -98,21 +183,24 @@ h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .0
 .avatar svg { width: 80%; height: 80%; }
 .seat .name { font-size: 14px; font-weight: bold; margin-top: 3px; white-space: nowrap; }
 .seat .score { font-size: 11px; color: var(--muted); white-space: nowrap; }
-.seat.you .avatar { border-color: var(--you); }
+.seat.human .avatar { border-color: var(--you); }
 .seat.oya .avatar { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(201,154,46,.35), var(--shadow); }
 .seat.target .avatar { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(179,38,30,.3), var(--shadow); }
 .seat.pickable .avatar { animation: pulse 1s infinite; }
+.seat.first .avatar { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(179,38,30,.3), var(--shadow); }
 .seat.picked .avatar { border-color: var(--accent); border-width: 5px; }
 @keyframes pulse { 50% { transform: scale(1.06); } }
-.oya-tag {
-  position: absolute; top: -6px; left: -6px; background: var(--gold); color: #fff; font-size: 11px; font-weight: bold;
+.tag {
+  position: absolute; top: -6px; left: -6px; color: var(--accent-ink); font-size: 11px; font-weight: bold;
   border-radius: 8px; padding: 1px 6px; display: none;
 }
+.oya-tag { background: var(--gold); }
 .seat.oya .oya-tag { display: block; }
+.cpu-tag { background: var(--muted); left: auto; right: -6px; display: block; }
 
 .bubble {
   position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, -4px) scale(.6);
-  background: var(--panel); border: 2px solid var(--ink); border-radius: 12px;
+  background: var(--panel); border: 2px solid var(--ink); border-radius: 12px; color: var(--ink);
   padding: 4px 9px; font-size: 15px; font-weight: bold; white-space: nowrap;
   opacity: 0; transition: opacity .12s, transform .12s; pointer-events: none; z-index: 5;
 }
@@ -121,21 +209,26 @@ h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .0
   border: 6px solid transparent; border-top-color: var(--ink);
 }
 .bubble.show { opacity: 1; transform: translate(-50%, -4px) scale(1); }
-.seat[data-i="0"] .bubble { bottom: auto; top: 10%; left: auto; right: -12px; transform: translate(100%, 0) scale(.6); }
-.seat[data-i="0"] .bubble.show { transform: translate(100%, 0) scale(1); }
-.seat[data-i="0"] .bubble::after { display: none; }
+.seat.bottom .bubble { bottom: auto; top: 10%; left: auto; right: -12px; transform: translate(100%, 0) scale(.6); }
+.seat.bottom .bubble.show { transform: translate(100%, 0) scale(1); }
+.seat.bottom .bubble::after { display: none; }
 
 /* 動作アニメ */
 .seat.biro .avatar { animation: biro .6s ease-out; }
-@keyframes biro { 0% { transform: translateY(0); } 35% { transform: translateY(-28%) scaleY(1.15); } 100% { transform: translateY(0); } }
+@keyframes biro { 35% { transform: translateY(-28%) scaleY(1.15); } }
 .seat.shaki .avatar::after {
   content: ""; position: absolute; left: -10%; top: 50%; width: 120%; height: 4px; background: var(--ink);
   transform: rotate(-35deg) scaleX(0); transform-origin: left center; animation: slash .4s ease-out forwards; border-radius: 2px;
 }
 @keyframes slash { 60% { transform: rotate(-35deg) scaleX(1); opacity: 1; } 100% { transform: rotate(-35deg) scaleX(1); opacity: 0; } }
 .seat.allsay .avatar { animation: shake .4s; }
+.seat.caught .avatar { animation: caught .5s; box-shadow: 0 0 0 5px var(--accent); }
+@keyframes caught { 10% { transform: scale(1.12); } 30% { transform: scale(1.08) rotate(-4deg); } 50% { transform: scale(1.08) rotate(4deg); } 100% { transform: scale(1); } }
 @keyframes shake { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
 .seat.dead .avatar { filter: grayscale(1); opacity: .6; }
+@media (prefers-reduced-motion: reduce) {
+  .seat.pickable .avatar, .seat.biro .avatar, .seat.allsay .avatar { animation: none; }
+}
 
 /* 操作パネル */
 .hint { text-align: center; font-size: 15px; min-height: 2.6em; line-height: 1.3; margin: 4px 0 8px; font-weight: bold; }
@@ -149,18 +242,19 @@ h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .0
 .pad button.call { border-color: var(--accent); }
 .pad button.react { border-color: var(--gold); }
 .pad button.picked { background: var(--accent); color: var(--accent-ink); }
-.pad .wide { grid-column: 1 / -1; }
 .voicebox { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; text-align: center; box-shadow: var(--shadow); }
 .mic { font-size: 15px; font-weight: bold; }
 .mic .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
-.mic.on .dot { background: #d33; animation: blink 1s infinite; }
+.mic.on .dot { background: var(--accent); animation: blink 1s infinite; }
 @keyframes blink { 50% { opacity: .3; } }
 .heard { margin-top: 6px; font-size: 14px; color: var(--muted); min-height: 1.4em; word-break: break-all; }
+.micwarn { margin-top: 6px; font-size: 13px; font-weight: bold; color: var(--accent); line-height: 1.5; }
 .voicebox .say-list { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.voicebox button { margin-top: 8px; padding: 8px 14px; border-radius: 10px; border: 2px solid var(--accent); background: var(--seat); font-size: 14px; font-weight: bold; cursor: pointer; }
 
 /* 切腹オーバーレイ */
 .overlay {
-  position: fixed; inset: 0; background: rgba(20, 10, 5, .72); display: none; align-items: center; justify-content: center;
+  position: fixed; inset: 0; background: var(--scrim); display: none; align-items: center; justify-content: center;
   z-index: 20; padding: 16px;
 }
 .overlay.show { display: flex; }
@@ -171,7 +265,7 @@ h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .0
 @keyframes pop { from { transform: scale(.6); opacity: 0; } }
 .overlay .kanji { font-size: 56px; font-weight: bold; color: var(--accent); letter-spacing: .1em; }
 .overlay .who { font-size: 22px; font-weight: bold; margin: 4px 0; }
-.overlay .why { color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+.overlay .why { color: var(--muted); margin-bottom: 14px; line-height: 1.5; white-space: pre-line; }
 .overlay .btns { display: flex; gap: 8px; }
 .overlay .btns button { flex: 1; padding: 13px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; border: 2px solid var(--line); background: var(--seat); }
 .overlay .btns button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -184,18 +278,11 @@ h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .0
   <h1>ちんちん侍</h1>
   <p class="sub">言い間違えたら、切腹。</p>
 
-  <div class="card">
-    <h2>ルール</h2>
-    <ul class="rules">
-      <li><b>親</b>は4つの言葉のどれかを言って、誰かを指す</li>
-      <li><b>「ちんちん」</b> → 指された人は何も言わず、すぐ次の言葉で誰かを指す</li>
-      <li><b>「おちんちん」</b> → 指された人が<b>「びろーん」</b></li>
-      <li><b>「侍」</b> → 指された人が<b>「シャキーン」</b></li>
-      <li><b>「ちんちん侍」</b> → 親以外の<b>全員</b>で「ちんちん侍」</li>
-      <li>反応のあと、指された人が次の親になる</li>
-      <li>言い間違い・お手つき・時間切れは<b>切腹</b></li>
-    </ul>
-  </div>
+  <button class="big" id="startBtn">いざ、勝負！</button>
+  <button class="big sub-btn" id="onlineBtn" hidden>オンライン対戦</button>
+  <p class="msg" id="titleMsg" style="margin:0 0 6px"></p>
+  <div class="best" id="bestBox"></div>
+
 
   <div class="card">
     <h2>モード</h2>
@@ -203,23 +290,166 @@ h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .0
       <button data-v="button" class="on">セリフボタン</button>
       <button data-v="voice">音声入力</button>
     </div>
-    <h2 style="margin-top:14px">むずかしさ</h2>
+    <h2>全体の人数</h2>
+    <div class="seg" id="totalSeg">
+      <button data-v="3">3人</button>
+      <button data-v="4" class="on">4人</button>
+      <button data-v="5">5人</button>
+      <button data-v="6">6人</button>
+    </div>
+    <h2>そのうち人間（残りはCPU）</h2>
+    <div class="seg" id="humanSeg">
+      <button data-v="1" class="on">1</button>
+      <button data-v="2">2</button>
+      <button data-v="3">3</button>
+      <button data-v="4">4</button>
+      <button data-v="5" hidden>5</button>
+      <button data-v="6" hidden>6</button>
+    </div>
+    <h2>対戦形式</h2>
+    <div class="seg" id="ruleSeg">
+      <button data-v="normal" class="on">一発勝負</button>
+      <button data-v="death">デスマッチ</button>
+    </div>
+    <p class="note" id="ruleNote" style="margin:-8px 0 14px">一人切腹したら勝負あり</p>
+    <h2>CPUの強さ</h2>
+    <div class="seg" id="cpuSeg">
+      <button data-v="weak">弱い</button>
+      <button data-v="normal" class="on">普通</button>
+      <button data-v="strong">強い</button>
+    </div>
+    <p class="note" id="cpuNote" style="margin:-8px 0 10px"></p>
+    <div class="row" style="margin-bottom:4px">
+      <label for="safeChk">CPUは絶対に負けない</label>
+      <input type="checkbox" id="safeChk">
+    </div>
+    <p class="note" id="safeNote" style="margin:0 0 14px">オンにすると、CPUは言い間違えも時間切れもしません。切腹するのは人間だけ。強さはスピードと言葉の選び方だけに効きます。</p>
+    <h2>制限時間</h2>
     <div class="seg" id="diffSeg">
       <button data-v="easy">ゆっくり</button>
       <button data-v="normal" class="on">ふつう</button>
       <button data-v="hard">はやい</button>
     </div>
-    <div class="row">
-      <label for="ttsChk">CPUのセリフを読み上げる</label>
-      <input type="checkbox" id="ttsChk" checked style="width:22px;height:22px">
+    <h2>演出</h2>
+    <div class="toggles">
+      <div class="row">
+        <label for="ttsChk">セリフの音声を出す</label>
+        <input type="checkbox" id="ttsChk" checked>
+      </div>
+      <div class="row">
+        <label for="bgmChk">BGM<small>タイトル画面で和太鼓と三味線が鳴る</small></label>
+        <input type="checkbox" id="bgmChk" checked>
+      </div>
+      <div class="row">
+        <label for="guideChk">案内を出す（初心者向け）<small>誰の番か・何と言えばいいかを画面の下に出す。親の金枠・指された人の赤丸も出る</small></label>
+        <input type="checkbox" id="guideChk">
+      </div>
+      <div class="row">
+        <label for="movieChk">切腹ムービー</label>
+        <input type="checkbox" id="movieChk" checked>
+      </div>
+      <div class="row">
+        <label for="feintChk">CPUのフェイント<small>「ちんちん…」と溜めて、侍をつけるかどうか迷わせる</small></label>
+        <input type="checkbox" id="feintChk">
+      </div>
     </div>
-    <p class="note" id="voiceNote" style="display:none">
-      音声入力モードはマイクを使います（Chrome / Safari 推奨）。言葉は声で言い、指す人は画面をタップします。
-      イヤホンを使うと、CPUの読み上げをマイクが拾いにくくなります。
+    <p class="note" id="humanNote" hidden>
+      1台のスマホをみんなで囲んで遊びます。自分の番の人が言葉ボタンを押して、指す人をタップ（自分のアイコンから相手の方へフリックでもOK）。
+      「ちんちん侍」のときは、人間はそれぞれ<b>自分のアイコン</b>をタップします。
+    </p>
+    <p class="note" id="voiceNote" hidden>
+      言葉は声で言い、指す人は画面をタップします。マイクの使用を許可してください（Chrome 推奨）。
+      CPUが喋っている最中にマイクが拾った言葉は、今あなたが言うべき言葉以外は無視するので、セリフの音声はオンのままで大丈夫です。
     </p>
   </div>
 
-  <button class="big" id="startBtn">いざ、勝負！</button>
+  <div class="card">
+    <h2>オンライン対戦の音声</h2>
+    <p class="note" style="margin:-4px 0 10px">オンライン対戦（それぞれのスマホから参加）のときに効きます。</p>
+    <div class="toggles">
+      <div class="row">
+        <label for="netCharSendChk">キャラの声を送る<small>自分が言った言葉を、自分のキャラの声で相手のスマホに鳴らす</small></label>
+        <input type="checkbox" id="netCharSendChk" checked>
+      </div>
+      <div class="row">
+        <label for="netCharRecvChk">キャラの声を受け取る<small>相手が言った言葉を、相手のキャラの声で自分のスマホに鳴らす</small></label>
+        <input type="checkbox" id="netCharRecvChk" checked>
+      </div>
+      <div class="row">
+        <label for="netLiveSendChk">生の声を送る <small class="soon">準備中</small><small>マイクの声そのものを相手に流す（音声入力モードのとき）</small></label>
+        <input type="checkbox" id="netLiveSendChk">
+      </div>
+      <div class="row">
+        <label for="netLiveRecvChk">生の声を受け取る <small class="soon">準備中</small><small>相手のマイクの声を自分のスマホで流す</small></label>
+        <input type="checkbox" id="netLiveRecvChk">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>プレイヤー</h2>
+    <p class="note" style="margin:-4px 0 10px">顔をタップで髪型、色の丸で服の色が変わります。「ハンデ」を押すと、その人だけ制限時間が +0.5／+1／+2 秒長くなります（人間だけ）。▶を押すたびに全セリフを順に試し聞き（数字はパターン）。</p>
+    <div class="plist" id="plist"></div>
+  </div>
+
+  <div class="card">
+    <h2>ルール</h2>
+    <ul class="rules">
+      <li><b>親</b>は4つの言葉のどれかを言って、自分以外の誰かを指す（相手をタップ、または自分のアイコンから相手の方へフリック）</li>
+      <li><b>「ちんちん」</b> → 指された人は何も言わず、すぐ次の言葉で誰かを指す</li>
+      <li><b>「おちんちん」</b> → 指された人が<b>「びろーん」</b></li>
+      <li><b>「侍」</b> → 指された人が<b>「シャキーン」</b></li>
+      <li><b>「ちんちん侍」</b> → 親も含めて<b>全員</b>で「ちんちん侍」</li>
+      <li>反応のあと、指された人が次の親になる</li>
+      <li>言い間違い・お手つき・時間切れは<b>切腹</b>。一発勝負なら一人切腹で勝負あり、デスマッチなら脱落して最後の一人まで</li>
+    </ul>
+  </div>
+
+  <p class="ver"><span id="verLabel"></span><button id="notesBtn">パッチノート</button></p>
+  <p class="note" style="text-align:center">
+    音声：Open JTalk／HTS Voice「Mei」「Takumi」「NIT ATR503 M001」<br>
+    © Nagoya Institute of Technology（Mei・Takumi は CC BY 3.0, MMDAgent Project）
+  </p>
+</section>
+
+<!-- ===== オンライン対戦 ===== -->
+<section class="screen" id="online">
+  <div class="topbar">
+    <span>オンライン対戦</span>
+    <button id="onBack">もどる</button>
+  </div>
+  <div class="card" id="onEntry">
+    <h2>あなたの名前</h2>
+    <input class="field" id="onName" maxlength="8" placeholder="名前" aria-label="あなたの名前">
+    <p class="note" style="margin:6px 0 14px">見た目・ハンデ・声の設定は、スタート画面の「プレイヤー」の席1が使われます。</p>
+    <button class="big" id="onCreate">部屋を作る</button>
+    <h2 style="margin-top:18px">部屋番号で参加</h2>
+    <div class="joinrow">
+      <input class="field" id="onCode" inputmode="numeric" maxlength="4" placeholder="1234" aria-label="部屋番号">
+      <button class="big" id="onJoin">参加</button>
+    </div>
+  </div>
+  <div class="card" id="onRoom" hidden>
+    <h2>部屋番号</h2>
+    <div class="roomcode" id="onRoomCode"></div>
+    <button class="ghost-btn" id="onShare">招待リンクをコピー</button>
+    <h2 style="margin-top:14px">参加者 <small id="onCount"></small></h2>
+    <ol class="members" id="onMembers"></ol>
+    <p class="note" id="onRule" style="margin-bottom:12px"></p>
+    <button class="big" id="onStart" hidden>この人数で始める</button>
+    <p class="note" id="onWait" hidden>ホストが始めるのを待っています…</p>
+    <button class="ghost-btn" id="onLeave">部屋を出る</button>
+  </div>
+  <p class="msg" id="onMsg"></p>
+</section>
+
+<!-- ===== パッチノート ===== -->
+<section class="screen" id="notes">
+  <div class="topbar">
+    <span>パッチノート</span>
+    <button id="notesBack">もどる</button>
+  </div>
+  <div id="notesList"></div>
 </section>
 
 <!-- ===== ゲーム画面 ===== -->
@@ -233,11 +463,11 @@ h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .0
     <div class="mat"></div>
     <svg id="arrow" viewBox="0 0 100 100" preserveAspectRatio="none">
       <defs>
-        <marker id="head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-          <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+        <marker id="head" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="currentColor"></path>
         </marker>
       </defs>
-      <line id="arrowLine" x1="50" y1="50" x2="50" y2="50" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" marker-end="url(#head)" style="color:var(--accent);opacity:0"/>
+      <line id="arrowLine" x1="50" y1="50" x2="50" y2="50" stroke="currentColor" stroke-width="1.4" stroke-linecap="butt" marker-end="url(#head)" opacity="0"></line>
     </svg>
     <div class="center">
       <div class="word" id="centerWord"></div>
@@ -258,26 +488,47 @@ h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .0
     <button class="react" data-w="シャキーン">シャキーン</button>
   </div>
 
-  <div class="voicebox" id="voicebox" style="display:none">
+  <div class="voicebox" id="voicebox" hidden>
     <div class="mic" id="mic"><span class="dot"></span><span id="micText">マイク準備中…</span></div>
     <div class="heard" id="heard"></div>
+    <div class="micwarn" id="micWarn" hidden></div>
     <div class="say-list">言える言葉：ちんちん / おちんちん / 侍 / ちんちん侍 / びろーん / シャキーン</div>
+    <button id="micBtn" hidden>マイクをオンにする</button>
   </div>
 </section>
+
+<!-- ===== 切腹ムービー ===== -->
+<div class="cut" id="cut" aria-hidden="true">
+  <div class="flash"></div>
+  <div class="body">
+    <div class="half whole" id="cutWhole"></div>
+    <div class="half top" id="cutTop"></div>
+    <div class="half bot" id="cutBot"></div>
+    <div class="blade"></div>
+  </div>
+</div>
 
 <!-- ===== 切腹 ===== -->
 <div class="overlay" id="overlay">
   <div class="box">
-    <div class="kanji">切腹</div>
+    <div class="kanji" id="ovTitle">切腹</div>
     <div class="who" id="ovWho"></div>
+    <div class="new" id="ovNew" hidden></div>
     <div class="why" id="ovWhy"></div>
-    <div class="btns">
+    <p class="note" id="guestWait" hidden style="margin:0 0 10px">次の勝負はホストが始めます</p>
+    <div class="btns" id="endBtns">
       <button id="menuBtn">メニュー</button>
-      <button class="primary" id="nextBtn">次の勝負</button>
+      <button class="primary" id="againBtn">もう一回</button>
+    </div>
+    <div class="btns" id="contBtns" hidden>
+      <button id="menuBtn2">メニュー</button>
+      <button class="primary" id="contBtn">つづける</button>
     </div>
   </div>
 </div>
 
+<script src="firebase-config.js"></script>
+<script src="voices.js"></script>
 <script>
 'use strict';
 
@@ -285,66 +536,253 @@ h1 { font-size: 44px; text-align: center; margin: 18px 0 4px; letter-spacing: .0
 const W = { CHIN: 'ちんちん', OCHIN: 'おちんちん', SAMU: '侍', CS: 'ちんちん侍', BIRO: 'びろーん', SHAKI: 'シャキーン' };
 const CALLS = [W.CHIN, W.OCHIN, W.SAMU, W.CS];
 const REACTION = { [W.OCHIN]: W.BIRO, [W.SAMU]: W.SHAKI };
-const CALL_WEIGHTS = [[W.CHIN, 34], [W.OCHIN, 24], [W.SAMU, 26], [W.CS, 16]];
-const DIFF = {
-  easy:   { limit: 4200, miss: 0.08 },
-  normal: { limit: 3000, miss: 0.05 },
-  hard:   { limit: 2000, miss: 0.03 },
+const DIFF = { easy: { limit: 4200 }, normal: { limit: 3000 }, hard: { limit: 2000 } };
+/**
+ * CPUの強さ。n は今何回つづいているか。
+ * 弱い：いつも30%で失敗 / 普通：n% で失敗 / 強い：20回までは失敗0%で「ちんちん」を高速で回し、21回目から (n-20)%
+ */
+const CPU_LEVEL = {
+  weak:   { miss: () => 0.30, speed: [0.25, 0.55], weights: [[W.CHIN, 34], [W.OCHIN, 24], [W.SAMU, 26], [W.CS, 16]],
+            note: 'いつも30%の確率で失敗する' },
+  normal: { miss: (n) => Math.min(1, n / 100), speed: [0.2, 0.5], weights: [[W.CHIN, 34], [W.OCHIN, 24], [W.SAMU, 26], [W.CS, 16]],
+            note: '最初は失敗しない。続いた回数がそのまま失敗確率（10回目なら10%）' },
+  strong: { miss: (n) => Math.min(1, Math.max(0, n - 20) / 100), speed: [0.08, 0.2], weights: [[W.CHIN, 75], [W.OCHIN, 8], [W.SAMU, 9], [W.CS, 8]],
+            note: '20回までは失敗しない。「ちんちん」を高速で回してくる。21回目から（回数−20）%で失敗' },
 };
 const VOICE_EXTRA = 1600; // 音声認識の遅延ぶん猶予を足す
-const SEAT_POS = [[50, 84], [15, 50], [50, 16], [85, 50]];
-const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d'];
-const YOU = 0;
+let SEAT_POS = [];
+const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d', '#c0506e', '#5b6b2f', '#1f1f1f', '#c9a227', '#3a8fa0', '#9b2d20'];
+const HAIRS = ['mage', 'bozu', 'long', 'hachi']; // ちょんまげ・坊主・長髪・はちまき
+const SEAT_DEFAULTS = [['mage', 0], ['mage', 1], ['long', 2], ['hachi', 3], ['long', 4], ['bozu', 5]];
+/** 席ごとの見た目と名前（空なら自動の名前） */
+let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bonus: 0 }));
+const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
+/** その人のハンデ（ミリ秒）。人間だけに効く */
+const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
+const APP_VERSION = "1.0.0";
+/** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
+const PATCH_NOTES = [
+ [
+  "1.0.0",
+  "2026-11-14",
+  "アプリ化とオンライン対戦",
+  [
+   "オンライン対戦：それぞれのスマホから同じ部屋に入って遊べる（4ケタの部屋番号、招待リンク、6人まで、空いた席はCPU）",
+   "部屋を作った人が判定するので、誰がいつ言ったかが正確に分かる。お手つきも正しく取れる",
+   "「キャラの声を送る／受け取る」が効くように",
+   "途中で抜けた人の席はCPUが引き継ぐ。ホストが抜けると部屋は閉じる",
+   "オンラインは通信の遅れぶん、制限時間を0.5秒長く",
+   "アプリ化：ホーム画面に追加でき、電波がなくても開ける",
+   "パッチノートを追加"
+  ]
+ ],
+ [
+  "0.9",
+  "2026-11-14",
+  "デバッグ",
+  [
+   "デスマッチで人間が全員脱落したあとの回数を最高記録にしない",
+   "切腹ムービー中にやめても音が鳴らないように",
+   "音声入力が2重に動く・前の勝負の言葉が持ち越されるなどの不具合を修正"
+  ]
+ ],
+ [
+  "0.8",
+  "2026-11-14",
+  "声と音声入力",
+  [
+   "残り時間が半分を切ってから言うと、焦った高い声になる",
+   "CPUもたまにギリギリで答える",
+   "音声入力の反応を速く（「ちんちん」の判定待ちを場面ごとに短く）",
+   "マイクが使えないとき・声が届いていないときに画面で知らせる",
+   "音声入力モードでもセリフの音声を最初からオン",
+   "タップしてもBGMが鳴らないことがあるのを修正",
+   "ごろうの声を速く、試し聞きで全セリフを聞けるように"
+  ]
+ ],
+ [
+  "0.7",
+  "2026-11-13",
+  "BGM・ハンデ・フリック",
+  [
+   "タイトル画面に和太鼓と三味線のBGM",
+   "人ごとに制限時間を長くできるハンデ",
+   "自分のアイコンから相手の方へフリックして指せる"
+  ]
+ ],
+ [
+  "0.6",
+  "2026-11-13",
+  "切腹をしっかり",
+  [
+   "ミスした瞬間に止まり、一瞬の間のあと斬られる。斬れた体は画面の外へ落ちる",
+   "切腹の声は「シャキーン」",
+   "勝負の最初の親は赤丸で表示",
+   "答えが分かる案内は「初心者向け」のオンオフに（最初はオフ）",
+   "矢印の先がアイコンに隠れないように"
+  ]
+ ],
+ [
+  "0.5",
+  "2026-11-13",
+  "遊びやすく",
+  [
+   "切腹ムービー、CPUのフェイント",
+   "名前・髪型・服の色を変えられる",
+   "最高記録、設定を覚える"
+  ]
+ ],
+ [
+  "0.4",
+  "2026-11-13",
+  "デスマッチ",
+  [
+   "切腹した人が脱落して、最後の一人まで続けるデスマッチ",
+   "声の速さを全員そろえる"
+  ]
+ ],
+ [
+  "0.3",
+  "2026-11-13",
+  "6人とCPUの強さ",
+  [
+   "6人まで遊べる",
+   "CPUの強さ（弱い・普通・強い）と「CPUは絶対に負けない」",
+   "声を Mei／Takumi で席ごとに別のキャラに",
+   "ギリギリで反応すると固まる不具合を修正"
+  ]
+ ],
+ [
+  "0.2",
+  "2026-11-13",
+  "人数とセリフ音声",
+  [
+   "人間の人数を選べる（1台を囲んで遊ぶ）",
+   "「ちんちん侍」は親も含めて全員、一人切腹したら勝負あり",
+   "セリフ音声（Open JTalk）"
+  ]
+ ],
+ [
+  "0.1",
+  "2026-11-13",
+  "はじまり",
+  [
+   "4人で円になって遊ぶ、セリフボタンモードと音声入力モード"
+  ]
+ ]
+];
+const CPU_NAMES = ['たろう', 'はなこ', 'じろう', 'さくら', 'ごろう'];
+/** 円の上に、下（自分）から時計回りに並べる */
+function layoutSeats(n) {
+  const R = n <= 4 ? 34 : 36;
+  const me = online() ? NET.me : 0; // 自分の席が一番下に来るように回す
+  SEAT_POS = Array.from({ length: n }, (_, i) => {
+    const a = Math.PI / 2 + ((i - me + n) % n) * 2 * Math.PI / n;
+    return [50 + R * Math.cos(a), 50 + R * Math.sin(a)];
+  });
+  const stage = $('stage');
+  stage.style.setProperty('--seat-w', n <= 4 ? '27%' : n === 5 ? '24%' : '22%');
+  stage.style.setProperty('--mat-inset', (50 - R) + '%');
+  stage.classList.toggle('many', n >= 5);
+}
 
 /* ================= 状態 ================= */
 const S = {
-  mode: 'button', diff: 'normal', tts: true,
-  players: [
-    { name: 'あなた', cpu: false, sep: 0 },
-    { name: 'たろう', cpu: true, sep: 0 },
-    { name: 'はなこ', cpu: true, sep: 0 },
-    { name: 'じろう', cpu: true, sep: 0 },
-  ],
+  mode: 'button', total: 4, diff: 'normal', cpu: 'normal', cpuSafe: false, movie: true, feint: false, guide: false, bgm: true, overlayDelay: 450, rule: 'normal', alive: new Set(), tts: true, humans: 1,
+  players: [],
   phase: 'idle',     // idle | call | respond | over
   oya: 0,
   call: null,        // { from, word, target }
   need: new Map(),   // respond フェーズで、誰が何を言うべきか
-  pendingWord: null, // 自分が親のとき：言った言葉
+  pendingWord: null, // 人間の親：言った言葉
   pendingTarget: null,
   combo: 0,
   token: 0,          // フェーズごとに増やし、古いタイマーを無効化する
   timers: [],
-  deadline: 0, limitMs: 0,
+  deadline: 0, limitMs: 1, barMs: 1,
 };
+
+/* ================= オンライン対戦の土台（通信は online.js） =================
+ * ホスト（部屋を作った人）がゲームを進めて判定する。参加者（ゲスト）は操作を送り、状態と出来事を受け取って画面を動かす。
+ * NET.role: null（1台で遊ぶ）／'host'／'guest'。NET.me は自分の席。 */
+const NET = { role: null, me: 0, send: null, emit: null, onLeave: null, dirty: false };
+const online = () => NET.role != null;
+const isHost = () => NET.role === 'host';
+const isGuest = () => NET.role === 'guest';
+const ONLINE_EXTRA = 500; // 通信の遅れぶん、オンラインは制限時間を少し長く
+/** この端末で操作する席か（1台なら人間全員、オンラインなら自分の席だけ） */
+const isMine = (i) => (online() ? i === NET.me : isHuman(i));
+/** ホストが出来事を全員に配る */
+const emitFx = (e) => { if (isHost() && NET.emit) NET.emit(e); };
+const markDirty = () => { if (isHost() && NET.dirty === false) { NET.dirty = true; setTimeout(() => { NET.dirty = false; if (NET.push) NET.push(); }, 0); } };
 
 const $ = (id) => document.getElementById(id);
 const rand = (a, b) => a + Math.random() * (b - a);
+const isHuman = (i) => !S.players[i].cpu;
+const isAlive = (i) => S.alive.has(i);
+const aliveList = () => S.players.map((_, i) => i).filter(isAlive);
+const death = () => S.rule === 'death';
+const solo = () => S.humans === 1;
+const nameOf = (i) => S.players[i].name;
+
+function defaultName(i) {
+  if (i < S.humans) return solo() ? 'あなた' : `プレイヤー${i + 1}`;
+  return CPU_NAMES[i - 1];
+}
+function setupPlayers() {
+  const prev = S.players;
+  S.players = Array.from({ length: S.total }, (_, i) => i).map((i) => {
+    const human = i < S.humans;
+    const name = PROFILES[i].name.trim() || defaultName(i);
+    const old = prev[i];
+    return { name, cpu: !human, sep: old && old.name === name ? old.sep : 0 };
+  });
+}
 
 /* ================= 画面構築 ================= */
-function avatarSvg(color, i) {
-  const mouth = ['M38 66 Q50 74 62 66', 'M40 68 L60 68', 'M38 70 Q50 62 62 70', 'M40 66 Q50 76 60 66'][i];
+function avatarSvg(color, i, hair = 'mage') {
+  const mouth = ['M38 66 Q50 74 62 66', 'M40 68 L60 68', 'M38 70 Q50 62 62 70', 'M40 66 Q50 76 60 66', 'M42 66 Q50 72 58 66', 'M38 68 Q50 66 62 70'][i % 6];
+  const knot = '<rect x="44" y="4" width="12" height="22" rx="5" fill="#222"></rect><rect x="38" y="20" width="24" height="7" rx="3" fill="#222"></rect>';
+  const top = '<path d="M20 46 Q50 22 80 46 L80 40 Q50 14 20 40 z" fill="#222"></path>';
+  const back = hair === 'long' ? '<path d="M14 92 Q10 30 50 22 Q90 30 86 92 L74 92 L74 50 L26 50 L26 92 z" fill="#222"></path>' : '';
+  let front = '';
+  if (hair === 'mage') front = knot + top;
+  if (hair === 'hachi') front = knot + top + '<rect x="19" y="38" width="62" height="9" rx="3" fill="#fafafa" stroke="#999" stroke-width="1"></rect><circle cx="50" cy="42.5" r="3.5" fill="#c62828"></circle>';
+  if (hair === 'long') front = '<path d="M18 50 Q22 18 50 18 Q78 18 82 50 Q66 34 50 40 Q34 34 18 50 z" fill="#222"></path>';
+  if (hair === 'bozu') front = '<path d="M19 50 Q22 24 50 24 Q78 24 81 50 Q50 36 19 50 z" fill="#6b6f78" opacity=".55"></path>';
   return `<svg viewBox="0 0 100 100" aria-hidden="true">
-    <rect x="44" y="4" width="12" height="22" rx="5" fill="#222"/>
-    <rect x="38" y="20" width="24" height="7" rx="3" fill="#222"/>
-    <circle cx="50" cy="58" r="32" fill="#f3d2b0" stroke="#5a3a20" stroke-width="2"/>
-    <path d="M20 46 Q50 22 80 46 L80 40 Q50 14 20 40 z" fill="#222"/>
-    <circle cx="38" cy="54" r="4" fill="#222"/><circle cx="62" cy="54" r="4" fill="#222"/>
-    <path d="M30 44 L44 47 M70 44 L56 47" stroke="#222" stroke-width="3" stroke-linecap="round"/>
-    <path d="${mouth}" stroke="#7a2a1a" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <path d="M22 92 Q50 78 78 92 L80 100 L20 100 z" fill="${color}"/>
+    ${back}
+    <circle cx="50" cy="58" r="32" fill="#f3d2b0" stroke="#5a3a20" stroke-width="2"></circle>
+    ${front}
+    <circle cx="38" cy="56" r="4" fill="#222"></circle><circle cx="62" cy="56" r="4" fill="#222"></circle>
+    <path d="M30 47 L44 50 M70 47 L56 50" stroke="#222" stroke-width="3" stroke-linecap="round" fill="none"></path>
+    <path d="${mouth}" stroke="#7a2a1a" stroke-width="3" fill="none" stroke-linecap="round" transform="translate(0 2)"></path>
+    <path d="M22 92 Q50 78 78 92 L80 100 L20 100 z" fill="${color}"></path>
   </svg>`;
 }
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/** 席の見た目：オンライン対戦中はホストから届いた見た目、それ以外はこの端末の設定 */
+const seatLook = (i) => (online() && S.players[i] && S.players[i].look) || PROFILES[i];
+const seatAvatar = (i) => avatarSvg(COLORS[seatLook(i).color] || COLORS[0], i, seatLook(i).hair);
+const profileAvatar = (i) => avatarSvg(COLORS[PROFILES[i].color], i, PROFILES[i].hair);
 
 function buildSeats() {
   $('seats').innerHTML = S.players.map((p, i) => `
-    <div class="seat ${i === YOU ? 'you' : ''}" data-i="${i}">
-      <div class="avatar">${avatarSvg(COLORS[i], i)}<span class="oya-tag">親</span>
+    <div class="seat ${p.cpu ? '' : 'human'} ${i === (online() ? NET.me : 0) ? 'bottom' : ''}" data-i="${i}" style="left:${SEAT_POS[i][0]}%;top:${SEAT_POS[i][1]}%">
+      <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
+        ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
-      <div class="name">${p.name}</div>
-      <div class="score" id="sc${i}">切腹 0</div>
+      <div class="name">${esc(p.name)}</div>
+      <div class="score" id="sc${i}"></div>
     </div>`).join('');
   document.querySelectorAll('.seat').forEach((el) => {
-    el.addEventListener('pointerdown', (e) => { e.preventDefault(); onSeatTap(+el.dataset.i); });
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const i = +el.dataset.i;
+      // 親（人間）が自分のアイコンに触れたら、フリックで指す
+      if (S.phase === 'call' && isMine(S.oya) && i === S.oya && S.pendingTarget == null) return startFlick(e);
+      seatAction(i);
+    });
   });
 }
 const seatEl = (i) => document.querySelector(`.seat[data-i="${i}"]`);
@@ -363,54 +801,94 @@ function flash(i, cls) {
   el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
   setTimeout(() => el.classList.remove(cls), 700);
 }
+function setCenter(text) {
+  $('centerWord').textContent = text;
+  emitFx({ t: 'cw', s: text });
+}
 function setHint(text, warn) {
   $('hint').textContent = text;
   $('hint').classList.toggle('warn', !!warn);
 }
-function drawArrow(from, to) {
-  const line = $('arrowLine');
-  if (from == null) { line.style.opacity = 0; return; }
-  const [x1, y1] = SEAT_POS[from], [x2, y2] = SEAT_POS[to];
-  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
-  const pad = 14;
-  line.setAttribute('x1', x1 + dx / len * pad); line.setAttribute('y1', y1 + dy / len * pad);
-  line.setAttribute('x2', x2 - dx / len * pad); line.setAttribute('y2', y2 - dy / len * pad);
-  line.style.opacity = 1;
+/** アイコン（円）の中心と半径を、ステージに対する % で返す（アニメの transform の影響を受けない） */
+function avatarCircle(i) {
+  const stage = $('stage'), seat = seatEl(i), av = seat.querySelector('.avatar');
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const left = SEAT_POS[i][0] / 100 * W - seat.offsetWidth / 2;
+  const top = SEAT_POS[i][1] / 100 * H - seat.offsetHeight / 2;
+  return {
+    x: (left + av.offsetLeft + av.offsetWidth / 2) / W * 100,
+    y: (top + av.offsetTop + av.offsetHeight / 2) / H * 100,
+    r: av.offsetWidth / 2 / W * 100,
+  };
 }
+let lastArrow = null;
+function drawArrow(from, to, preview = false) {
+  const line = $('arrowLine');
+  if (!preview) { lastArrow = from == null ? null : [from, to]; emitFx({ t: 'ar', f: from ?? -1, to: to ?? -1 }); }
+  if (from == null) { line.setAttribute('opacity', 0); return; }
+  const a = avatarCircle(from), b = avatarCircle(to);
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  const gap = 1.5;          // 円のふちから少し離す
+  const head = 4 * 1.4;     // 三角の長さ（markerWidth × 線の太さ）。線は三角の根元で止め、先から棒がはみ出さないようにする
+  line.setAttribute('x1', a.x + dx / len * (a.r + gap)); line.setAttribute('y1', a.y + dy / len * (a.r + gap));
+  line.setAttribute('x2', b.x - dx / len * (b.r + gap + head)); line.setAttribute('y2', b.y - dy / len * (b.r + gap + head));
+  line.setAttribute('opacity', preview ? 0.55 : 1);
+}
+window.addEventListener('resize', () => { if (lastArrow) drawArrow(...lastArrow); });
 function refreshSeats() {
+  markDirty();
+  const humanOya = S.phase === 'call' && isMine(S.oya);
   S.players.forEach((p, i) => {
     const el = seatEl(i);
-    el.classList.toggle('oya', S.phase === 'call' && S.oya === i);
-    el.classList.toggle('target', S.phase === 'respond' && S.need.has(i));
-    const pickable = S.phase === 'call' && S.oya === YOU && i !== YOU;
-    el.classList.toggle('pickable', pickable && S.pendingTarget == null);
+    // 親の金枠・「親」マーク・指された人の赤丸・指せる人のぷくぷくは、初心者向けの案内がオンのときだけ
+    el.classList.toggle('oya', S.guide && S.phase === 'call' && S.oya === i);
+    el.classList.toggle('target', S.guide && S.phase === 'respond' && S.call && S.call.target === i); // 赤丸は指された人だけ
+    const pickable = humanOya && i !== S.oya && isAlive(i);
+    el.classList.toggle('pickable', S.guide && pickable && S.pendingTarget == null);
+    // 勝負の最初の親だけは、案内なしでも赤丸で分かるようにする
+    el.classList.toggle('first', S.phase === 'call' && S.firstOya && S.oya === i);
     el.classList.toggle('picked', pickable && S.pendingTarget === i);
-    $('sc' + i).textContent = `切腹 ${p.sep}`;
+    if (death()) el.classList.toggle('dead', !isAlive(i));
+    $('sc' + i).textContent = isAlive(i) ? `切腹 ${p.sep}回${bonusMs(i) ? `・+${bonusMs(i) / 1000}秒` : ''}` : '脱落';
   });
   document.querySelectorAll('#pad button').forEach((b) => {
-    b.classList.toggle('picked', S.phase === 'call' && S.oya === YOU && b.dataset.w === S.pendingWord);
+    b.classList.toggle('picked', humanOya && b.dataset.w === S.pendingWord);
   });
   $('combo').textContent = `${S.combo} 回つづいた`;
   updateHint();
 }
+/**
+ * 案内文。初心者向けがオフのときは「自分が選んだもの」の確認だけ出す
+ * （誰の番か・何と言うべきかを書くと、そこを見るだけで勝ててしまうため）。
+ */
 function updateHint() {
-  if (S.phase === 'call') {
-    if (S.oya === YOU) {
-      const verb = S.mode === 'voice' ? '言って' : '選んで';
-      if (S.pendingWord && S.pendingTarget == null) setHint(`「${S.pendingWord}」→ 指す人をタップ！`, true);
-      else if (S.pendingTarget != null) setHint(`${S.players[S.pendingTarget].name}に何と言う？`, true);
-      else setHint(`あなたが親！ 言葉を${verb}、指す人をタップ`, true);
-    } else setHint(`${S.players[S.oya].name}の番…`);
-  } else if (S.phase === 'respond') {
-    const mine = S.need.get(YOU);
-    if (mine) setHint(S.mode === 'voice' ? `「${mine}」と言え！` : `「${mine}」！`, true);
-    else setHint('…見守る');
+  if (S.phase === 'call' && isMine(S.oya)) {
+    if (S.pendingWord && S.pendingTarget == null) return setHint(`「${S.pendingWord}」→ 指す人は？`, S.guide);
+    if (S.pendingTarget != null) return setHint(`${nameOf(S.pendingTarget)}を指した → 言葉は？`, S.guide);
   }
+  if (!S.guide) return setHint('');
+  // ---- 初心者向けの案内 ----
+  if (S.phase === 'call') {
+    if (isMine(S.oya)) {
+      const who = solo() || online() ? 'あなた' : nameOf(S.oya);
+      setHint(`${who}が親！ 言葉を${S.mode === 'voice' ? '言って' : '選んで'}、指す人をタップ`, true);
+    } else setHint(`${nameOf(S.oya)}の番…`);
+  } else if (S.phase === 'respond') {
+    const hs = [...S.need.keys()].filter(isMine);
+    if (!hs.length) return setHint('…見守る');
+    const word = S.need.get(hs[0]);
+    if (solo() || online()) return setHint(S.mode === 'voice' ? `「${word}」と言え！` : `「${word}」！`, true);
+    if (word === W.CS) {
+      return setHint(S.mode === 'voice' ? 'みんなで「ちんちん侍」！'
+        : `「ちんちん侍」！ ${hs.map(nameOf).join('・')}は自分のアイコンをタップ`, true);
+    }
+    setHint(`${nameOf(hs[0])}、「${word}」！`, true);
+  } else setHint('');
 }
 
 /* ================= タイマー ================= */
 function currentLimit() {
-  const base = DIFF[S.diff].limit + (S.mode === 'voice' ? VOICE_EXTRA : 0);
+  const base = DIFF[S.diff].limit + (S.mode === 'voice' ? VOICE_EXTRA : 0) + (online() ? ONLINE_EXTRA : 0);
   return Math.max(base * 0.55, base * (1 - S.combo * 0.02));
 }
 function later(ms, fn) {
@@ -423,43 +901,195 @@ function newPhase() {
   S.timers.forEach(clearTimeout);
   S.timers = [];
 }
-function startDeadline(ms, onTimeout) {
-  S.limitMs = ms;
+/** S.limitMs は基準の制限時間（CPUの速さもこれで決まる）。バーは barMs で減っていく */
+function setBar(ms) {
+  S.barMs = ms;
   S.deadline = performance.now() + ms;
-  later(ms, onTimeout);
 }
 function tickTimer() {
   const bar = $('timerBar');
   if (S.phase === 'call' || S.phase === 'respond') {
     const left = Math.max(0, S.deadline - performance.now());
-    bar.style.width = (left / S.limitMs * 100) + '%';
+    bar.style.width = (left / S.barMs * 100) + '%';
   } else bar.style.width = '0';
   requestAnimationFrame(tickTimer);
 }
 
-/* ================= 読み上げ ================= */
-let ttsBusyUntil = 0;
-let jaVoice = null;
-function pickVoice() {
-  const vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-  jaVoice = vs.find((v) => v.lang && v.lang.startsWith('ja')) || null;
+/* ================= セリフ音声 ================= */
+// voices.js の VOICES（席ごとに違う声、各セリフ2パターン：ふつうの声／高い声）を WebAudio で鳴らす
+let ttsBusyUntil = 0; // CPUの声が鳴っている間は、マイクが拾った言葉を無視する
+let actx = null;
+const buffers = {};
+function makeContext() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  // 24kHz で作るとデコード後の音声のメモリが半分で済む（スマホで落ちないように）
+  try { return new AC({ sampleRate: 24000 }); } catch (e) { return new AC(); }
 }
-if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
-function speak(text) {
-  if (!S.tts || !window.speechSynthesis) return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'ja-JP'; u.rate = 1.35; u.pitch = 1;
-  if (jaVoice) u.voice = jaVoice;
-  ttsBusyUntil = performance.now() + 1500;
-  u.onend = () => { ttsBusyUntil = performance.now() + 350; };
-  speechSynthesis.speak(u);
+function initAudio(seats) {
+  try {
+    actx = actx || makeContext();
+    if (actx.state !== 'running') actx.resume().catch(() => {}); // iOS は 'interrupted' になることもある
+  } catch (e) { actx = null; return; }
+  if (typeof VOICES === 'undefined' || !seats) return;
+  // 使う席の分だけ展開する
+  Object.entries(VOICES).filter(([v]) => +v.slice(1) < seats).forEach(([v, lines]) => {
+    buffers[v] = buffers[v] || {};
+    Object.entries(lines).forEach(([word, takes]) => {
+      if (buffers[v][word]) return;
+      buffers[v][word] = [];
+      takes.forEach((uri, n) => {
+        const bin = atob(uri.split(',')[1]);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        actx.decodeAudioData(bytes.buffer, (buf) => { buffers[v][word][n] = buf; }, () => {});
+      });
+    });
+  });
+}
+const playing = new Set();
+/** 席ごとに、声が高いほうのパターン（実際に声の高さを測って決めた） */
+const HIGH_TAKE = { p0: 1, p1: 1, p2: 1, p3: 1, p4: 0, p5: 0 };
+function isHurried() {
+  if (S.phase !== 'call' && S.phase !== 'respond') return false;
+  return S.deadline - performance.now() < S.barMs / 2;
+}
+/**
+ * この端末でその人の声を鳴らすか。
+ *  - CPU：鳴らす ／ 自分（この端末の人）：セリフボタンのときだけ（音声入力なら自分で声に出している）
+ *  - オンラインの相手：相手が「キャラの声を送る」、自分が「キャラの声を受け取る」のときだけ
+ */
+function shouldPlay(p) {
+  if (!isHuman(p)) return true;
+  if (isMine(p)) return S.mode === 'button';
+  if (online()) return $('netCharRecvChk').checked && S.players[p].cs !== false;
+  return S.mode === 'button';
+}
+/** 切腹の「シャキーン」：自分やCPUの分は演出として鳴らす。オンラインの相手の分は声のスイッチに従う */
+const seppukuVoice = (p) => !online() || isMine(p) || !isHuman(p) || shouldPlay(p);
+function playLine(p, word, hurried) {
+  if (!S.tts || typeof VOICES === 'undefined') return;
+  const v = 'p' + p;
+  const takes = VOICES[v] && VOICES[v][word];
+  if (!takes) return;
+  // 残り時間が制限時間の半分を切ってから言ったときだけ、声が高いほう（焦って上ずった声）
+  const n = (hurried ?? isHurried()) ? HIGH_TAKE[v] : 1 - HIGH_TAKE[v];
+  const buf = buffers[v] && buffers[v][word] && buffers[v][word][n];
+  let dur = 1;
+  try {
+    if (actx && buf) {
+      const src = actx.createBufferSource();
+      src.buffer = buf;
+      src.connect(actx.destination);
+      src.start();
+      playing.add(src);
+      src.onended = () => playing.delete(src);
+      dur = buf.duration;
+    } else {
+      new Audio(takes[n]).play().catch(() => {});
+    }
+  } catch (e) { /* 音が出なくても続行 */ }
+  if (!isMine(p)) ttsBusyUntil = Math.max(ttsBusyUntil, performance.now() + dur * 1000 + 350);
+}
+function stopAllLines() {
+  playing.forEach((src) => { try { src.stop(); } catch (e) { /* noop */ } });
+  playing.clear();
+}
+
+/* ================= BGM（和太鼓＋三味線風、その場で合成） ================= */
+// 都節音階（D Eb G A Bb）。タイトル画面だけで鳴らす
+const BGM = { timer: null, step: 0, next: 0, gain: null, noise: null };
+const SCALE = [146.83, 155.56, 196.0, 220.0, 233.08, 293.66, 311.13, 392.0, 440.0];
+const MELODY = [0, -1, 2, -1, 3, -1, 2, 1, 0, -1, -1, 4, 3, 2, 0, -1,
+                5, -1, 4, -1, 3, -1, 4, 5, 7, -1, 6, 5, 4, 3, 2, -1];
+const TAIKO = [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0];
+const KA    = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1];
+const BGM_BPM = 108;
+const BGM_VOLUME = 0.6;
+function noiseBuffer() {
+  if (BGM.noise) return BGM.noise;
+  const b = actx.createBuffer(1, actx.sampleRate * 0.3, actx.sampleRate);
+  const d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return (BGM.noise = b);
+}
+function env(g, t, peak, decay) {
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+}
+function taiko(t, strong) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(strong ? 130 : 110, t);
+  o.frequency.exponentialRampToValueAtTime(42, t + 0.3);
+  env(g, t, strong ? 1.0 : 0.7, 0.45);
+  o.connect(g).connect(BGM.gain); o.start(t); o.stop(t + 0.5);
+  const n = actx.createBufferSource(), f = actx.createBiquadFilter(), gn = actx.createGain();
+  n.buffer = noiseBuffer(); f.type = 'lowpass'; f.frequency.value = 400;
+  env(gn, t, 0.5, 0.12);
+  n.connect(f).connect(gn).connect(BGM.gain); n.start(t); n.stop(t + 0.15);
+}
+function ka(t) { // 太鼓のふち「カッ」
+  const n = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+  n.buffer = noiseBuffer(); f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 3;
+  env(g, t, 0.6, 0.05);
+  n.connect(f).connect(g).connect(BGM.gain); n.start(t); n.stop(t + 0.06);
+}
+function shamisen(t, freq) { // はじいた弦：鋭い立ち上がり＋少し上から下がる音程（さわり）
+  const o = actx.createOscillator(), f = actx.createBiquadFilter(), g = actx.createGain();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(freq * 1.015, t);
+  o.frequency.exponentialRampToValueAtTime(freq, t + 0.04);
+  f.type = 'lowpass';
+  f.frequency.setValueAtTime(3200, t);
+  f.frequency.exponentialRampToValueAtTime(700, t + 0.25);
+  env(g, t, 0.28, 0.32);
+  o.connect(f).connect(g).connect(BGM.gain); o.start(t); o.stop(t + 0.35);
+}
+function bgmStep(step, t) {
+  const s16 = step % 16;
+  if (TAIKO[s16] || (step >= 16 && s16 === 14)) taiko(t, s16 === 0);
+  if (KA[s16]) ka(t);
+  const m = MELODY[step];
+  if (m >= 0) shamisen(t, SCALE[m]);
+}
+function bgmTick() {
+  if (!actx || !BGM.gain) return;
+  const ahead = actx.currentTime + 0.12;
+  while (BGM.next < ahead) {
+    bgmStep(BGM.step, BGM.next);
+    BGM.next += 60 / BGM_BPM / 4; // 16分音符
+    BGM.step = (BGM.step + 1) % MELODY.length;
+  }
+}
+function bgmStart() {
+  bgmStop();
+  if (!$('bgmChk').checked || !$('title').classList.contains('active')) return;
+  initAudio(); // 画面に触れたときに呼ばれるので、ここで音を有効にできる
+  if (!actx) return;
+  BGM.gain = actx.createGain();
+  BGM.gain.gain.value = BGM_VOLUME;
+  BGM.gain.connect(actx.destination);
+  BGM.step = 0;
+  BGM.next = actx.currentTime + 0.05;
+  BGM.timer = setInterval(bgmTick, 25);
+}
+function bgmStop() {
+  clearInterval(BGM.timer);
+  BGM.timer = null;
+  if (!BGM.gain) return;
+  const g = BGM.gain, now = actx.currentTime;
+  g.gain.cancelScheduledValues(now);
+  g.gain.setValueAtTime(g.gain.value, now);
+  g.gain.linearRampToValueAtTime(0, now + 0.03); // ピタッと止める（プツッと鳴らないよう30msで）
+  setTimeout(() => g.disconnect(), 200);
+  BGM.gain = null;
 }
 
 /* ================= 効果音 ================= */
-let actx = null;
 function beep(freq, dur, type = 'square', vol = 0.06) {
   try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (!actx) return;
     const o = actx.createOscillator(), g = actx.createGain();
     o.type = type; o.frequency.value = freq;
     g.gain.setValueAtTime(vol, actx.currentTime);
@@ -471,12 +1101,24 @@ function beep(freq, dur, type = 'square', vol = 0.06) {
 function gong() { beep(110, 1.2, 'sine', 0.25); beep(165, 1.0, 'triangle', 0.12); }
 
 /* ================= ゲーム進行 ================= */
-function startRound(oya) {
+/** 新しい勝負・デスマッチの再開で盤面を片付ける（ゲストは 'reset' の出来事で同じことをする） */
+function resetBoard(text, revive) {
+  dropChinHold();
   $('overlay').classList.remove('show');
-  S.players.forEach((_, i) => seatEl(i).classList.remove('dead'));
+  $('cut').classList.remove('show', 'fade');
+  if (revive) S.players.forEach((_, i) => seatEl(i).classList.remove('dead'));
+  $('centerWord').textContent = text;
+  drawArrow(null, null, true);
+  lastArrow = null;
+  $('arrowLine').setAttribute('opacity', 0);
+  emitFx({ t: 'reset', s: text, rv: !!revive });
+}
+function startGame(oya) {
+  if (isGuest()) return;
+  S.alive = new Set(S.players.map((_, i) => i));
   S.combo = 0;
-  $('centerWord').textContent = 'いざ！';
-  drawArrow(null);
+  resetBoard('いざ！', true);
+  S.firstOya = true;
   beginCall(oya);
 }
 
@@ -488,16 +1130,20 @@ function beginCall(p) {
   S.need = new Map();
   S.pendingWord = null;
   S.pendingTarget = null;
-  startDeadline(currentLimit(), () => seppuku(p, '親なのに言葉が出なかった（時間切れ）'));
-  if (S.players[p].cpu) cpuCall(p);
+  S.limitMs = currentLimit();
+  const ms = S.limitMs + bonusMs(p); // 親のハンデぶん長く待つ
+  setBar(ms);
+  later(ms, () => seppuku(p, '親なのに言葉が出なかった（時間切れ）'));
+  if (!isHuman(p)) cpuCall(p);
   refreshSeats();
 }
 
 /** 親が言葉を言って target を指した */
 function makeCall(p, word, target) {
+  S.firstOya = false;
   S.call = { from: p, word, target };
   S.combo++;
-  $('centerWord').textContent = word;
+  setCenter(word);
   drawArrow(p, target);
   beep(word === W.CS ? 660 : 520, 0.08);
 
@@ -510,33 +1156,48 @@ function makeCall(p, word, target) {
   S.phase = 'respond';
   S.need = new Map();
   if (word === W.CS) {
-    S.players.forEach((_, i) => { if (i !== p) S.need.set(i, W.CS); });
+    aliveList().forEach((i) => S.need.set(i, W.CS)); // 親も含めて全員（脱落者以外）
   } else {
     S.need.set(target, REACTION[word]);
   }
-  startDeadline(currentLimit(), () => {
-    // 遅れた人が複数いたら、自分が遅れていれば自分、いなければ最初の人が切腹
-    const late = [...S.need.keys()];
-    const loser = late.includes(YOU) ? YOU : late[0];
-    seppuku(loser, `「${S.need.get(loser)}」が言えなかった（時間切れ）`);
-  });
-  S.need.forEach((w, i) => { if (S.players[i].cpu) cpuRespond(i, w); });
+  // 時間切れは一人ずつ、その人のハンデを足した時間で判定する（同じ時間なら人間が先）
+  S.limitMs = currentLimit();
+  const order = [...S.need.keys()].sort((a, b) => isHuman(b) - isHuman(a));
+  order.forEach((i) => later(S.limitMs + bonusMs(i), () => {
+    if (S.need.has(i)) seppuku(i, `「${S.need.get(i)}」が言えなかった（時間切れ）`);
+  }));
+  setBar(S.limitMs + Math.max(0, ...order.filter(isHuman).map(bonusMs)));
+  S.need.forEach((w, i) => { if (!isHuman(i)) cpuRespond(i, w); });
   refreshSeats();
 }
 
 /** 誰かが何かを言った（ボタン・音声・CPU 共通） */
-function say(p, word, target) {
+function say(p, word, target, byVoice = false) {
   if (S.phase !== 'call' && S.phase !== 'respond') return;
+  if (!isAlive(p)) return; // 脱落した人の声やボタンは無視
   showBubble(p, word);
-  if (p !== YOU) speak(word);
+  const hurried = isHurried();
+  if (shouldPlay(p)) playLine(p, word, hurried);
+  emitFx({ t: 'say', p, w: word, h: hurried });
 
   if (S.phase === 'call') {
     if (p !== S.oya) return seppuku(p, `親じゃないのに「${word}」と言ってしまった（お手つき）`);
     if (!CALLS.includes(word)) return seppuku(p, `親なのに「${word}」と言ってしまった`);
-    if (p === YOU) {
-      if (S.pendingWord) return seppuku(p, '言い直しは無効！'); // 2回言ったら言い間違い扱い
+    if (isHuman(p)) {
+      if (S.pendingWord) {
+        // 声で「ちんちん」と判定した直後に「侍」が聞こえた → 「ちんちん侍」と言ったことにする
+        if (byVoice && S.pendingWord === W.CHIN && (word === W.SAMU || word === W.CS) && performance.now() - S.pendingAt < 900) {
+          S.pendingWord = W.CS;
+          showBubble(p, W.CS);
+          emitFx({ t: 'bub', p, s: W.CS });
+          refreshSeats();
+          return;
+        }
+        return seppuku(p, '言い直しは無効！');
+      }
       S.pendingWord = word;
-      if (S.pendingTarget != null) return makeCall(YOU, word, S.pendingTarget);
+      S.pendingAt = performance.now();
+      if (S.pendingTarget != null) return makeCall(p, word, S.pendingTarget);
       refreshSeats();
       return;
     }
@@ -548,56 +1209,267 @@ function say(p, word, target) {
   if (!expect) return seppuku(p, `関係ないのに「${word}」と言ってしまった（お手つき）`);
   if (expect !== word) return seppuku(p, `「${expect}」のところを「${word}」と言ってしまった`);
   S.need.delete(p);
-  if (word === W.BIRO) flash(p, 'biro');
-  if (word === W.SHAKI) flash(p, 'shaki');
-  if (word === W.CS) flash(p, 'allsay');
+  const fx = { [W.BIRO]: 'biro', [W.SHAKI]: 'shaki', [W.CS]: 'allsay' }[word];
+  if (fx) { flash(p, fx); emitFx({ t: 'fl', p, c: fx }); }
   if (S.need.size === 0) {
-    const next = S.call.target;
-    later(250, () => beginCall(next));
-    S.phase = 'respond'; // 250ms のあいだもお手つき判定は有効
+    // 全員そろったらすぐ次の親の番（待ち時間を置くと、素早く次を言った人がお手つきにされる）
+    beginCall(S.call.target);
   }
   refreshSeats();
 }
 
+const SEPPUKU_PAUSE = 800; // ミスしてから切腹が始まるまでの「間」
+const CUT_LEN = 2000;      // ムービー開始から、斬れた体が画面の外へ落ちきるまで
 function seppuku(p, why) {
+  // ミスした瞬間にゲームを止める（タイマー・CPUも止まる）
   newPhase();
   S.phase = 'over';
   S.players[p].sep++;
-  seatEl(p).classList.add('dead');
-  refreshSeats();
+  // 最高記録は人間がまだ遊んでいるときだけ（デスマッチで人間が全員脱落したあとのCPUだけの回数は数えない）
+  const isNew = aliveList().some(isHuman) && recordBest(S.combo);
+  const info = { p, title: '切腹', who: `${nameOf(p)} の負け`, why: `${why}\n${S.combo} 回つづいた`, final: true,
+    best: isNew ? `新記録！ ${CPU_LABEL[S.cpu]}で ${S.combo} 回` : '' };
+  if (death()) {
+    // デスマッチ：脱落して、最後の一人になるまで続ける
+    S.alive.delete(p);
+    const left = aliveList();
+    if (left.length <= 1 || (S.cpuSafe && !left.some(isHuman))) {
+      info.title = '決着';
+      info.who = left.length === 1 ? `${nameOf(left[0])} の勝ち！` : 'CPUの勝ち';
+      info.why = `最後に切腹：${nameOf(p)}（${why}）`;
+    } else {
+      info.final = false;
+      info.who = `${nameOf(p)} 脱落`;
+      info.why = `${why}\n残り ${left.length} 人：${left.map(nameOf).join('・')}`;
+      // 脱落した人の次（時計回り）の生き残りが親で再開
+      let next = p;
+      do { next = (next + 1) % S.players.length; } while (!isAlive(next));
+      S.nextOya = next;
+    }
+  }
+  seppukuFx(info);
+  emitFx({ t: 'sep', ...info });
+  if (!info.final) later(S.overlayDelay + 2150, continueDeath);
+}
+/** 切腹の演出（ホストもゲストも同じ）：止まる → 間 → 斬られる → 結果 */
+function seppukuFx(info) {
+  const p = info.p;
   setHint('');
-  gong();
-  speak(p === YOU ? 'せっぷく！' : `${S.players[p].name}、せっぷく！`);
-  $('ovWho').textContent = p === YOU ? 'あなた' : S.players[p].name;
-  $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
-  $('ovWhy').style.whiteSpace = 'pre-line';
-  S.lastLoser = p;
-  setTimeout(() => $('overlay').classList.add('show'), 450);
+  flash(p, 'caught');
+  beep(220, 0.15, 'square', 0.05);
+  S.overlayDelay = SEPPUKU_PAUSE + (S.movie ? CUT_LEN + 150 : 1300); // ムービーが終わってから結果
+  later(SEPPUKU_PAUSE, () => {
+    seatEl(p).classList.add('dead');
+    refreshSeats();
+    if (S.movie) playCutMovie(p);
+    else { gong(); if (seppukuVoice(p)) playLine(p, W.SHAKI); }
+  });
+  $('ovTitle').textContent = info.title;
+  $('ovWho').textContent = info.who;
+  $('ovWhy').textContent = info.why;
+  $('ovNew').hidden = !info.best;
+  $('ovNew').textContent = info.best || '';
+  showOverlay(info.final);
+}
+function showOverlay(final) {
+  // ゲストはホストの操作を待つ（「もう一回」「つづける」はホストだけ）
+  $('endBtns').hidden = !final;
+  $('contBtns').hidden = final || isGuest();
+  $('againBtn').hidden = isGuest();
+  $('guestWait').hidden = !isGuest();
+  later(S.overlayDelay, () => $('overlay').classList.add('show'));
+}
+/** 切腹ムービー：アバターが斜めにスパッと斬れる */
+function playCutMovie(p) {
+  const svg = seatAvatar(p);
+  $('cutWhole').innerHTML = svg;
+  $('cutTop').innerHTML = svg;
+  $('cutBot').innerHTML = svg;
+  const cut = $('cut');
+  cut.classList.remove('show', 'fade'); void cut.offsetWidth; cut.classList.add('show');
+  later(500, () => { beep(1800, 0.12, 'sawtooth', 0.05); gong(); if (seppukuVoice(p)) playLine(p, W.SHAKI); }); // 刀が走る瞬間にゴーン＋シャキーン（メニューに戻ったら鳴らさない）
+  clearTimeout(playCutMovie.t);
+  // 斬れた体が画面の下へ落ちきったら消す（そのあとに結果を出す）
+  playCutMovie.t = setTimeout(() => cut.classList.remove('show', 'fade'), CUT_LEN);
+}
+
+/* ================= オンライン：状態の配信と反映 ================= */
+/** ホストが配る、今の状態（Realtime Database に置く） */
+function netSnapshot() {
+  return {
+    ph: S.phase, oy: S.oya, cl: S.call || null, nd: [...S.need], cb: S.combo, al: [...S.alive],
+    lf: Math.max(0, Math.round(S.deadline - performance.now())), bm: Math.round(S.barMs), lm: Math.round(S.limitMs),
+    pw: S.pendingWord || null, pt: S.pendingTarget ?? null, fo: !!S.firstOya,
+    sp: S.players.map((p) => p.sep), cpu: S.players.map((p) => (p.cpu ? 1 : 0)),
+  };
+}
+/** ゲスト：届いた状態を画面に反映 */
+function netApplyState(st) {
+  if (!st || !isGuest()) return;
+  S.phase = st.ph; S.oya = st.oy; S.call = st.cl || null;
+  S.need = new Map(st.nd || []); S.combo = st.cb || 0; S.alive = new Set(st.al || []);
+  S.barMs = st.bm || 1; S.limitMs = st.lm || 1; S.deadline = performance.now() + (st.lf || 0);
+  S.pendingWord = st.pw || null; S.pendingTarget = st.pt ?? null; S.firstOya = !!st.fo;
+  (st.sp || []).forEach((n, i) => { if (S.players[i]) S.players[i].sep = n; });
+  (st.cpu || []).forEach((c, i) => { if (S.players[i] && c && !S.players[i].cpu) netSeatToCpu(i); });
+  refreshSeats();
+}
+/** ゲスト：届いた出来事（セリフ・矢印・切腹など）を再生 */
+function netApplyEvent(e) {
+  if (!e || !isGuest()) return;
+  switch (e.t) {
+    case 'say':
+      if (e.p !== NET.me) { showBubble(e.p, e.w); if (shouldPlay(e.p)) playLine(e.p, e.w, e.h); }
+      break;
+    case 'bub':
+      showBubble(e.p, e.s);
+      if (e.w && e.p !== NET.me && shouldPlay(e.p)) playLine(e.p, e.w);
+      break;
+    case 'fl': flash(e.p, e.c); break;
+    case 'ar':
+      if (e.f < 0) { lastArrow = null; $('arrowLine').setAttribute('opacity', 0); } else drawArrow(e.f, e.to);
+      break;
+    case 'cw': $('centerWord').textContent = e.s; break;
+    case 'reset': resetBoard(e.s, e.rv); break;
+    case 'sep': S.phase = 'over'; seppukuFx(e); break;
+    case 'cpu': netSeatToCpu(e.p); break;
+  }
+}
+/** 抜けた人の席をCPUにする（ホストは代わりにCPUを動かす） */
+function netSeatToCpu(i) {
+  const pl = S.players[i];
+  if (!pl || pl.cpu) return;
+  pl.cpu = true;
+  const el = seatEl(i);
+  el.classList.remove('human');
+  if (!el.querySelector('.cpu-tag')) el.querySelector('.avatar').insertAdjacentHTML('beforeend', '<span class="tag cpu-tag">CPU</span>');
+  if (!isHost()) return;
+  emitFx({ t: 'cpu', p: i });
+  if (S.phase === 'call' && S.oya === i) cpuCall(i);
+  if (S.phase === 'respond' && S.need.has(i)) cpuRespond(i, S.need.get(i));
+  refreshSeats();
+}
+/** ホスト：ゲストから届いた操作 */
+function netHostAct(seat, a) {
+  if (!isHost() || !S.players[seat] || S.players[seat].cpu) return;
+  if (a.k === 'say' && CALLS.concat([W.BIRO, W.SHAKI]).includes(a.w)) say(seat, a.w, undefined, !!a.v);
+  else if (a.k === 'tap' && Number.isInteger(a.i)) onSeatTap(a.i, seat);
+}
+/**
+ * オンライン対戦を始める（online.js から呼ぶ）。
+ * roster：席ごとの {name, cpu, hair, color, bonus, cs}、set：ホストのルール設定、me：自分の席
+ */
+function netBegin({ roster, set, me, role }) {
+  NET.role = role;
+  NET.me = me;
+  S.total = roster.length;
+  S.rule = set.rule; S.cpu = set.cpu; S.diff = set.diff; S.cpuSafe = !!set.safe; S.feint = !!set.feint;
+  S.humans = roster.filter((r) => !r.cpu).length;
+  S.players = roster.map((r) => ({
+    name: r.name, cpu: !!r.cpu, sep: 0, look: { hair: r.hair, color: r.color }, bonus: r.bonus || 0, cs: r.cs !== false,
+  }));
+  S.tts = $('ttsChk').checked; S.movie = $('movieChk').checked; S.guide = $('guideChk').checked;
+  S.alive = new Set(S.players.map((_, i) => i));
+  S.phase = 'idle';
+  layoutSeats(S.total);
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'game'));
+  $('modeLabel').textContent = `オンライン・部屋${set.code}` + (death() ? '・デスマッチ' : '') + (S.cpuSafe ? '・CPU不敗' : '') + (S.guide ? '・案内あり' : '');
+  $('pad').hidden = S.mode === 'voice';
+  $('voicebox').hidden = S.mode !== 'voice';
+  $('heard').textContent = '';
+  bgmStop();
+  initAudio(S.total);
+  buildSeats();
+  if (S.mode === 'voice' && !startVoice()) $('micBtn').hidden = false;
+  if (isHost()) startGame(0);
+  else { resetBoard('いざ！', true); refreshSeats(); }
+}
+/** オンライン対戦を終える（部屋を出た・閉じられた） */
+function netEnd() {
+  NET.role = null; NET.me = 0; NET.send = NET.emit = NET.push = null;
+}
+
+/* ================= 保存（設定・最高記録） ================= */
+const STORE_KEY = 'chinchin-samurai-settings-v1';
+const BEST_KEY = 'chinchin-samurai-best-v1';
+const CPU_LABEL = { weak: '弱い', normal: '普通', strong: '強い' };
+function loadJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
+function saveJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* 保存できなくても遊べる */ } }
+function recordBest(n) {
+  const best = loadJSON(BEST_KEY) || {};
+  const old = Number.isInteger(best[S.cpu]) ? best[S.cpu] : 0;
+  if (n <= 0 || n <= old) return false;
+  best[S.cpu] = n;
+  saveJSON(BEST_KEY, best);
+  renderBest();
+  return true;
+}
+function renderBest() {
+  const best = loadJSON(BEST_KEY) || {};
+  const parts = ['weak', 'normal', 'strong'].filter((k) => Number.isInteger(best[k]) && best[k] > 0).map((k) => `${CPU_LABEL[k]} <b>${best[k]}</b>回`);
+  $('bestBox').innerHTML = parts.length ? `最高記録（つづいた回数）　${parts.join('　')}` : '最高記録はまだありません';
+}
+function continueDeath() {
+  if (S.phase !== 'over' || isGuest()) return;
+  S.combo = 0;
+  resetBoard('つづき！', false);
+  S.firstOya = true;
+  beginCall(S.nextOya);
 }
 
 /* ================= CPU ================= */
 function pickWeighted() {
-  const total = CALL_WEIGHTS.reduce((s, [, w]) => s + w, 0);
+  const weights = CPU_LEVEL[S.cpu].weights;
+  const total = weights.reduce((s, [, w]) => s + w, 0);
   let r = Math.random() * total;
-  for (const [word, w] of CALL_WEIGHTS) { if ((r -= w) < 0) return word; }
+  for (const [word, w] of weights) { if ((r -= w) < 0) return word; }
   return W.CHIN;
 }
+const cpuMisses = () => !S.cpuSafe && Math.random() < CPU_LEVEL[S.cpu].miss(S.combo);
+/** たまにギリギリ（制限時間の55〜80%）で答えて、焦った高い声を出す。強いCPUはめったにしない */
+const CPU_LATE_RATE = { weak: 0.15, normal: 0.12, strong: 0.05 };
+const cpuDelay = (allowLate = true) => {
+  if (allowLate && Math.random() < CPU_LATE_RATE[S.cpu]) return rand(S.limitMs * 0.55, S.limitMs * 0.8);
+  const [a, b] = CPU_LEVEL[S.cpu].speed;
+  return rand(S.limitMs * a, S.limitMs * b);
+};
 function cpuCall(p) {
-  const lim = S.limitMs;
-  later(rand(lim * 0.2, lim * 0.5), () => {
-    if (Math.random() < DIFF[S.diff].miss * 0.6) {
-      say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); // うっかり
-      return;
+  const miss = cpuMisses();
+  if (miss && Math.random() < 0.5) return; // 固まって時間切れ
+  // フェイントは溜める時間があるので、ギリギリには答えない（時間切れにならないように）
+  const feint = !miss && S.feint && Math.random() < 0.3;
+  later(cpuDelay(!feint), () => {
+    if (miss) { say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); return; } // うっかり
+    const others = aliveList().filter((i) => i !== p);
+    const target = others[Math.floor(Math.random() * others.length)];
+    if (feint) return cpuFeint(p, target);
+    say(p, pickWeighted(), target);
+  });
+}
+/**
+ * フェイント：「ちんちん…」と言って指し、少し溜めてから「侍！」を付けるか、付けずに終わる。
+ * 溜めている間はまだCPUが親なので、早とちりして何か言うとお手つき。
+ */
+function cpuFeint(p, target) {
+  showBubble(p, `${W.CHIN}…`);
+  playLine(p, W.CHIN);
+  emitFx({ t: 'bub', p, s: `${W.CHIN}…`, w: W.CHIN });
+  drawArrow(p, target);
+  later(Math.max(380, S.limitMs * 0.25), () => {
+    if (Math.random() < 0.5) {
+      showBubble(p, `${W.CHIN}…侍！`);
+      playLine(p, W.SAMU);
+      emitFx({ t: 'bub', p, s: `${W.CHIN}…侍！`, w: W.SAMU });
+      makeCall(p, W.CS, target);
+    } else {
+      makeCall(p, W.CHIN, target);
     }
-    const others = [0, 1, 2, 3].filter((i) => i !== p);
-    say(p, pickWeighted(), others[Math.floor(Math.random() * others.length)]);
   });
 }
 function cpuRespond(p, expect) {
-  const lim = S.limitMs;
-  const miss = Math.random() < DIFF[S.diff].miss;
+  const miss = cpuMisses();
   if (miss && Math.random() < 0.5) return; // 固まって時間切れ
-  later(rand(lim * 0.18, lim * 0.5), () => {
+  later(cpuDelay(), () => {
     if (miss) {
       const wrong = [W.BIRO, W.SHAKI, W.CS, W.CHIN].filter((w) => w !== expect);
       say(p, wrong[Math.floor(Math.random() * wrong.length)]);
@@ -605,34 +1477,113 @@ function cpuRespond(p, expect) {
   });
 }
 
+/* ================= 入力の振り分け ================= */
+/**
+ * ボタン・声は「誰が言ったか」が分からないので、今それを言うべき人間に割り当てる。
+ * 1人プレイなら常にあなた。複数人なら、番の人間が決まらないときは無視する。
+ */
+function humansFor(word, source) {
+  if (online()) return isAlive(NET.me) ? [NET.me] : []; // オンラインは自分の席だけ
+  if (solo()) return [0];
+  if (S.phase === 'call') return isHuman(S.oya) ? [S.oya] : [];
+  if (S.phase === 'respond') {
+    const hs = [...S.need.keys()].filter(isHuman);
+    if (hs.length <= 1) return hs;
+    if (word === W.CS && source === 'voice') return hs; // 声はみんなでそろえて言う
+    return []; // ボタンで「ちんちん侍」はアイコンタップで
+  }
+  return [];
+}
+function humanSay(word, source) {
+  if (isGuest()) {
+    // ゲスト：ホストに送る。待たせないよう、自分の吹き出しと声はすぐ出す
+    if (!isAlive(NET.me) || (S.phase !== 'call' && S.phase !== 'respond')) return;
+    showBubble(NET.me, word);
+    if (shouldPlay(NET.me)) playLine(NET.me, word);
+    NET.send({ k: 'say', w: word, v: source === 'voice' });
+    return;
+  }
+  humansFor(word, source).forEach((p) => say(p, word, undefined, source === 'voice'));
+}
+/** 席をタップ（またはフリック）したとき：ゲストはホストに送る */
+function seatAction(i) {
+  if (isGuest()) { NET.send({ k: 'tap', i }); return; }
+  onSeatTap(i, online() ? NET.me : undefined);
+}
+
 /* ================= 入力：タップ ================= */
-function onSeatTap(i) {
-  if (i === YOU) return;
-  if (S.phase !== 'call' || S.oya !== YOU) return;
+/** actor：タップした人の席（オンライン）。1台で遊ぶときは undefined（人間なら誰でも） */
+function onSeatTap(i, actor) {
+  // 1台を囲むとき、「ちんちん侍」は人間がそれぞれ自分のアイコンをタップ
+  if (S.phase === 'respond' && isHuman(i) && S.need.get(i) === W.CS && S.mode === 'button' && (actor === undefined || actor === i)) {
+    say(i, W.CS);
+    return;
+  }
+  const ctl = actor === undefined ? isHuman(S.oya) : S.oya === actor;
+  if (S.phase !== 'call' || !ctl || i === S.oya || !isAlive(i)) return;
   if (S.pendingTarget != null) return;
   S.pendingTarget = i;
-  if (S.pendingWord) return makeCall(YOU, S.pendingWord, i);
+  if (S.pendingWord) return makeCall(S.oya, S.pendingWord, i);
   refreshSeats();
+}
+
+/* ================= 入力：フリックで指す ================= */
+/**
+ * 親が自分のアイコンから指を払った向きに一番近い人を指す。
+ * 払っている間は、その時点で指すことになる人へ薄い矢印を出す。
+ */
+const FLICK_MIN_PX = 24;   // これより短い動きはタップ扱い（何もしない）
+const FLICK_MAX_DEG = 40;  // 払った向きと、その人の方向のずれがこれ以内なら指す
+function avatarCenter(i) {
+  const r = seatEl(i).querySelector('.avatar').getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+}
+function flickCandidate(oya, dx, dy) {
+  if (Math.hypot(dx, dy) < FLICK_MIN_PX) return null;
+  const o = avatarCenter(oya);
+  let best = null, bestDeg = FLICK_MAX_DEG;
+  aliveList().filter((i) => i !== oya).forEach((i) => {
+    const c = avatarCenter(i);
+    let deg = Math.abs(Math.atan2(dy, dx) - Math.atan2(c.y - o.y, c.x - o.x)) * 180 / Math.PI;
+    if (deg > 180) deg = 360 - deg;
+    if (deg < bestDeg) { bestDeg = deg; best = i; }
+  });
+  return best;
+}
+function startFlick(e) {
+  const oya = S.oya, x0 = e.clientX, y0 = e.clientY, before = lastArrow;
+  let cand = null;
+  const move = (ev) => {
+    if (S.phase !== 'call' || S.oya !== oya) return;
+    cand = flickCandidate(oya, ev.clientX - x0, ev.clientY - y0);
+    if (cand != null) drawArrow(oya, cand, true);
+    else if (before) drawArrow(...before); else drawArrow(null);
+  };
+  const up = (ev) => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    window.removeEventListener('pointercancel', up);
+    cand = ev.type === 'pointercancel' ? null : flickCandidate(oya, ev.clientX - x0, ev.clientY - y0);
+    if (cand != null && S.phase === 'call' && S.oya === oya) return seatAction(cand);
+    if (S.phase === 'call') { if (before) drawArrow(...before); else drawArrow(null); }
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
 }
 
 /* ================= 入力：ボタン ================= */
 document.querySelectorAll('#pad button').forEach((b) => {
-  b.addEventListener('pointerdown', (e) => { e.preventDefault(); say(YOU, b.dataset.w); });
+  b.addEventListener('pointerdown', (e) => { e.preventDefault(); humanSay(b.dataset.w, 'button'); });
 });
 
 /* ================= 入力：音声 ================= */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null, recWanted = false;
-const consumed = {}; // 結果インデックスごとに処理済みの文字数
-let pendingVoice = null;
-
 function normalize(s) {
   s = s.replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60)); // カナ→かな
   s = s.replace(/[珍沈陳鎮]/g, 'ちん').replace(/侍/g, 'さむらい').replace(/御/g, 'お');
   s = s.replace(/[\sー〜~ｰっ、。．，！!？?・「」]/g, '');
   return s;
 }
-// 長い言葉から順に判定する
 const VOICE_PATTERNS = [
   [/ちんちん[ざさ]むらい/, W.CS],
   [/おちんちん/, W.OCHIN],
@@ -641,6 +1592,7 @@ const VOICE_PATTERNS = [
   [/し[ゃや]+き+ん/, W.SHAKI],
   [/[びぴ]ろ+ん|[びぴ]よ+ん/, W.BIRO],
 ];
+// 一番手前・同じ位置なら長いものを優先
 function findKeyword(text) {
   let best = null;
   for (const [re, word] of VOICE_PATTERNS) {
@@ -651,115 +1603,429 @@ function findKeyword(text) {
   }
   return best;
 }
-// 「ちんちん」の後に「侍」が続くかもしれないので、末尾にある候補は少しだけ待つ
-const AMBIGUOUS_TAIL = /(ちんちん|ちん|ち|お|おち|おちん|おちんち)$/;
-
-function handleTranscript(idx, raw, isFinal) {
-  const text = normalize(raw);
-  let from = consumed[idx] || 0;
-  if (from > text.length) from = 0;
-  let rest = text.slice(from);
-  clearTimeout(pendingVoice);
-  while (true) {
-    const hit = findKeyword(rest);
+function findAll(text) {
+  const out = [];
+  let from = 0;
+  for (;;) {
+    const hit = findKeyword(text.slice(from));
     if (!hit) break;
-    const end = hit.index + hit.len;
-    const atTail = end === rest.length;
-    if (atTail && !isFinal && (hit.word === W.CHIN || AMBIGUOUS_TAIL.test(rest.slice(0, hit.index)))) {
-      // 続きが来なければ確定
-      const word = hit.word, base = from + end;
-      pendingVoice = setTimeout(() => { consumed[idx] = base; voiceSay(word); }, 380);
-      break;
+    from += hit.index + hit.len;
+    out.push({ word: hit.word, end: from });
+  }
+  return out;
+}
+// 「ちんちん」のあとに「侍」が続くかもしれないので、続きが「さむ…」の途中なら少しだけ待つ
+function mayBecomeSamurai(rest) {
+  return ['さむらい', 'ざむらい'].some((w) => w.startsWith(rest));
+}
+
+/**
+ * 1つの発話（区切り）ごとに、何個目のキーワードまで処理したかを覚えておく。
+ * 途中経過の文字が書き換わっても、個数で数えるので二重に反応しない。
+ */
+const emitted = {};
+/**
+ * 「ちんちん」と聞こえたとき、続けて「侍」が来て「ちんちん侍」になるかもしれない。
+ * 待つと反応が遅れるので、場面ごとに待つ時間を変える。
+ *  - 全員で「ちんちん侍」を言う場面：「ちんちん」だけでは正解にならないので長めに待つ
+ *  - 人間が親で言葉を言う場面：どちらも正解になりうるので少しだけ待つ（あとで「侍」が来たら直す）
+ *  - それ以外：待たない
+ */
+function chinHoldMs() {
+  if (S.phase === 'respond' && [...S.need].some(([i, w]) => isMine(i) && w === W.CS)) return 700;
+  if (S.phase === 'call' && isMine(S.oya) && !S.pendingWord) return 200;
+  return 0;
+}
+let chinHold = null; // { seg, k, timer }  seg が null なら前の発話の最後で止めている
+function dropChinHold() { if (chinHold) { clearTimeout(chinHold.timer); chinHold = null; } }
+function holdChin(seg, k) {
+  chinHold = {
+    seg, k,
+    timer: setTimeout(() => {
+      const h = chinHold;
+      chinHold = null;
+      if (h && h.seg != null) emitted[h.seg] = h.k + 1;
+      voiceSay(W.CHIN);
+    }, chinHoldMs()),
+  };
+}
+function handleTranscript(seg, raw, isFinal) {
+  const text = normalize(raw);
+  const list = findAll(text);
+  for (let k = emitted[seg] || 0; k < list.length; k++) {
+    const hit = list[k];
+    if (chinHold) {
+      if (chinHold.seg === seg && chinHold.k === k) {
+        // この発話の中で止めていた「ちんちん」がどうなったか
+        clearTimeout(chinHold.timer);
+        chinHold = null;
+        if (hit.word === W.CHIN) {
+          const last = k === list.length - 1;
+          if (last && !isFinal && mayBecomeSamurai(text.slice(hit.end))) { holdChin(seg, k); return; }
+          if (last && isFinal && chinHoldMs()) { emitted[seg] = k + 1; holdChin(null, k); return; } // 次の発話の「侍」を待つ
+        }
+      } else {
+        // 前の発話が「ちんちん」で終わっていて、この発話が「侍」で始まった → 「ちんちん侍」
+        const prev = chinHold;
+        clearTimeout(prev.timer);
+        chinHold = null;
+        if (prev.seg == null && k === 0 && hit.word === W.SAMU) { emitted[seg] = 1; voiceSay(W.CS); continue; }
+        if (prev.seg != null) emitted[prev.seg] = prev.k + 1;
+        voiceSay(W.CHIN); // 止めていた「ちんちん」を先に出す（順番が入れ替わらないように）
+      }
     }
-    from += end;
-    consumed[idx] = from;
-    rest = text.slice(from);
+    if (hit.word === W.CHIN && k === list.length - 1 && chinHoldMs()) {
+      if (!isFinal && mayBecomeSamurai(text.slice(hit.end))) { holdChin(seg, k); return; }
+      if (isFinal) { emitted[seg] = k + 1; holdChin(null, k); return; }
+    }
+    emitted[seg] = k + 1;
     voiceSay(hit.word);
   }
 }
-function voiceSay(word) {
-  if (performance.now() < ttsBusyUntil) return; // CPUの読み上げを拾った可能性
-  say(YOU, word);
+/** 今、人間の誰かが言うべき言葉か */
+function expectedForHuman(word) {
+  if (S.phase === 'call') return isMine(S.oya) && CALLS.includes(word) && !S.pendingWord;
+  if (S.phase === 'respond') return [...S.need].some(([i, w]) => isMine(i) && w === word);
+  return false;
 }
-function startRec() {
-  if (!SR) return false;
-  recWanted = true;
-  rec = new SR();
+function voiceSay(word) {
+  // CPUが喋っている最中は、マイクがCPUの声を拾った可能性がある。
+  // そのときは「今言うべき言葉」だけ受け付け、お手つきになる言葉は無視する
+  if (performance.now() < ttsBusyUntil && !expectedForHuman(word)) return;
+  humanSay(word, 'voice');
+}
+function micState(on, text) {
+  $('mic').classList.toggle('on', on);
+  $('micText').textContent = text;
+}
+const MIC_MSG = {
+  busy: 'マイクが使えません。通話アプリなど、ほかのアプリがマイクを使っている可能性があります。通話を切るか、セリフボタンモードで遊んでください。',
+  denied: 'マイクが許可されていません。ブラウザの設定でこのページのマイクを許可してください。',
+  silent: '声が届いていないようです。通話中だとミュートしていてもマイクを取られていることがあります。「侍」と言って「聞こえた」に出なければ、セリフボタンモードで遊んでください。',
+  network: '音声の聞き取りサービスにつながりません。電波の良い場所で試してください。',
+  broken: 'マイクか音声の聞き取りでエラーが起きました。下のボタンでもう一度試してください。',
+};
+function micWarn(kind) {
+  $('micWarn').hidden = !kind;
+  $('micWarn').textContent = kind ? MIC_MSG[kind] : '';
+}
+// ゲームが進んでいる時間で15秒なにも聞こえなければ「声が届いていない」と出す
+// （エラーにならず無音だけ届く場合＝通話中など、に気づけるように）
+const SILENT_MS = 15000;
+let silentAcc = 0, silentTimer = null;
+function heardSomething(text) {
+  $('heard').textContent = '聞こえた：' + text;
+  silentAcc = 0;
+  if (!$('micWarn').hidden && $('micWarn').textContent !== MIC_MSG.denied) micWarn(null);
+}
+function watchSilence() {
+  clearInterval(silentTimer);
+  silentAcc = 0;
+  silentTimer = setInterval(() => {
+    if (!voiceWanted || (S.phase !== 'call' && S.phase !== 'respond')) return;
+    silentAcc += 1000;
+    if (silentAcc >= SILENT_MS && $('micWarn').hidden) micWarn('silent');
+  }, 1000);
+}
+
+// --- claude.ai 上ではプラットフォームの音声入力（dictation）を使う ---
+let dict = null;
+let segNo = 0;
+if (window.claude && typeof window.claude.use === 'function') {
+  window.claude.use('dictation').then((d) => {
+    if (!d) return;
+    dict = d;
+    d.onPartial(({ text }) => {
+      if (!text) return;
+      heardSomething(text);
+      handleTranscript(segNo, text, false);
+    });
+    d.onFinal(({ text }) => {
+      heardSomething(text);
+      handleTranscript(segNo, text, true);
+      segNo++;
+    });
+    d.onState(({ state, reason }) => {
+      if (state === 'listening') { micState(true, '聞いています'); if ($('micWarn').textContent !== MIC_MSG.silent) micWarn(null); }
+      else if (state === 'starting') micState(false, 'マイク準備中…');
+      else if (state === 'idle') {
+        micState(false, reason === 'not_granted' ? 'マイクが許可されていません' : 'マイクは止まっています');
+        if (voiceWanted) {
+          if (reason === 'not_granted') micWarn('denied');
+          else if (reason === 'upstream_error') micWarn('broken');
+          else if (reason === 'rate_limited') micWarn('network');
+        }
+        $('micBtn').hidden = !(voiceWanted && reason !== 'not_granted' && reason !== 'unavailable');
+      }
+    });
+  }).catch(() => {});
+}
+
+// --- それ以外のブラウザでは Web Speech API ---
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, voiceWanted = false, recFails = 0;
+function startNativeRec() {
+  const me = (rec = new SR());
   rec.lang = 'ja-JP';
   rec.continuous = true;
   rec.interimResults = true;
-  rec.maxAlternatives = 1;
-  rec.onstart = () => { $('mic').classList.add('on'); $('micText').textContent = '聞いています'; };
+  const base = segNo;
+  rec.onstart = () => micState(true, '聞いています');
   rec.onresult = (e) => {
+    recFails = 0;
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i];
-      $('heard').textContent = '聞こえた：' + r[0].transcript;
-      handleTranscript(i, r[0].transcript, r.isFinal);
+      heardSomething(r[0].transcript);
+      handleTranscript(base + i, r[0].transcript, r.isFinal);
     }
   };
   rec.onerror = (e) => {
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-      recWanted = false;
-      $('micText').textContent = 'マイクが使えません（許可してください）';
+      voiceWanted = false;
+      micState(false, 'マイクが使えません');
+      micWarn('denied');
+      $('micBtn').hidden = false;
+    } else if (e.error === 'audio-capture') {
+      recFails++;
+      micWarn('busy'); // マイクがない／ほかのアプリが使っている
+    } else if (e.error === 'network') {
+      recFails++;
+      micWarn('network');
     }
+    // no-speech（しばらく無音）と aborted はふつうに起きるので何もしない
   };
   rec.onend = () => {
-    $('mic').classList.remove('on');
-    for (const k in consumed) delete consumed[k];
-    if (recWanted) setTimeout(() => { try { rec.start(); } catch (e) { /* 既に起動中 */ } }, 150);
+    micState(false, 'マイク再起動中…');
+    segNo += 1000; // 区切り番号を進めて、前の発話と混ざらないようにする
+    // 失敗が続くときは間をあけて再挑戦（一瞬で何度も起動し直さないように）
+    const wait = recFails ? Math.min(5000, 1000 * recFails) : 150;
+    // 自分が今の聞き取りのときだけ再起動（メニューから始め直した直後に2つ動かないように）
+    if (voiceWanted && rec === me) setTimeout(() => { if (voiceWanted && rec === me) startNativeRec(); }, wait);
   };
-  try { rec.start(); } catch (e) { /* noop */ }
-  return true;
+  try { rec.start(); } catch (e) { /* 既に起動中 */ }
 }
-function stopRec() {
-  recWanted = false;
+
+/** クリックの中から同期的に呼ぶこと（マイク許可のため） */
+function startVoice() {
+  voiceWanted = true;
+  recFails = 0;
+  micWarn(null);
+  watchSilence();
+  $('micBtn').hidden = true;
+  if (dict) {
+    dict.start({ language: 'ja' }).catch((err) => {
+      if (err && err.code === 'unavailable') {
+        dict.start().catch(() => { $('micBtn').hidden = false; });
+      } else if (err && err.code !== 'not_granted') {
+        $('micBtn').hidden = false;
+      }
+    });
+    return true;
+  }
+  if (SR) { startNativeRec(); return true; }
+  return false;
+}
+function stopVoice() {
+  voiceWanted = false;
+  clearInterval(silentTimer);
+  micWarn(null);
+  if (dict) dict.stop().catch(() => {});
   if (rec) { try { rec.stop(); } catch (e) { /* noop */ } }
-  $('mic').classList.remove('on');
+  micState(false, 'マイクは止まっています');
+}
+$('micBtn').addEventListener('click', startVoice);
+
+// ---------- プレイヤー一覧（名前・髪型・服の色・声の試し聞き） ----------
+const testTake = {};
+/** 押すたびに全セリフを順に、各セリフ 1 → 2 パターン目の順で鳴らす。ボタンにパターン番号を出す */
+function previewVoice(i, btn) {
+  const v = 'p' + i;
+  if (typeof VOICES === 'undefined' || !VOICES[v]) return;
+  const words = Object.keys(VOICES[v]);
+  const n = (testTake[v] = ((testTake[v] ?? -1) + 1) % (words.length * 2));
+  const word = words[Math.floor(n / 2)], take = n % 2;
+  new Audio(VOICES[v][word][take]).play().catch(() => {});
+  if (btn) btn.textContent = `▶${take + 1}`;
+}
+const hcLabel = (b) => (b ? `+${b}秒` : 'ハンデ');
+function renderPlist() {
+  $('plist').innerHTML = PROFILES.slice(0, S.total).map((pr, i) => `
+    <div class="prow" data-i="${i}">
+      <button class="face" aria-label="髪型を変える">${seatAvatar(i)}</button>
+      <div class="nm">
+        <small>${i < S.humans ? '人間' : 'CPU'}・席${i + 1}</small>
+        <input id="pname${i}" maxlength="8" value="${esc(pr.name)}" placeholder="${esc(defaultName(i))}" aria-label="席${i + 1}の名前">
+      </div>
+      <button class="dot" style="background:${COLORS[pr.color]}" aria-label="服の色を変える"></button>
+      <button class="hc ${pr.bonus ? 'on' : ''}" ${i < S.humans ? '' : 'disabled'} aria-label="ハンデ（制限時間を長くする）">${hcLabel(pr.bonus)}</button>
+      <button class="play" aria-label="声を試し聞き">▶</button>
+    </div>`).join('');
+  $('plist').querySelectorAll('.prow').forEach((row) => {
+    const i = +row.dataset.i;
+    row.querySelector('.face').addEventListener('click', () => {
+      PROFILES[i].hair = HAIRS[(HAIRS.indexOf(PROFILES[i].hair) + 1) % HAIRS.length];
+      row.querySelector('.face').innerHTML = seatAvatar(i);
+      saveSettings();
+    });
+    row.querySelector('.dot').addEventListener('click', (e) => {
+      PROFILES[i].color = (PROFILES[i].color + 1) % COLORS.length;
+      e.currentTarget.style.background = COLORS[PROFILES[i].color];
+      row.querySelector('.face').innerHTML = seatAvatar(i);
+      saveSettings();
+    });
+    row.querySelector('input').addEventListener('input', (e) => { PROFILES[i].name = e.target.value; saveSettings(); });
+    row.querySelector('.play').addEventListener('click', (e) => previewVoice(i, e.currentTarget));
+    row.querySelector('.hc').addEventListener('click', (e) => {
+      const k = (BONUS_STEPS.indexOf(PROFILES[i].bonus) + 1) % BONUS_STEPS.length;
+      PROFILES[i].bonus = BONUS_STEPS[k];
+      e.currentTarget.textContent = hcLabel(PROFILES[i].bonus);
+      e.currentTarget.classList.toggle('on', !!PROFILES[i].bonus);
+      saveSettings();
+    });
+  });
 }
 
 /* ================= 画面遷移 ================= */
-function segInit(id, key) {
+function segInit(id, apply) {
   $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     $(id).querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
-    S[key] = b.dataset.v;
-    if (key === 'mode') $('voiceNote').style.display = S.mode === 'voice' ? 'block' : 'none';
+    apply(b.dataset.v);
   }));
 }
-segInit('modeSeg', 'mode');
-segInit('diffSeg', 'diff');
+segInit('modeSeg', (v) => {
+  S.mode = v;
+  $('voiceNote').hidden = v !== 'voice';
+});
+segInit('humanSeg', (v) => { S.humans = +v; $('humanNote').hidden = S.humans === 1; renderPlist(); });
+segInit('totalSeg', (v) => {
+  S.total = +v;
+  $('humanSeg').querySelectorAll('button').forEach((b) => { b.hidden = +b.dataset.v > S.total; });
+  if (S.humans > S.total) $('humanSeg').querySelector(`button[data-v="${S.total}"]`).click();
+  renderPlist();
+});
+segInit('diffSeg', (v) => { S.diff = v; });
+segInit('cpuSeg', (v) => { S.cpu = v; $('cpuNote').textContent = CPU_LEVEL[v].note; });
+$('cpuNote').textContent = CPU_LEVEL[S.cpu].note;
 
 $('startBtn').addEventListener('click', () => {
-  S.tts = $('ttsChk').checked;
-  if (S.mode === 'voice' && !SR) {
-    alert('このブラウザは音声入力に対応していません。Chrome か Safari で開いてください。セリフボタンモードで始めます。');
-    S.mode = 'button';
+  $('titleMsg').textContent = '';
+  if (S.mode === 'voice' && !startVoice()) {
+    $('titleMsg').textContent = 'この画面では音声入力が使えません。セリフボタンモードで遊んでください。';
+    return;
   }
-  S.players.forEach((p) => { p.sep = 0; });
+  S.tts = $('ttsChk').checked;
+  S.cpuSafe = $('safeChk').checked;
+  S.movie = $('movieChk').checked;
+  S.feint = $('feintChk').checked;
+  S.guide = $('guideChk').checked;
+  saveSettings();
+  setupPlayers();
+  layoutSeats(S.total);
   $('title').classList.remove('active');
   $('game').classList.add('active');
-  $('modeLabel').textContent = S.mode === 'voice' ? '音声入力モード' : 'セリフボタンモード';
-  $('pad').style.display = S.mode === 'voice' ? 'none' : 'grid';
-  $('voicebox').style.display = S.mode === 'voice' ? 'block' : 'none';
+  $('modeLabel').textContent = (S.mode === 'voice' ? '音声入力' : 'セリフボタン') + (death() ? '・デスマッチ' : '') + (solo() ? '' : `・${S.humans}人`) + (S.cpuSafe ? '・CPU不敗' : '') + (S.guide ? '・案内あり' : '');
+  $('pad').hidden = S.mode === 'voice';
+  $('voicebox').hidden = S.mode !== 'voice';
   $('heard').textContent = '';
-  if (S.mode === 'voice') startRec();
-  beep(440, 0.01, 'sine', 0.001); // iOS で音を有効化
+  bgmStop();
+  initAudio(S.total); // クリックの中で音を有効化（iOS 対策）
   buildSeats();
-  startRound(YOU);
+  startGame(0);
 });
 function toMenu() {
+  if (online() && NET.onLeave) NET.onLeave();
+  netEnd();
   newPhase();
+  dropChinHold();
   S.phase = 'idle';
-  stopRec();
-  if (window.speechSynthesis) speechSynthesis.cancel();
+  stopVoice();
+  stopAllLines();
   $('overlay').classList.remove('show');
-  $('game').classList.remove('active');
-  $('title').classList.add('active');
+  $('cut').classList.remove('show', 'fade');
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'title'));
+  bgmStart(); // タイトルに戻ったらBGM
 }
 $('quitBtn').addEventListener('click', toMenu);
 $('menuBtn').addEventListener('click', toMenu);
-$('nextBtn').addEventListener('click', () => startRound(S.lastLoser ?? YOU));
+$('againBtn').addEventListener('click', () => startGame(Math.floor(Math.random() * S.total)));
+$('contBtn').addEventListener('click', continueDeath);
+$('menuBtn2').addEventListener('click', toMenu);
+segInit('ruleSeg', (v) => {
+  S.rule = v;
+  $('ruleNote').textContent = v === 'death' ? '切腹した人は脱落。最後の一人になるまで続ける' : '一人切腹したら勝負あり';
+});
 
+/** 設定を覚えておく（次に開いたときも同じ設定） */
+const SEGS = { modeSeg: 'mode', totalSeg: 'total', humanSeg: 'humans', ruleSeg: 'rule', cpuSeg: 'cpu', diffSeg: 'diff' };
+const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'netCharSendChk', 'netCharRecvChk', 'netLiveSendChk', 'netLiveRecvChk'];
+function saveSettings() {
+  const v = { profiles: PROFILES };
+  Object.entries(SEGS).forEach(([id, key]) => { v[key] = String(S[key]); });
+  CHECKS.forEach((id) => { v[id] = $(id).checked; });
+  saveJSON(STORE_KEY, v);
+}
+function restoreSettings() {
+  const v = loadJSON(STORE_KEY);
+  if (!v) return;
+  if (Array.isArray(v.profiles)) {
+    PROFILES = PROFILES.map((d, i) => {
+      const p = v.profiles[i] || {};
+      return {
+        name: typeof p.name === 'string' ? p.name.slice(0, 8) : '',
+        hair: HAIRS.includes(p.hair) ? p.hair : d.hair,
+        color: Number.isInteger(p.color) && p.color >= 0 && p.color < COLORS.length ? p.color : d.color,
+        bonus: BONUS_STEPS.includes(p.bonus) ? p.bonus : 0,
+      };
+    });
+  }
+  // 人数→人間の順に押す（人間の数は全体の人数の範囲内にする）
+  ['modeSeg', 'totalSeg', 'humanSeg', 'ruleSeg', 'cpuSeg', 'diffSeg'].forEach((id) => {
+    const b = v[SEGS[id]] != null && $(id).querySelector(`button[data-v="${v[SEGS[id]]}"]`);
+    if (b && !b.hidden) b.click();
+  });
+  CHECKS.forEach((id) => { if (typeof v[id] === 'boolean') $(id).checked = v[id]; });
+}
+document.querySelectorAll('#title .seg button').forEach((b) => b.addEventListener('click', () => saveSettings()));
+CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
+
+restoreSettings();
+renderPlist();
+// 版とパッチノート
+$('verLabel').textContent = `ver ${APP_VERSION}`;
+$('notesList').innerHTML = PATCH_NOTES.map(([v, d, head, items]) => `
+  <div class="card">
+    <h2 class="notes-ver">ver ${v}　${esc(head)}</h2>
+    <p class="notes-date">${d}</p>
+    <ul class="notes-list">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+  </div>`).join('');
+$('notesBtn').addEventListener('click', () => {
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'notes'));
+  window.scrollTo(0, 0);
+});
+$('notesBack').addEventListener('click', () => {
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'title'));
+});
+// アプリ化：ホーム画面に追加でき、電波がなくても開けるように（GitHub Pages などで開いたときだけ）
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+// タイトル画面で最初に触れたときからBGM（ブラウザは触れるまで音を出せない）
+/**
+ * スマホのブラウザは「指を離したとき」でないと音を出させてくれないことがある。
+ * 触れた・離した・クリック・キー入力のどれでも試し、止まっていたら毎回再開する。
+ */
+function ensureTitleBgm() {
+  if (!$('title').classList.contains('active') || !$('bgmChk').checked) return;
+  initAudio();
+  if (!actx) return;
+  if (actx.state !== 'running') actx.resume().catch(() => {});
+  if (!BGM.gain) bgmStart();
+}
+['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach((ev) => document.addEventListener(ev, ensureTitleBgm, { passive: true }));
+$('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart(); else bgmStop(); });
+renderBest();
 requestAnimationFrame(tickTimer);
 </script>
+<script src="online.js"></script>
 </body>
 </html>
