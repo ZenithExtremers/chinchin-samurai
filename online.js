@@ -18,6 +18,7 @@ const HOST_AWAY_MS = 45000; // ホストの接続が切れたまま、これだ�
 const Online = {
   p: null, ctx: null,
   code: null, role: null, offs: [], begun: false, members: {}, meta: null, me: null, awayTimer: null,
+  chat: [], joinedAt: 0, lastSent: 0,
 
   configured() { const c = window.FIREBASE_CONFIG; return !!(c && c.apiKey && c.databaseURL); },
   start() {
@@ -106,8 +107,41 @@ const Online = {
   /** 部屋の様子（参加者・開始）を見張る */
   watchLobby() {
     const { D } = this.ctx;
+    this.chat = [];
+    this.joinedAt = Date.now();
+    renderChat();
+    this.listen(D.onChildAdded(D.query(this.r('chat'), D.limitToLast(40)), (s) => this.onChat(s.val())));
     this.listen(D.onValue(this.r('members'), (s) => { this.members = s.val() || {}; this.onMembers(); }));
     this.listen(D.onValue(this.r('meta'), (s) => { this.meta = s.val(); this.onMeta(); }));
+  },
+  /** チャット・定型文を送る（連打しすぎないように少し間をあける） */
+  sendChat(msg) {
+    if (!this.code || !this.ctx || !this.me) return false;
+    if (Date.now() - this.lastSent < 600) return false;
+    this.lastSent = Date.now();
+    const { D, uid } = this.ctx;
+    D.push(this.r('chat'), { uid, name: this.me.name, ...msg, t: D.serverTimestamp() }).catch((e) => onMsg(errText(e)));
+    return true;
+  },
+  /** その人の席（声と吹き出しの位置）：対戦中は席順、待合室では並び順 */
+  seatOf(uid) {
+    if (this.begun && this.meta && this.meta.roster) return this.meta.roster.findIndex((r) => r.uid === uid);
+    return Math.min(MAX_MEMBERS - 1, this.memberList().findIndex((m) => m.uid === uid));
+  },
+  onChat(m) {
+    if (!m) return;
+    this.chat.push(m);
+    if (this.chat.length > 40) this.chat.shift();
+    renderChat();
+    const mine = m.uid === this.ctx.uid;
+    const fresh = !m.t || m.t > this.joinedAt - 3000; // 入る前の古い発言は音を鳴らさない
+    const seat = this.seatOf(m.uid);
+    if (this.begun && seat >= 0 && !mine) showBubble(seat, m.stamp || (m.text.length > 14 ? m.text.slice(0, 14) + '…' : m.text));
+    if (!fresh || mine) return; // 自分の分は送ったときに鳴らしている
+    if (m.stamp) {
+      const sender = this.members[m.uid];
+      if (seat >= 0 && $('netCharRecvChk').checked && (!sender || sender.cs !== false)) playStamp(seat, m.stamp);
+    } else beep(880, 0.06, 'sine', 0.05);
   },
   /** 参加者を席順に（ホストが先、あとは入った順） */
   memberList() {
@@ -199,6 +233,8 @@ const Online = {
       else D.remove(this.r(`members/${uid}`)).catch(() => {});
     }
     this.code = null; this.role = null; this.begun = false; this.members = {}; this.meta = null; this.me = null;
+    this.chat = [];
+    renderChat();
     if (wasBegun && online()) { NET.onLeave = null; toMenu(); }
     else if (wasBegun) { /* toMenu から呼ばれた */ }
     showOnlineEntry();
@@ -221,6 +257,7 @@ function myMember() {
 function showOnlineEntry() {
   $('onEntry').hidden = false;
   $('onRoom').hidden = true;
+  $('onChatCard').hidden = true;
 }
 function openOnline(code) {
   document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'online'));
@@ -234,6 +271,8 @@ function renderLobby() {
   if (!Online.code) return;
   $('onEntry').hidden = true;
   $('onRoom').hidden = false;
+  $('onChatCard').hidden = false;
+  $('onChat').hidden = false;
   $('onRoomCode').textContent = Online.code;
   const ms = Online.memberList();
   const total = Math.min(MAX_MEMBERS, Math.max(S.total, ms.length));
@@ -259,6 +298,40 @@ function errText(e) {
   if (/^[\u3000-\u9fff]/.test((e && e.message) || '')) return e.message; // こちらで用意した日本語のメッセージ
   return `うまくいきませんでした（${c.slice(0, 60)}）。`;
 }
+/* ---------- チャット・定型文 ---------- */
+function renderChat() {
+  const html = Online.chat.length
+    ? Online.chat.map((m) => `<div class="m"><b>${esc(m.name || '？')}</b>${m.stamp ? `<span class="st">${esc(m.stamp)}</span>` : esc(m.text || '')}</div>`).join('')
+    : '<div class="empty">まだ発言はありません。定型文を押すと声付きで送れます。</div>';
+  ['onChatLog', 'ovChatLog'].forEach((id) => { const el = $(id); el.innerHTML = html; el.scrollTop = el.scrollHeight; });
+}
+/** 定型文を送る：自分の端末ではすぐ声を鳴らし、対戦中なら自分の席に吹き出しを出す */
+function sendStamp(label) {
+  if (!Online.sendChat({ stamp: label })) return;
+  const seat = Online.seatOf(Online.ctx.uid);
+  if (seat >= 0) playStamp(seat, label);
+  if (Online.begun && seat >= 0) showBubble(seat, label);
+}
+function sendText(input) {
+  const text = (input.value || '').trim().slice(0, 60);
+  if (!text) return;
+  if (Online.sendChat({ text })) input.value = '';
+}
+['on', 'ov'].forEach((pre) => {
+  $(`${pre}Stamps`).innerHTML = STAMPS.map(([l]) => `<button data-s="${esc(l)}">${esc(l)}</button>`).join('');
+  $(`${pre}Stamps`).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => sendStamp(b.dataset.s)));
+  $(`${pre}ChatSend`).addEventListener('click', () => sendText($(`${pre}ChatIn`)));
+  $(`${pre}ChatIn`).addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendText(e.target); } });
+});
+$('gameStamps').innerHTML = STAMPS.map(([l]) => `<button data-s="${esc(l)}">${esc(l)}</button>`).join('');
+$('gameStamps').querySelectorAll('button').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); sendStamp(b.dataset.s); $('stampSheet').hidden = true; }));
+$('stampBtn').addEventListener('click', () => { $('stampSheet').hidden = !$('stampSheet').hidden; });
+// 定型文の外をタップしたら閉じる
+document.addEventListener('pointerdown', (e) => {
+  if (!$('stampSheet').hidden && !e.target.closest('#stampSheet') && !e.target.closest('#stampBtn')) $('stampSheet').hidden = true;
+});
+renderChat();
+
 async function withBusy(btn, fn) {
   btn.disabled = true;
   try { await fn(); } catch (e) { onMsg(errText(e)); } finally { btn.disabled = false; }
