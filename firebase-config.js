@@ -4,7 +4,15 @@
    databaseURL（Realtime Database の URL）も必ず入れてください。
    この値は公開しても大丈夫なもの（データの守りは database.rules.json で行います）。
    null のままだとオンライン対戦はオフになり、1台で遊ぶ機能はそのまま使えます。 */
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyAGx8ONya4o1xEmoYJit6FavwPQwS4KyI8',
+  authDomain: 'chinchin-samurai.firebaseapp.com',
+  databaseURL: 'https://chinchin-samurai-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'chinchin-samurai',
+  storageBucket: 'chinchin-samurai.firebasestorage.app',
+  messagingSenderId: '1086001222920',
+  appId: '1:1086001222920:web:2814a81cb7ba523a9848bd',
+};
 /* 例：
 window.FIREBASE_CONFIG = {
   apiKey: 'AIza...',
