@@ -568,7 +568,9 @@ const PATCH_NOTES = [
   "更新がすぐ届くように",
   [
    "更新したあと、スマホに前の版が残ってオンライン対戦のボタンが出ないことがあるのを修正",
-   "開くたびに新しい版がないか確かめる"
+   "開くたびに新しい版がないか確かめる",
+   "アプリを裏に回してもBGMが鳴り続けるのを修正",
+   "オンライン対戦のエラーを日本語で出す（Firebase の設定もれが分かるように）"
   ]
  ],
  [
@@ -2031,6 +2033,12 @@ function ensureTitleBgm() {
   if (!BGM.gain) bgmStart();
 }
 ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach((ev) => document.addEventListener(ev, ensureTitleBgm, { passive: true }));
+// アプリを裏に回したり画面を消したりしたら音を止め、戻ってきたら再開する（裏でBGMが鳴り続けないように）
+function onHidden() { if (actx && actx.state === 'running') actx.suspend().catch(() => {}); }
+function onShown() { if (actx && actx.state !== 'running') actx.resume().catch(() => {}); }
+document.addEventListener('visibilitychange', () => (document.hidden ? onHidden() : onShown()));
+window.addEventListener('pagehide', onHidden);
+window.addEventListener('pageshow', () => { if (!document.hidden) onShown(); });
 $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart(); else bgmStop(); });
 renderBest();
 requestAnimationFrame(tickTimer);

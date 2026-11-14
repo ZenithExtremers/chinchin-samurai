@@ -194,7 +194,7 @@ function openOnline(code) {
   onMsg('');
   $('onName').value = PROFILES[0].name || '';
   if (code) $('onCode').value = code;
-  Online.start().catch(() => onMsg('通信できませんでした。電波の良い所でもう一度試してください。'));
+  Online.start().catch((e) => onMsg(errText(e)));
 }
 function renderLobby() {
   if (!Online.code) return;
@@ -214,9 +214,19 @@ function renderLobby() {
     ? `全体 ${total}人（CPU ${total - ms.length}）・${S.rule === 'death' ? 'デスマッチ' : '一発勝負'}・CPU ${CPU_LABEL[S.cpu]}・制限時間 ${{ easy: 'ゆっくり', normal: 'ふつう', hard: 'はやい' }[S.diff]}。ルールはスタート画面の設定が使われます。`
     : '';
 }
+/** Firebase のエラーを、何をすれば直るか分かる日本語にする */
+function errText(e) {
+  const c = String((e && (e.code || e.message)) || '');
+  if (/admin-restricted-operation|operation-not-allowed/.test(c)) return 'Firebase の「匿名」ログインが有効になっていません（Authentication → ログイン方法 → 匿名）。';
+  if (/PERMISSION_DENIED|permission[_-]denied/i.test(c)) return 'Firebase のルールで断られました。Realtime Database のルールに database.rules.json の内容が公開されているか確認してください。';
+  if (/network|unavailable|Failed to fetch|import|timeout/i.test(c)) return '通信できませんでした。電波の良い所でもう一度試してください。';
+  if (/NOCONFIG/.test(c)) return 'オンライン対戦の設定がありません。';
+  if (/^[\u3000-\u9fff]/.test((e && e.message) || '')) return e.message; // こちらで用意した日本語のメッセージ
+  return `うまくいきませんでした（${c.slice(0, 60)}）。`;
+}
 async function withBusy(btn, fn) {
   btn.disabled = true;
-  try { await fn(); } catch (e) { onMsg(e && e.message && !/NOCONFIG/.test(e.message) ? e.message : '通信できませんでした。'); } finally { btn.disabled = false; }
+  try { await fn(); } catch (e) { onMsg(errText(e)); } finally { btn.disabled = false; }
 }
 
 $('onlineBtn').hidden = !Online.configured();
