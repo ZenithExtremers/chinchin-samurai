@@ -341,7 +341,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 
   <div class="card">
     <h2>プレイヤー</h2>
-    <p class="note" style="margin:-4px 0 10px">顔をタップで髪型、色の丸で服の色が変わります。「ハンデ」を押すと、その人だけ制限時間が +0.5／+1／+2 秒長くなります（人間だけ）。▶で声を試し聞き。</p>
+    <p class="note" style="margin:-4px 0 10px">顔をタップで髪型、色の丸で服の色が変わります。「ハンデ」を押すと、その人だけ制限時間が +0.5／+1／+2 秒長くなります（人間だけ）。▶を押すたびに全セリフを順に試し聞き（数字はパターン）。</p>
     <div class="plist" id="plist"></div>
   </div>
 
@@ -1347,12 +1347,15 @@ $('micBtn').addEventListener('click', startVoice);
 
 // ---------- プレイヤー一覧（名前・髪型・服の色・声の試し聞き） ----------
 const testTake = {};
-function previewVoice(i) {
+/** 押すたびに全セリフを順に、各セリフ 1 → 2 パターン目の順で鳴らす。ボタンにパターン番号を出す */
+function previewVoice(i, btn) {
   const v = 'p' + i;
   if (typeof VOICES === 'undefined' || !VOICES[v]) return;
-  const takes = VOICES[v]['ちんちん侍'];
-  testTake[v] = ((testTake[v] ?? -1) + 1) % takes.length;
-  new Audio(takes[testTake[v]]).play().catch(() => {});
+  const words = Object.keys(VOICES[v]);
+  const n = (testTake[v] = ((testTake[v] ?? -1) + 1) % (words.length * 2));
+  const word = words[Math.floor(n / 2)], take = n % 2;
+  new Audio(VOICES[v][word][take]).play().catch(() => {});
+  if (btn) btn.textContent = `▶${take + 1}`;
 }
 const hcLabel = (b) => (b ? `+${b}秒` : 'ハンデ');
 function renderPlist() {
@@ -1381,7 +1384,7 @@ function renderPlist() {
       saveSettings();
     });
     row.querySelector('input').addEventListener('input', (e) => { PROFILES[i].name = e.target.value; saveSettings(); });
-    row.querySelector('.play').addEventListener('click', () => previewVoice(i));
+    row.querySelector('.play').addEventListener('click', (e) => previewVoice(i, e.currentTarget));
     row.querySelector('.hc').addEventListener('click', (e) => {
       const k = (BONUS_STEPS.indexOf(PROFILES[i].bonus) + 1) % BONUS_STEPS.length;
       PROFILES[i].bonus = BONUS_STEPS[k];
