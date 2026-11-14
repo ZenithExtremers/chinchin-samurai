@@ -925,7 +925,7 @@ function makeCall(p, word, target) {
 }
 
 /** 誰かが何かを言った（ボタン・音声・CPU 共通） */
-function say(p, word, target) {
+function say(p, word, target, byVoice = false) {
   if (S.phase !== 'call' && S.phase !== 'respond') return;
   if (!isAlive(p)) return; // 脱落した人の声やボタンは無視
   showBubble(p, word);
@@ -935,8 +935,18 @@ function say(p, word, target) {
     if (p !== S.oya) return seppuku(p, `親じゃないのに「${word}」と言ってしまった（お手つき）`);
     if (!CALLS.includes(word)) return seppuku(p, `親なのに「${word}」と言ってしまった`);
     if (isHuman(p)) {
-      if (S.pendingWord) return seppuku(p, '言い直しは無効！');
+      if (S.pendingWord) {
+        // 声で「ちんちん」と判定した直後に「侍」が聞こえた → 「ちんちん侍」と言ったことにする
+        if (byVoice && S.pendingWord === W.CHIN && (word === W.SAMU || word === W.CS) && performance.now() - S.pendingAt < 900) {
+          S.pendingWord = W.CS;
+          showBubble(p, W.CS);
+          refreshSeats();
+          return;
+        }
+        return seppuku(p, '言い直しは無効！');
+      }
       S.pendingWord = word;
+      S.pendingAt = performance.now();
       if (S.pendingTarget != null) return makeCall(p, word, S.pendingTarget);
       refreshSeats();
       return;
@@ -1131,7 +1141,7 @@ function humansFor(word, source) {
   return [];
 }
 function humanSay(word, source) {
-  humansFor(word, source).forEach((p) => say(p, word));
+  humansFor(word, source).forEach((p) => say(p, word, undefined, source === 'voice'));
 }
 
 /* ================= 入力：タップ ================= */
@@ -1244,18 +1254,56 @@ function mayBecomeSamurai(rest) {
  * 途中経過の文字が書き換わっても、個数で数えるので二重に反応しない。
  */
 const emitted = {};
-let pendingVoice = null;
+/**
+ * 「ちんちん」と聞こえたとき、続けて「侍」が来て「ちんちん侍」になるかもしれない。
+ * 待つと反応が遅れるので、場面ごとに待つ時間を変える。
+ *  - 全員で「ちんちん侍」を言う場面：「ちんちん」だけでは正解にならないので長めに待つ
+ *  - 人間が親で言葉を言う場面：どちらも正解になりうるので少しだけ待つ（あとで「侍」が来たら直す）
+ *  - それ以外：待たない
+ */
+function chinHoldMs() {
+  if (S.phase === 'respond' && [...S.need].some(([i, w]) => isHuman(i) && w === W.CS)) return 700;
+  if (S.phase === 'call' && isHuman(S.oya) && !S.pendingWord) return 200;
+  return 0;
+}
+let chinHold = null; // { seg, k, timer }  seg が null なら前の発話の最後で止めている
+function holdChin(seg, k) {
+  chinHold = {
+    seg, k,
+    timer: setTimeout(() => {
+      const h = chinHold;
+      chinHold = null;
+      if (h && h.seg != null) emitted[h.seg] = h.k + 1;
+      voiceSay(W.CHIN);
+    }, chinHoldMs()),
+  };
+}
 function handleTranscript(seg, raw, isFinal) {
   const text = normalize(raw);
   const list = findAll(text);
-  clearTimeout(pendingVoice);
-  let done = emitted[seg] || 0;
-  for (let k = done; k < list.length; k++) {
+  for (let k = emitted[seg] || 0; k < list.length; k++) {
     const hit = list[k];
-    const rest = text.slice(hit.end);
-    if (!isFinal && hit.word === W.CHIN && k === list.length - 1 && mayBecomeSamurai(rest)) {
-      pendingVoice = setTimeout(() => { emitted[seg] = k + 1; voiceSay(hit.word); }, 380);
-      break;
+    if (chinHold) {
+      if (chinHold.seg === seg && chinHold.k === k) {
+        // この発話の中で止めていた「ちんちん」がどうなったか
+        clearTimeout(chinHold.timer);
+        chinHold = null;
+        if (hit.word === W.CHIN) {
+          const last = k === list.length - 1;
+          if (last && !isFinal && mayBecomeSamurai(text.slice(hit.end))) { holdChin(seg, k); return; }
+          if (last && isFinal && chinHoldMs()) { emitted[seg] = k + 1; holdChin(null, k); return; } // 次の発話の「侍」を待つ
+        }
+      } else if (chinHold.seg == null) {
+        // 前の発話が「ちんちん」で終わっていて、この発話が「侍」で始まった → 「ちんちん侍」
+        clearTimeout(chinHold.timer);
+        chinHold = null;
+        if (k === 0 && hit.word === W.SAMU) { emitted[seg] = 1; voiceSay(W.CS); continue; }
+        voiceSay(W.CHIN);
+      }
+    }
+    if (hit.word === W.CHIN && k === list.length - 1 && chinHoldMs()) {
+      if (!isFinal && mayBecomeSamurai(text.slice(hit.end))) { holdChin(seg, k); return; }
+      if (isFinal) { emitted[seg] = k + 1; holdChin(null, k); return; }
     }
     emitted[seg] = k + 1;
     voiceSay(hit.word);
