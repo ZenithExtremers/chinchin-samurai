@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ちんちん侍</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#b3261e">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ちんちん侍">
 <style>
 /* 座敷の畳と朱。円座の4人を中心に、下に操作盤 */
 :root {
@@ -74,7 +80,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 }
 .best { text-align: center; font-size: 13px; color: var(--muted); margin: 0 0 14px; font-variant-numeric: tabular-nums; }
 .best b { color: var(--ink); }
-.card h2 .soon { font-size: 11px; font-weight: bold; color: var(--accent-ink); background: var(--muted); border-radius: 6px; padding: 1px 6px; vertical-align: middle; }
+.card h2 .soon, .row label .soon { display: inline; }
+.card h2 .soon, .row label .soon { font-size: 11px; font-weight: bold; color: var(--accent-ink); background: var(--muted); border-radius: 6px; padding: 1px 6px; vertical-align: middle; }
 .toggles { display: flex; flex-direction: column; gap: 10px; }
 .row label small { display: block; font-size: 12px; color: var(--muted); }
 .plist { display: flex; flex-direction: column; gap: 8px; }
@@ -125,6 +132,20 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .voices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .voices button { padding: 9px 4px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); font-size: 14px; cursor: pointer; }
 .voices button:active { border-color: var(--accent); }
+.sub-btn { margin-top: 10px; background: var(--seat); color: var(--accent); border: 2px solid var(--accent); font-size: 18px; padding: 12px; }
+.field { width: 100%; font: inherit; font-size: 18px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); color: var(--ink); }
+.joinrow { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; }
+.joinrow .big { font-size: 18px; padding: 10px; letter-spacing: .05em; }
+.roomcode { font-size: 44px; font-weight: bold; letter-spacing: .25em; text-align: center; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ghost-btn { width: 100%; margin-top: 8px; padding: 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); font-size: 15px; cursor: pointer; }
+.members { margin: 0 0 10px; padding-left: 1.6em; line-height: 1.9; font-size: 16px; }
+.members .tag-host { font-size: 11px; color: var(--accent-ink); background: var(--gold); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
+.members .tag-cpu { color: var(--muted); }
+.ver { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+.ver button { background: none; border: none; color: var(--accent); text-decoration: underline; font-size: 12px; cursor: pointer; padding: 0 0 0 6px; }
+.notes-ver { margin: 0 0 4px; font-size: 18px; color: var(--accent); }
+.notes-date { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+.notes-list { margin: 0; padding-left: 1.2em; line-height: 1.7; font-size: 14px; }
 .note { font-size: 13px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
 .msg { font-size: 14px; color: var(--accent); text-align: center; margin: 10px 0 0; min-height: 1em; }
 
@@ -258,6 +279,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   <p class="sub">言い間違えたら、切腹。</p>
 
   <button class="big" id="startBtn">いざ、勝負！</button>
+  <button class="big sub-btn" id="onlineBtn" hidden>オンライン対戦</button>
   <p class="msg" id="titleMsg" style="margin:0 0 6px"></p>
   <div class="best" id="bestBox"></div>
 
@@ -342,8 +364,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 
   <div class="card">
-    <h2>オンライン対戦の音声 <small class="soon">準備中</small></h2>
-    <p class="note" style="margin:-4px 0 10px">オンライン対戦（それぞれのスマホから参加）ができたら効きます。今の1台で遊ぶときは関係ありません。</p>
+    <h2>オンライン対戦の音声</h2>
+    <p class="note" style="margin:-4px 0 10px">オンライン対戦（それぞれのスマホから参加）のときに効きます。</p>
     <div class="toggles">
       <div class="row">
         <label for="netCharSendChk">キャラの声を送る<small>自分が言った言葉を、自分のキャラの声で相手のスマホに鳴らす</small></label>
@@ -354,11 +376,11 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
         <input type="checkbox" id="netCharRecvChk" checked>
       </div>
       <div class="row">
-        <label for="netLiveSendChk">生の声を送る<small>マイクの声そのものを相手に流す（音声入力モードのとき）</small></label>
+        <label for="netLiveSendChk">生の声を送る <small class="soon">準備中</small><small>マイクの声そのものを相手に流す（音声入力モードのとき）</small></label>
         <input type="checkbox" id="netLiveSendChk">
       </div>
       <div class="row">
-        <label for="netLiveRecvChk">生の声を受け取る<small>相手のマイクの声を自分のスマホで流す</small></label>
+        <label for="netLiveRecvChk">生の声を受け取る <small class="soon">準備中</small><small>相手のマイクの声を自分のスマホで流す</small></label>
         <input type="checkbox" id="netLiveRecvChk">
       </div>
     </div>
@@ -383,10 +405,51 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     </ul>
   </div>
 
+  <p class="ver"><span id="verLabel"></span><button id="notesBtn">パッチノート</button></p>
   <p class="note" style="text-align:center">
     音声：Open JTalk／HTS Voice「Mei」「Takumi」「NIT ATR503 M001」<br>
     © Nagoya Institute of Technology（Mei・Takumi は CC BY 3.0, MMDAgent Project）
   </p>
+</section>
+
+<!-- ===== オンライン対戦 ===== -->
+<section class="screen" id="online">
+  <div class="topbar">
+    <span>オンライン対戦</span>
+    <button id="onBack">もどる</button>
+  </div>
+  <div class="card" id="onEntry">
+    <h2>あなたの名前</h2>
+    <input class="field" id="onName" maxlength="8" placeholder="名前" aria-label="あなたの名前">
+    <p class="note" style="margin:6px 0 14px">見た目・ハンデ・声の設定は、スタート画面の「プレイヤー」の席1が使われます。</p>
+    <button class="big" id="onCreate">部屋を作る</button>
+    <h2 style="margin-top:18px">部屋番号で参加</h2>
+    <div class="joinrow">
+      <input class="field" id="onCode" inputmode="numeric" maxlength="4" placeholder="1234" aria-label="部屋番号">
+      <button class="big" id="onJoin">参加</button>
+    </div>
+  </div>
+  <div class="card" id="onRoom" hidden>
+    <h2>部屋番号</h2>
+    <div class="roomcode" id="onRoomCode"></div>
+    <button class="ghost-btn" id="onShare">招待リンクをコピー</button>
+    <h2 style="margin-top:14px">参加者 <small id="onCount"></small></h2>
+    <ol class="members" id="onMembers"></ol>
+    <p class="note" id="onRule" style="margin-bottom:12px"></p>
+    <button class="big" id="onStart" hidden>この人数で始める</button>
+    <p class="note" id="onWait" hidden>ホストが始めるのを待っています…</p>
+    <button class="ghost-btn" id="onLeave">部屋を出る</button>
+  </div>
+  <p class="msg" id="onMsg"></p>
+</section>
+
+<!-- ===== パッチノート ===== -->
+<section class="screen" id="notes">
+  <div class="topbar">
+    <span>パッチノート</span>
+    <button id="notesBack">もどる</button>
+  </div>
+  <div id="notesList"></div>
 </section>
 
 <!-- ===== ゲーム画面 ===== -->
@@ -452,6 +515,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     <div class="who" id="ovWho"></div>
     <div class="new" id="ovNew" hidden></div>
     <div class="why" id="ovWhy"></div>
+    <p class="note" id="guestWait" hidden style="margin:0 0 10px">次の勝負はホストが始めます</p>
     <div class="btns" id="endBtns">
       <button id="menuBtn">メニュー</button>
       <button class="primary" id="againBtn">もう一回</button>
@@ -463,6 +527,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
+<script src="firebase-config.js"></script>
 <script src="voices.js"></script>
 <script>
 'use strict';
@@ -493,13 +558,126 @@ const SEAT_DEFAULTS = [['mage', 0], ['mage', 1], ['long', 2], ['hachi', 3], ['lo
 let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bonus: 0 }));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
-const bonusMs = (i) => (isHuman(i) ? (PROFILES[i].bonus || 0) * 1000 : 0);
+const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
+const APP_VERSION = "1.0.0";
+/** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
+const PATCH_NOTES = [
+ [
+  "1.0.0",
+  "2026-11-14",
+  "アプリ化とオンライン対戦",
+  [
+   "オンライン対戦：それぞれのスマホから同じ部屋に入って遊べる（4ケタの部屋番号、招待リンク、6人まで、空いた席はCPU）",
+   "部屋を作った人が判定するので、誰がいつ言ったかが正確に分かる。お手つきも正しく取れる",
+   "「キャラの声を送る／受け取る」が効くように",
+   "途中で抜けた人の席はCPUが引き継ぐ。ホストが抜けると部屋は閉じる",
+   "オンラインは通信の遅れぶん、制限時間を0.5秒長く",
+   "アプリ化：ホーム画面に追加でき、電波がなくても開ける",
+   "パッチノートを追加"
+  ]
+ ],
+ [
+  "0.9",
+  "2026-11-14",
+  "デバッグ",
+  [
+   "デスマッチで人間が全員脱落したあとの回数を最高記録にしない",
+   "切腹ムービー中にやめても音が鳴らないように",
+   "音声入力が2重に動く・前の勝負の言葉が持ち越されるなどの不具合を修正"
+  ]
+ ],
+ [
+  "0.8",
+  "2026-11-14",
+  "声と音声入力",
+  [
+   "残り時間が半分を切ってから言うと、焦った高い声になる",
+   "CPUもたまにギリギリで答える",
+   "音声入力の反応を速く（「ちんちん」の判定待ちを場面ごとに短く）",
+   "マイクが使えないとき・声が届いていないときに画面で知らせる",
+   "音声入力モードでもセリフの音声を最初からオン",
+   "タップしてもBGMが鳴らないことがあるのを修正",
+   "ごろうの声を速く、試し聞きで全セリフを聞けるように"
+  ]
+ ],
+ [
+  "0.7",
+  "2026-11-13",
+  "BGM・ハンデ・フリック",
+  [
+   "タイトル画面に和太鼓と三味線のBGM",
+   "人ごとに制限時間を長くできるハンデ",
+   "自分のアイコンから相手の方へフリックして指せる"
+  ]
+ ],
+ [
+  "0.6",
+  "2026-11-13",
+  "切腹をしっかり",
+  [
+   "ミスした瞬間に止まり、一瞬の間のあと斬られる。斬れた体は画面の外へ落ちる",
+   "切腹の声は「シャキーン」",
+   "勝負の最初の親は赤丸で表示",
+   "答えが分かる案内は「初心者向け」のオンオフに（最初はオフ）",
+   "矢印の先がアイコンに隠れないように"
+  ]
+ ],
+ [
+  "0.5",
+  "2026-11-13",
+  "遊びやすく",
+  [
+   "切腹ムービー、CPUのフェイント",
+   "名前・髪型・服の色を変えられる",
+   "最高記録、設定を覚える"
+  ]
+ ],
+ [
+  "0.4",
+  "2026-11-13",
+  "デスマッチ",
+  [
+   "切腹した人が脱落して、最後の一人まで続けるデスマッチ",
+   "声の速さを全員そろえる"
+  ]
+ ],
+ [
+  "0.3",
+  "2026-11-13",
+  "6人とCPUの強さ",
+  [
+   "6人まで遊べる",
+   "CPUの強さ（弱い・普通・強い）と「CPUは絶対に負けない」",
+   "声を Mei／Takumi で席ごとに別のキャラに",
+   "ギリギリで反応すると固まる不具合を修正"
+  ]
+ ],
+ [
+  "0.2",
+  "2026-11-13",
+  "人数とセリフ音声",
+  [
+   "人間の人数を選べる（1台を囲んで遊ぶ）",
+   "「ちんちん侍」は親も含めて全員、一人切腹したら勝負あり",
+   "セリフ音声（Open JTalk）"
+  ]
+ ],
+ [
+  "0.1",
+  "2026-11-13",
+  "はじまり",
+  [
+   "4人で円になって遊ぶ、セリフボタンモードと音声入力モード"
+  ]
+ ]
+];
 const CPU_NAMES = ['たろう', 'はなこ', 'じろう', 'さくら', 'ごろう'];
 /** 円の上に、下（自分）から時計回りに並べる */
 function layoutSeats(n) {
   const R = n <= 4 ? 34 : 36;
+  const me = online() ? NET.me : 0; // 自分の席が一番下に来るように回す
   SEAT_POS = Array.from({ length: n }, (_, i) => {
-    const a = Math.PI / 2 + i * 2 * Math.PI / n;
+    const a = Math.PI / 2 + ((i - me + n) % n) * 2 * Math.PI / n;
     return [50 + R * Math.cos(a), 50 + R * Math.sin(a)];
   });
   const stage = $('stage');
@@ -523,6 +701,20 @@ const S = {
   timers: [],
   deadline: 0, limitMs: 1, barMs: 1,
 };
+
+/* ================= オンライン対戦の土台（通信は online.js） =================
+ * ホスト（部屋を作った人）がゲームを進めて判定する。参加者（ゲスト）は操作を送り、状態と出来事を受け取って画面を動かす。
+ * NET.role: null（1台で遊ぶ）／'host'／'guest'。NET.me は自分の席。 */
+const NET = { role: null, me: 0, send: null, emit: null, onLeave: null, dirty: false };
+const online = () => NET.role != null;
+const isHost = () => NET.role === 'host';
+const isGuest = () => NET.role === 'guest';
+const ONLINE_EXTRA = 500; // 通信の遅れぶん、オンラインは制限時間を少し長く
+/** この端末で操作する席か（1台なら人間全員、オンラインなら自分の席だけ） */
+const isMine = (i) => (online() ? i === NET.me : isHuman(i));
+/** ホストが出来事を全員に配る */
+const emitFx = (e) => { if (isHost() && NET.emit) NET.emit(e); };
+const markDirty = () => { if (isHost() && NET.dirty === false) { NET.dirty = true; setTimeout(() => { NET.dirty = false; if (NET.push) NET.push(); }, 0); } };
 
 const $ = (id) => document.getElementById(id);
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -569,11 +761,14 @@ function avatarSvg(color, i, hair = 'mage') {
   </svg>`;
 }
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const seatAvatar = (i) => avatarSvg(COLORS[PROFILES[i].color], i, PROFILES[i].hair);
+/** 席の見た目：オンライン対戦中はホストから届いた見た目、それ以外はこの端末の設定 */
+const seatLook = (i) => (online() && S.players[i] && S.players[i].look) || PROFILES[i];
+const seatAvatar = (i) => avatarSvg(COLORS[seatLook(i).color] || COLORS[0], i, seatLook(i).hair);
+const profileAvatar = (i) => avatarSvg(COLORS[PROFILES[i].color], i, PROFILES[i].hair);
 
 function buildSeats() {
   $('seats').innerHTML = S.players.map((p, i) => `
-    <div class="seat ${p.cpu ? '' : 'human'} ${i === 0 ? 'bottom' : ''}" data-i="${i}" style="left:${SEAT_POS[i][0]}%;top:${SEAT_POS[i][1]}%">
+    <div class="seat ${p.cpu ? '' : 'human'} ${i === (online() ? NET.me : 0) ? 'bottom' : ''}" data-i="${i}" style="left:${SEAT_POS[i][0]}%;top:${SEAT_POS[i][1]}%">
       <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
@@ -585,8 +780,8 @@ function buildSeats() {
       e.preventDefault();
       const i = +el.dataset.i;
       // 親（人間）が自分のアイコンに触れたら、フリックで指す
-      if (S.phase === 'call' && isHuman(S.oya) && i === S.oya && S.pendingTarget == null) return startFlick(e);
-      onSeatTap(i);
+      if (S.phase === 'call' && isMine(S.oya) && i === S.oya && S.pendingTarget == null) return startFlick(e);
+      seatAction(i);
     });
   });
 }
@@ -605,6 +800,10 @@ function flash(i, cls) {
   const el = seatEl(i);
   el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
   setTimeout(() => el.classList.remove(cls), 700);
+}
+function setCenter(text) {
+  $('centerWord').textContent = text;
+  emitFx({ t: 'cw', s: text });
 }
 function setHint(text, warn) {
   $('hint').textContent = text;
@@ -625,7 +824,7 @@ function avatarCircle(i) {
 let lastArrow = null;
 function drawArrow(from, to, preview = false) {
   const line = $('arrowLine');
-  if (!preview) lastArrow = from == null ? null : [from, to];
+  if (!preview) { lastArrow = from == null ? null : [from, to]; emitFx({ t: 'ar', f: from ?? -1, to: to ?? -1 }); }
   if (from == null) { line.setAttribute('opacity', 0); return; }
   const a = avatarCircle(from), b = avatarCircle(to);
   const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
@@ -637,7 +836,8 @@ function drawArrow(from, to, preview = false) {
 }
 window.addEventListener('resize', () => { if (lastArrow) drawArrow(...lastArrow); });
 function refreshSeats() {
-  const humanOya = S.phase === 'call' && isHuman(S.oya);
+  markDirty();
+  const humanOya = S.phase === 'call' && isMine(S.oya);
   S.players.forEach((p, i) => {
     const el = seatEl(i);
     // 親の金枠・「親」マーク・指された人の赤丸・指せる人のぷくぷくは、初心者向けの案内がオンのときだけ
@@ -662,22 +862,22 @@ function refreshSeats() {
  * （誰の番か・何と言うべきかを書くと、そこを見るだけで勝ててしまうため）。
  */
 function updateHint() {
-  if (S.phase === 'call' && isHuman(S.oya)) {
+  if (S.phase === 'call' && isMine(S.oya)) {
     if (S.pendingWord && S.pendingTarget == null) return setHint(`「${S.pendingWord}」→ 指す人は？`, S.guide);
     if (S.pendingTarget != null) return setHint(`${nameOf(S.pendingTarget)}を指した → 言葉は？`, S.guide);
   }
   if (!S.guide) return setHint('');
   // ---- 初心者向けの案内 ----
   if (S.phase === 'call') {
-    if (isHuman(S.oya)) {
-      const who = solo() ? 'あなた' : nameOf(S.oya);
+    if (isMine(S.oya)) {
+      const who = solo() || online() ? 'あなた' : nameOf(S.oya);
       setHint(`${who}が親！ 言葉を${S.mode === 'voice' ? '言って' : '選んで'}、指す人をタップ`, true);
     } else setHint(`${nameOf(S.oya)}の番…`);
   } else if (S.phase === 'respond') {
-    const hs = [...S.need.keys()].filter(isHuman);
+    const hs = [...S.need.keys()].filter(isMine);
     if (!hs.length) return setHint('…見守る');
     const word = S.need.get(hs[0]);
-    if (solo()) return setHint(S.mode === 'voice' ? `「${word}」と言え！` : `「${word}」！`, true);
+    if (solo() || online()) return setHint(S.mode === 'voice' ? `「${word}」と言え！` : `「${word}」！`, true);
     if (word === W.CS) {
       return setHint(S.mode === 'voice' ? 'みんなで「ちんちん侍」！'
         : `「ちんちん侍」！ ${hs.map(nameOf).join('・')}は自分のアイコンをタップ`, true);
@@ -688,7 +888,7 @@ function updateHint() {
 
 /* ================= タイマー ================= */
 function currentLimit() {
-  const base = DIFF[S.diff].limit + (S.mode === 'voice' ? VOICE_EXTRA : 0);
+  const base = DIFF[S.diff].limit + (S.mode === 'voice' ? VOICE_EXTRA : 0) + (online() ? ONLINE_EXTRA : 0);
   return Math.max(base * 0.55, base * (1 - S.combo * 0.02));
 }
 function later(ms, fn) {
@@ -753,13 +953,26 @@ function isHurried() {
   if (S.phase !== 'call' && S.phase !== 'respond') return false;
   return S.deadline - performance.now() < S.barMs / 2;
 }
-function playLine(p, word) {
+/**
+ * この端末でその人の声を鳴らすか。
+ *  - CPU：鳴らす ／ 自分（この端末の人）：セリフボタンのときだけ（音声入力なら自分で声に出している）
+ *  - オンラインの相手：相手が「キャラの声を送る」、自分が「キャラの声を受け取る」のときだけ
+ */
+function shouldPlay(p) {
+  if (!isHuman(p)) return true;
+  if (isMine(p)) return S.mode === 'button';
+  if (online()) return $('netCharRecvChk').checked && S.players[p].cs !== false;
+  return S.mode === 'button';
+}
+/** 切腹の「シャキーン」：自分やCPUの分は演出として鳴らす。オンラインの相手の分は声のスイッチに従う */
+const seppukuVoice = (p) => !online() || isMine(p) || !isHuman(p) || shouldPlay(p);
+function playLine(p, word, hurried) {
   if (!S.tts || typeof VOICES === 'undefined') return;
   const v = 'p' + p;
   const takes = VOICES[v] && VOICES[v][word];
   if (!takes) return;
   // 残り時間が制限時間の半分を切ってから言ったときだけ、声が高いほう（焦って上ずった声）
-  const n = isHurried() ? HIGH_TAKE[v] : 1 - HIGH_TAKE[v];
+  const n = (hurried ?? isHurried()) ? HIGH_TAKE[v] : 1 - HIGH_TAKE[v];
   const buf = buffers[v] && buffers[v][word] && buffers[v][word][n];
   let dur = 1;
   try {
@@ -775,7 +988,7 @@ function playLine(p, word) {
       new Audio(takes[n]).play().catch(() => {});
     }
   } catch (e) { /* 音が出なくても続行 */ }
-  if (!isHuman(p)) ttsBusyUntil = Math.max(ttsBusyUntil, performance.now() + dur * 1000 + 350);
+  if (!isMine(p)) ttsBusyUntil = Math.max(ttsBusyUntil, performance.now() + dur * 1000 + 350);
 }
 function stopAllLines() {
   playing.forEach((src) => { try { src.stop(); } catch (e) { /* noop */ } });
@@ -888,14 +1101,23 @@ function beep(freq, dur, type = 'square', vol = 0.06) {
 function gong() { beep(110, 1.2, 'sine', 0.25); beep(165, 1.0, 'triangle', 0.12); }
 
 /* ================= ゲーム進行 ================= */
-function startGame(oya) {
+/** 新しい勝負・デスマッチの再開で盤面を片付ける（ゲストは 'reset' の出来事で同じことをする） */
+function resetBoard(text, revive) {
   dropChinHold();
   $('overlay').classList.remove('show');
+  $('cut').classList.remove('show', 'fade');
+  if (revive) S.players.forEach((_, i) => seatEl(i).classList.remove('dead'));
+  $('centerWord').textContent = text;
+  drawArrow(null, null, true);
+  lastArrow = null;
+  $('arrowLine').setAttribute('opacity', 0);
+  emitFx({ t: 'reset', s: text, rv: !!revive });
+}
+function startGame(oya) {
+  if (isGuest()) return;
   S.alive = new Set(S.players.map((_, i) => i));
-  S.players.forEach((_, i) => seatEl(i).classList.remove('dead'));
   S.combo = 0;
-  $('centerWord').textContent = 'いざ！';
-  drawArrow(null);
+  resetBoard('いざ！', true);
   S.firstOya = true;
   beginCall(oya);
 }
@@ -921,7 +1143,7 @@ function makeCall(p, word, target) {
   S.firstOya = false;
   S.call = { from: p, word, target };
   S.combo++;
-  $('centerWord').textContent = word;
+  setCenter(word);
   drawArrow(p, target);
   beep(word === W.CS ? 660 : 520, 0.08);
 
@@ -954,7 +1176,9 @@ function say(p, word, target, byVoice = false) {
   if (S.phase !== 'call' && S.phase !== 'respond') return;
   if (!isAlive(p)) return; // 脱落した人の声やボタンは無視
   showBubble(p, word);
-  if (!isHuman(p) || S.mode === 'button') playLine(p, word); // 音声入力モードでは人間の声はマイク側
+  const hurried = isHurried();
+  if (shouldPlay(p)) playLine(p, word, hurried);
+  emitFx({ t: 'say', p, w: word, h: hurried });
 
   if (S.phase === 'call') {
     if (p !== S.oya) return seppuku(p, `親じゃないのに「${word}」と言ってしまった（お手つき）`);
@@ -965,6 +1189,7 @@ function say(p, word, target, byVoice = false) {
         if (byVoice && S.pendingWord === W.CHIN && (word === W.SAMU || word === W.CS) && performance.now() - S.pendingAt < 900) {
           S.pendingWord = W.CS;
           showBubble(p, W.CS);
+          emitFx({ t: 'bub', p, s: W.CS });
           refreshSeats();
           return;
         }
@@ -984,9 +1209,8 @@ function say(p, word, target, byVoice = false) {
   if (!expect) return seppuku(p, `関係ないのに「${word}」と言ってしまった（お手つき）`);
   if (expect !== word) return seppuku(p, `「${expect}」のところを「${word}」と言ってしまった`);
   S.need.delete(p);
-  if (word === W.BIRO) flash(p, 'biro');
-  if (word === W.SHAKI) flash(p, 'shaki');
-  if (word === W.CS) flash(p, 'allsay');
+  const fx = { [W.BIRO]: 'biro', [W.SHAKI]: 'shaki', [W.CS]: 'allsay' }[word];
+  if (fx) { flash(p, fx); emitFx({ t: 'fl', p, c: fx }); }
   if (S.need.size === 0) {
     // 全員そろったらすぐ次の親の番（待ち時間を置くと、素早く次を言った人がお手つきにされる）
     beginCall(S.call.target);
@@ -1001,52 +1225,58 @@ function seppuku(p, why) {
   newPhase();
   S.phase = 'over';
   S.players[p].sep++;
+  // 最高記録は人間がまだ遊んでいるときだけ（デスマッチで人間が全員脱落したあとのCPUだけの回数は数えない）
+  const isNew = aliveList().some(isHuman) && recordBest(S.combo);
+  const info = { p, title: '切腹', who: `${nameOf(p)} の負け`, why: `${why}\n${S.combo} 回つづいた`, final: true,
+    best: isNew ? `新記録！ ${CPU_LABEL[S.cpu]}で ${S.combo} 回` : '' };
+  if (death()) {
+    // デスマッチ：脱落して、最後の一人になるまで続ける
+    S.alive.delete(p);
+    const left = aliveList();
+    if (left.length <= 1 || (S.cpuSafe && !left.some(isHuman))) {
+      info.title = '決着';
+      info.who = left.length === 1 ? `${nameOf(left[0])} の勝ち！` : 'CPUの勝ち';
+      info.why = `最後に切腹：${nameOf(p)}（${why}）`;
+    } else {
+      info.final = false;
+      info.who = `${nameOf(p)} 脱落`;
+      info.why = `${why}\n残り ${left.length} 人：${left.map(nameOf).join('・')}`;
+      // 脱落した人の次（時計回り）の生き残りが親で再開
+      let next = p;
+      do { next = (next + 1) % S.players.length; } while (!isAlive(next));
+      S.nextOya = next;
+    }
+  }
+  seppukuFx(info);
+  emitFx({ t: 'sep', ...info });
+  if (!info.final) later(S.overlayDelay + 2150, continueDeath);
+}
+/** 切腹の演出（ホストもゲストも同じ）：止まる → 間 → 斬られる → 結果 */
+function seppukuFx(info) {
+  const p = info.p;
   setHint('');
   flash(p, 'caught');
   beep(220, 0.15, 'square', 0.05);
-  // 一瞬の間をおいてから、しっかり切腹
+  S.overlayDelay = SEPPUKU_PAUSE + (S.movie ? CUT_LEN + 150 : 1300); // ムービーが終わってから結果
   later(SEPPUKU_PAUSE, () => {
     seatEl(p).classList.add('dead');
     refreshSeats();
     if (S.movie) playCutMovie(p);
-    else { gong(); playLine(p, W.SHAKI); }
+    else { gong(); if (seppukuVoice(p)) playLine(p, W.SHAKI); }
   });
-  $('ovTitle').textContent = '切腹';
-  $('ovWhy').textContent = `${why}\n${S.combo} 回つづいた`;
-  S.overlayDelay = SEPPUKU_PAUSE + (S.movie ? CUT_LEN + 150 : 1300); // ムービーが終わってから結果
-  // 最高記録は人間がまだ遊んでいるときだけ（デスマッチで人間が全員脱落したあとのCPUだけの回数は数えない）
-  const isNew = aliveList().some(isHuman) && recordBest(S.combo);
-  $('ovNew').hidden = !isNew;
-  $('ovNew').textContent = isNew ? `新記録！ ${CPU_LABEL[S.cpu]}で ${S.combo} 回` : '';
-
-  if (!death()) {
-    $('ovWho').textContent = `${nameOf(p)} の負け`;
-    showOverlay(true);
-    return;
-  }
-  // デスマッチ：脱落して、最後の一人になるまで続ける
-  S.alive.delete(p);
-  const left = aliveList();
-  const humansLeft = left.filter(isHuman);
-  if (left.length <= 1 || (S.cpuSafe && humansLeft.length === 0)) {
-    $('ovTitle').textContent = '決着';
-    $('ovWho').textContent = left.length === 1 ? `${nameOf(left[0])} の勝ち！` : 'CPUの勝ち';
-    $('ovWhy').textContent = `最後に切腹：${nameOf(p)}（${why}）`;
-    showOverlay(true);
-    return;
-  }
-  $('ovWho').textContent = `${nameOf(p)} 脱落`;
-  $('ovWhy').textContent = `${why}\n残り ${left.length} 人：${left.map(nameOf).join('・')}`;
-  showOverlay(false);
-  // 脱落した人の次（時計回り）の生き残りが親で再開
-  let next = p;
-  do { next = (next + 1) % S.players.length; } while (!isAlive(next));
-  S.nextOya = next;
-  later(S.overlayDelay + 2150, continueDeath);
+  $('ovTitle').textContent = info.title;
+  $('ovWho').textContent = info.who;
+  $('ovWhy').textContent = info.why;
+  $('ovNew').hidden = !info.best;
+  $('ovNew').textContent = info.best || '';
+  showOverlay(info.final);
 }
 function showOverlay(final) {
+  // ゲストはホストの操作を待つ（「もう一回」「つづける」はホストだけ）
   $('endBtns').hidden = !final;
-  $('contBtns').hidden = final;
+  $('contBtns').hidden = final || isGuest();
+  $('againBtn').hidden = isGuest();
+  $('guestWait').hidden = !isGuest();
   later(S.overlayDelay, () => $('overlay').classList.add('show'));
 }
 /** 切腹ムービー：アバターが斜めにスパッと斬れる */
@@ -1057,10 +1287,106 @@ function playCutMovie(p) {
   $('cutBot').innerHTML = svg;
   const cut = $('cut');
   cut.classList.remove('show', 'fade'); void cut.offsetWidth; cut.classList.add('show');
-  later(500, () => { beep(1800, 0.12, 'sawtooth', 0.05); gong(); playLine(p, W.SHAKI); }); // 刀が走る瞬間にゴーン＋シャキーン（メニューに戻ったら鳴らさない）
+  later(500, () => { beep(1800, 0.12, 'sawtooth', 0.05); gong(); if (seppukuVoice(p)) playLine(p, W.SHAKI); }); // 刀が走る瞬間にゴーン＋シャキーン（メニューに戻ったら鳴らさない）
   clearTimeout(playCutMovie.t);
   // 斬れた体が画面の下へ落ちきったら消す（そのあとに結果を出す）
   playCutMovie.t = setTimeout(() => cut.classList.remove('show', 'fade'), CUT_LEN);
+}
+
+/* ================= オンライン：状態の配信と反映 ================= */
+/** ホストが配る、今の状態（Realtime Database に置く） */
+function netSnapshot() {
+  return {
+    ph: S.phase, oy: S.oya, cl: S.call || null, nd: [...S.need], cb: S.combo, al: [...S.alive],
+    lf: Math.max(0, Math.round(S.deadline - performance.now())), bm: Math.round(S.barMs), lm: Math.round(S.limitMs),
+    pw: S.pendingWord || null, pt: S.pendingTarget ?? null, fo: !!S.firstOya,
+    sp: S.players.map((p) => p.sep), cpu: S.players.map((p) => (p.cpu ? 1 : 0)),
+  };
+}
+/** ゲスト：届いた状態を画面に反映 */
+function netApplyState(st) {
+  if (!st || !isGuest()) return;
+  S.phase = st.ph; S.oya = st.oy; S.call = st.cl || null;
+  S.need = new Map(st.nd || []); S.combo = st.cb || 0; S.alive = new Set(st.al || []);
+  S.barMs = st.bm || 1; S.limitMs = st.lm || 1; S.deadline = performance.now() + (st.lf || 0);
+  S.pendingWord = st.pw || null; S.pendingTarget = st.pt ?? null; S.firstOya = !!st.fo;
+  (st.sp || []).forEach((n, i) => { if (S.players[i]) S.players[i].sep = n; });
+  (st.cpu || []).forEach((c, i) => { if (S.players[i] && c && !S.players[i].cpu) netSeatToCpu(i); });
+  refreshSeats();
+}
+/** ゲスト：届いた出来事（セリフ・矢印・切腹など）を再生 */
+function netApplyEvent(e) {
+  if (!e || !isGuest()) return;
+  switch (e.t) {
+    case 'say':
+      if (e.p !== NET.me) { showBubble(e.p, e.w); if (shouldPlay(e.p)) playLine(e.p, e.w, e.h); }
+      break;
+    case 'bub':
+      showBubble(e.p, e.s);
+      if (e.w && e.p !== NET.me && shouldPlay(e.p)) playLine(e.p, e.w);
+      break;
+    case 'fl': flash(e.p, e.c); break;
+    case 'ar':
+      if (e.f < 0) { lastArrow = null; $('arrowLine').setAttribute('opacity', 0); } else drawArrow(e.f, e.to);
+      break;
+    case 'cw': $('centerWord').textContent = e.s; break;
+    case 'reset': resetBoard(e.s, e.rv); break;
+    case 'sep': S.phase = 'over'; seppukuFx(e); break;
+    case 'cpu': netSeatToCpu(e.p); break;
+  }
+}
+/** 抜けた人の席をCPUにする（ホストは代わりにCPUを動かす） */
+function netSeatToCpu(i) {
+  const pl = S.players[i];
+  if (!pl || pl.cpu) return;
+  pl.cpu = true;
+  const el = seatEl(i);
+  el.classList.remove('human');
+  if (!el.querySelector('.cpu-tag')) el.querySelector('.avatar').insertAdjacentHTML('beforeend', '<span class="tag cpu-tag">CPU</span>');
+  if (!isHost()) return;
+  emitFx({ t: 'cpu', p: i });
+  if (S.phase === 'call' && S.oya === i) cpuCall(i);
+  if (S.phase === 'respond' && S.need.has(i)) cpuRespond(i, S.need.get(i));
+  refreshSeats();
+}
+/** ホスト：ゲストから届いた操作 */
+function netHostAct(seat, a) {
+  if (!isHost() || !S.players[seat] || S.players[seat].cpu) return;
+  if (a.k === 'say' && CALLS.concat([W.BIRO, W.SHAKI]).includes(a.w)) say(seat, a.w, undefined, !!a.v);
+  else if (a.k === 'tap' && Number.isInteger(a.i)) onSeatTap(a.i, seat);
+}
+/**
+ * オンライン対戦を始める（online.js から呼ぶ）。
+ * roster：席ごとの {name, cpu, hair, color, bonus, cs}、set：ホストのルール設定、me：自分の席
+ */
+function netBegin({ roster, set, me, role }) {
+  NET.role = role;
+  NET.me = me;
+  S.total = roster.length;
+  S.rule = set.rule; S.cpu = set.cpu; S.diff = set.diff; S.cpuSafe = !!set.safe; S.feint = !!set.feint;
+  S.humans = roster.filter((r) => !r.cpu).length;
+  S.players = roster.map((r) => ({
+    name: r.name, cpu: !!r.cpu, sep: 0, look: { hair: r.hair, color: r.color }, bonus: r.bonus || 0, cs: r.cs !== false,
+  }));
+  S.tts = $('ttsChk').checked; S.movie = $('movieChk').checked; S.guide = $('guideChk').checked;
+  S.alive = new Set(S.players.map((_, i) => i));
+  S.phase = 'idle';
+  layoutSeats(S.total);
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'game'));
+  $('modeLabel').textContent = `オンライン・部屋${set.code}` + (death() ? '・デスマッチ' : '') + (S.cpuSafe ? '・CPU不敗' : '') + (S.guide ? '・案内あり' : '');
+  $('pad').hidden = S.mode === 'voice';
+  $('voicebox').hidden = S.mode !== 'voice';
+  $('heard').textContent = '';
+  bgmStop();
+  initAudio(S.total);
+  buildSeats();
+  if (S.mode === 'voice' && !startVoice()) $('micBtn').hidden = false;
+  if (isHost()) startGame(0);
+  else { resetBoard('いざ！', true); refreshSeats(); }
+}
+/** オンライン対戦を終える（部屋を出た・閉じられた） */
+function netEnd() {
+  NET.role = null; NET.me = 0; NET.send = NET.emit = NET.push = null;
 }
 
 /* ================= 保存（設定・最高記録） ================= */
@@ -1084,12 +1410,9 @@ function renderBest() {
   $('bestBox').innerHTML = parts.length ? `最高記録（つづいた回数）　${parts.join('　')}` : '最高記録はまだありません';
 }
 function continueDeath() {
-  if (S.phase !== 'over') return;
-  dropChinHold();
-  $('overlay').classList.remove('show');
+  if (S.phase !== 'over' || isGuest()) return;
   S.combo = 0;
-  $('centerWord').textContent = 'つづき！';
-  drawArrow(null);
+  resetBoard('つづき！', false);
   S.firstOya = true;
   beginCall(S.nextOya);
 }
@@ -1130,11 +1453,13 @@ function cpuCall(p) {
 function cpuFeint(p, target) {
   showBubble(p, `${W.CHIN}…`);
   playLine(p, W.CHIN);
+  emitFx({ t: 'bub', p, s: `${W.CHIN}…`, w: W.CHIN });
   drawArrow(p, target);
   later(Math.max(380, S.limitMs * 0.25), () => {
     if (Math.random() < 0.5) {
       showBubble(p, `${W.CHIN}…侍！`);
       playLine(p, W.SAMU);
+      emitFx({ t: 'bub', p, s: `${W.CHIN}…侍！`, w: W.SAMU });
       makeCall(p, W.CS, target);
     } else {
       makeCall(p, W.CHIN, target);
@@ -1158,6 +1483,7 @@ function cpuRespond(p, expect) {
  * 1人プレイなら常にあなた。複数人なら、番の人間が決まらないときは無視する。
  */
 function humansFor(word, source) {
+  if (online()) return isAlive(NET.me) ? [NET.me] : []; // オンラインは自分の席だけ
   if (solo()) return [0];
   if (S.phase === 'call') return isHuman(S.oya) ? [S.oya] : [];
   if (S.phase === 'respond') {
@@ -1169,16 +1495,32 @@ function humansFor(word, source) {
   return [];
 }
 function humanSay(word, source) {
+  if (isGuest()) {
+    // ゲスト：ホストに送る。待たせないよう、自分の吹き出しと声はすぐ出す
+    if (!isAlive(NET.me) || (S.phase !== 'call' && S.phase !== 'respond')) return;
+    showBubble(NET.me, word);
+    if (shouldPlay(NET.me)) playLine(NET.me, word);
+    NET.send({ k: 'say', w: word, v: source === 'voice' });
+    return;
+  }
   humansFor(word, source).forEach((p) => say(p, word, undefined, source === 'voice'));
+}
+/** 席をタップ（またはフリック）したとき：ゲストはホストに送る */
+function seatAction(i) {
+  if (isGuest()) { NET.send({ k: 'tap', i }); return; }
+  onSeatTap(i, online() ? NET.me : undefined);
 }
 
 /* ================= 入力：タップ ================= */
-function onSeatTap(i) {
-  if (S.phase === 'respond' && isHuman(i) && S.need.get(i) === W.CS && S.mode === 'button') {
+/** actor：タップした人の席（オンライン）。1台で遊ぶときは undefined（人間なら誰でも） */
+function onSeatTap(i, actor) {
+  // 1台を囲むとき、「ちんちん侍」は人間がそれぞれ自分のアイコンをタップ
+  if (S.phase === 'respond' && isHuman(i) && S.need.get(i) === W.CS && S.mode === 'button' && (actor === undefined || actor === i)) {
     say(i, W.CS);
     return;
   }
-  if (S.phase !== 'call' || !isHuman(S.oya) || i === S.oya || !isAlive(i)) return;
+  const ctl = actor === undefined ? isHuman(S.oya) : S.oya === actor;
+  if (S.phase !== 'call' || !ctl || i === S.oya || !isAlive(i)) return;
   if (S.pendingTarget != null) return;
   S.pendingTarget = i;
   if (S.pendingWord) return makeCall(S.oya, S.pendingWord, i);
@@ -1222,7 +1564,7 @@ function startFlick(e) {
     window.removeEventListener('pointerup', up);
     window.removeEventListener('pointercancel', up);
     cand = ev.type === 'pointercancel' ? null : flickCandidate(oya, ev.clientX - x0, ev.clientY - y0);
-    if (cand != null && S.phase === 'call' && S.oya === oya) return onSeatTap(cand);
+    if (cand != null && S.phase === 'call' && S.oya === oya) return seatAction(cand);
     if (S.phase === 'call') { if (before) drawArrow(...before); else drawArrow(null); }
   };
   window.addEventListener('pointermove', move);
@@ -1290,8 +1632,8 @@ const emitted = {};
  *  - それ以外：待たない
  */
 function chinHoldMs() {
-  if (S.phase === 'respond' && [...S.need].some(([i, w]) => isHuman(i) && w === W.CS)) return 700;
-  if (S.phase === 'call' && isHuman(S.oya) && !S.pendingWord) return 200;
+  if (S.phase === 'respond' && [...S.need].some(([i, w]) => isMine(i) && w === W.CS)) return 700;
+  if (S.phase === 'call' && isMine(S.oya) && !S.pendingWord) return 200;
   return 0;
 }
 let chinHold = null; // { seg, k, timer }  seg が null なら前の発話の最後で止めている
@@ -1342,8 +1684,8 @@ function handleTranscript(seg, raw, isFinal) {
 }
 /** 今、人間の誰かが言うべき言葉か */
 function expectedForHuman(word) {
-  if (S.phase === 'call') return isHuman(S.oya) && CALLS.includes(word) && !S.pendingWord;
-  if (S.phase === 'respond') return [...S.need].some(([i, w]) => isHuman(i) && w === word);
+  if (S.phase === 'call') return isMine(S.oya) && CALLS.includes(word) && !S.pendingWord;
+  if (S.phase === 'respond') return [...S.need].some(([i, w]) => isMine(i) && w === word);
   return false;
 }
 function voiceSay(word) {
@@ -1591,6 +1933,8 @@ $('startBtn').addEventListener('click', () => {
   startGame(0);
 });
 function toMenu() {
+  if (online() && NET.onLeave) NET.onLeave();
+  netEnd();
   newPhase();
   dropChinHold();
   S.phase = 'idle';
@@ -1598,8 +1942,7 @@ function toMenu() {
   stopAllLines();
   $('overlay').classList.remove('show');
   $('cut').classList.remove('show', 'fade');
-  $('game').classList.remove('active');
-  $('title').classList.add('active');
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'title'));
   bgmStart(); // タイトルに戻ったらBGM
 }
 $('quitBtn').addEventListener('click', toMenu);
@@ -1647,6 +1990,25 @@ CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
 
 restoreSettings();
 renderPlist();
+// 版とパッチノート
+$('verLabel').textContent = `ver ${APP_VERSION}`;
+$('notesList').innerHTML = PATCH_NOTES.map(([v, d, head, items]) => `
+  <div class="card">
+    <h2 class="notes-ver">ver ${v}　${esc(head)}</h2>
+    <p class="notes-date">${d}</p>
+    <ul class="notes-list">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+  </div>`).join('');
+$('notesBtn').addEventListener('click', () => {
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'notes'));
+  window.scrollTo(0, 0);
+});
+$('notesBack').addEventListener('click', () => {
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'title'));
+});
+// アプリ化：ホーム画面に追加でき、電波がなくても開けるように（GitHub Pages などで開いたときだけ）
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 // タイトル画面で最初に触れたときからBGM（ブラウザは触れるまで音を出せない）
 /**
  * スマホのブラウザは「指を離したとき」でないと音を出させてくれないことがある。
@@ -1664,5 +2026,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
+<script src="online.js"></script>
 </body>
 </html>
