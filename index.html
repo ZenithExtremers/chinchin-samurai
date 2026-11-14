@@ -690,7 +690,7 @@ function tickTimer() {
 }
 
 /* ================= セリフ音声 ================= */
-// voices.js の VOICES（席ごとに違う声、各セリフ2テイク）を WebAudio で鳴らす
+// voices.js の VOICES（席ごとに違う声、各セリフ2パターン：ふつうの声／高い声）を WebAudio で鳴らす
 let ttsBusyUntil = 0; // CPUの声が鳴っている間は、マイクが拾った言葉を無視する
 let actx = null;
 const buffers = {};
@@ -721,12 +721,19 @@ function initAudio(seats) {
   });
 }
 const playing = new Set();
+/** 席ごとに、声が高いほうのパターン（実際に声の高さを測って決めた） */
+const HIGH_TAKE = { p0: 1, p1: 1, p2: 1, p3: 1, p4: 0, p5: 0 };
+function isHurried() {
+  if (S.phase !== 'call' && S.phase !== 'respond') return false;
+  return S.deadline - performance.now() < S.barMs / 2;
+}
 function playLine(p, word) {
   if (!S.tts || typeof VOICES === 'undefined') return;
   const v = 'p' + p;
   const takes = VOICES[v] && VOICES[v][word];
   if (!takes) return;
-  const n = Math.floor(Math.random() * takes.length); // 毎回テイクを選ぶ
+  // 残り時間が制限時間の半分を切ってから言ったときだけ、声が高いほう（焦って上ずった声）
+  const n = isHurried() ? HIGH_TAKE[v] : 1 - HIGH_TAKE[v];
   const buf = buffers[v] && buffers[v][word] && buffers[v][word][n];
   let dur = 1;
   try {
