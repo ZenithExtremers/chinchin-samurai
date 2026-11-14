@@ -527,8 +527,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.0.1"></script>
-<script src="voices.js?v=1.0.1"></script>
+<script src="firebase-config.js?v=1.0.2"></script>
+<script src="voices.js?v=1.0.2"></script>
 <script>
 'use strict';
 
@@ -559,9 +559,20 @@ let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bo
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.0.2";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.0.2",
+  "2026-11-15",
+  "オンライン対戦の部屋が消えないように",
+  [
+   "部屋番号をコピーして別のアプリやタブに移ると、部屋が消えてしまうことがあるのを修正",
+   "ホストの通信が一時的に切れても部屋は残り、戻ればそのまま続けられる（参加者の画面には「接続待ち…」）",
+   "参加者が待合室で一時的に切れても、戻ったら自動で入り直す",
+   "ホストが45秒たっても戻らないときは、参加者はメニューに戻る"
+  ]
+ ],
  [
   "1.0.1",
   "2026-11-14",
@@ -2043,6 +2054,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.0.1"></script>
+<script src="online.js?v=1.0.2"></script>
 </body>
 </html>
