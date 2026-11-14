@@ -13,10 +13,12 @@
 const FB_VER = '12.19.0';
 const FB_BASE = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
 const MAX_MEMBERS = 6;
+const HOST_AWAY_MS = 45000; // ホストの接続が切れたまま、これだけたったら参加者は抜ける
 
 const Online = {
   p: null, ctx: null,
-  code: null, role: null, offs: [], begun: false, members: {}, meta: null,
+  code: null, role: null, offs: [], begun: false, members: {}, meta: null, me: null, awayTimer: null,
+  chat: [], joinedAt: 0, lastSent: 0,
 
   configured() { const c = window.FIREBASE_CONFIG; return !!(c && c.apiKey && c.databaseURL); },
   start() {
@@ -36,7 +38,32 @@ const Online = {
     await auth.authStateReady();
     if (!auth.currentUser) await Au.signInAnonymously(auth);
     this.ctx = { D, db, uid: auth.currentUser.uid };
+    this.watchConnection();
     return this.ctx;
+  },
+  /**
+   * 通信が切れて戻ったとき（スマホで別のアプリやタブに切り替えると、裏のページの通信が切れることがある）
+   *  - ホスト：「接続が切れた」印を消し、もう一度「切れたら印を付ける」を予約する
+   *  - 参加者：待合室で一覧から外れていたら入り直す
+   */
+  watchConnection() {
+    const { D, db, uid } = this.ctx;
+    D.onValue(D.ref(db, '.info/connected'), async (s) => {
+      if (s.val() !== true || !this.code) return;
+      try {
+        if (this.role === 'host') {
+          await D.onDisconnect(this.r('meta/away')).set(D.serverTimestamp());
+          await D.set(this.r('meta/away'), null);
+        } else if (this.role === 'guest') {
+          await D.onDisconnect(this.r(`members/${uid}`)).remove();
+          if (!this.begun && this.me) {
+            const mine = await D.get(this.r(`members/${uid}`));
+            const meta = (await D.get(this.r('meta'))).val();
+            if (!mine.exists() && meta && meta.status === 'lobby') await D.set(this.r(`members/${uid}`), { ...this.me, at: D.serverTimestamp() });
+          }
+        }
+      } catch (e) { /* 次につながったときにまた試す */ }
+    });
   },
   r(path) { return this.ctx.D.ref(this.ctx.db, `rooms/${this.code}${path ? '/' + path : ''}`); },
   listen(unsub) { this.offs.push(unsub); },
@@ -50,7 +77,9 @@ const Online = {
       const res = await D.runTransaction(this.r('meta'), (cur) => (cur === null ? { host: uid, status: 'lobby', at: Date.now() } : undefined));
       if (!res.committed) continue;
       this.role = 'host';
-      await D.onDisconnect(this.r()).remove(); // ホストが落ちたら部屋ごと消える
+      this.me = member;
+      // ホストの通信が切れても部屋は消さず「接続が切れた」印を付ける（別のアプリに切り替えただけで部屋が消えないように）
+      await D.onDisconnect(this.r('meta/away')).set(D.serverTimestamp());
       await D.set(this.r(`members/${uid}`), { ...member, at: D.serverTimestamp() });
       this.watchLobby();
       return this.code;
@@ -69,6 +98,7 @@ const Online = {
     const ms = (await D.get(this.r('members'))).val() || {};
     if (Object.keys(ms).length >= MAX_MEMBERS && !ms[uid]) { this.code = null; throw new Error('その部屋は満員です（6人まで）。'); }
     this.role = 'guest';
+    this.me = member;
     await D.onDisconnect(this.r(`members/${uid}`)).remove();
     await D.set(this.r(`members/${uid}`), { ...member, at: D.serverTimestamp() });
     this.watchLobby();
@@ -77,8 +107,41 @@ const Online = {
   /** 部屋の様子（参加者・開始）を見張る */
   watchLobby() {
     const { D } = this.ctx;
+    this.chat = [];
+    this.joinedAt = Date.now();
+    renderChat();
+    this.listen(D.onChildAdded(D.query(this.r('chat'), D.limitToLast(40)), (s) => this.onChat(s.val())));
     this.listen(D.onValue(this.r('members'), (s) => { this.members = s.val() || {}; this.onMembers(); }));
     this.listen(D.onValue(this.r('meta'), (s) => { this.meta = s.val(); this.onMeta(); }));
+  },
+  /** チャット・定型文を送る（連打しすぎないように少し間をあける） */
+  sendChat(msg) {
+    if (!this.code || !this.ctx || !this.me) return false;
+    if (Date.now() - this.lastSent < 600) return false;
+    this.lastSent = Date.now();
+    const { D, uid } = this.ctx;
+    D.push(this.r('chat'), { uid, name: this.me.name, ...msg, t: D.serverTimestamp() }).catch((e) => onMsg(errText(e)));
+    return true;
+  },
+  /** その人の席（声と吹き出しの位置）：対戦中は席順、待合室では並び順 */
+  seatOf(uid) {
+    if (this.begun && this.meta && this.meta.roster) return this.meta.roster.findIndex((r) => r.uid === uid);
+    return Math.min(MAX_MEMBERS - 1, this.memberList().findIndex((m) => m.uid === uid));
+  },
+  onChat(m) {
+    if (!m) return;
+    this.chat.push(m);
+    if (this.chat.length > 40) this.chat.shift();
+    renderChat();
+    const mine = m.uid === this.ctx.uid;
+    const fresh = !m.t || m.t > this.joinedAt - 3000; // 入る前の古い発言は音を鳴らさない
+    const seat = this.seatOf(m.uid);
+    if (this.begun && seat >= 0 && !mine) showBubble(seat, m.stamp || (m.text.length > 14 ? m.text.slice(0, 14) + '…' : m.text));
+    if (!fresh || mine) return; // 自分の分は送ったときに鳴らしている
+    if (m.stamp) {
+      const sender = this.members[m.uid];
+      if (seat >= 0 && $('netCharRecvChk').checked && (!sender || sender.cs !== false)) playStamp(seat, m.stamp);
+    } else beep(880, 0.06, 'sine', 0.05);
   },
   /** 参加者を席順に（ホストが先、あとは入った順） */
   memberList() {
@@ -145,8 +208,12 @@ const Online = {
   },
   onMeta() {
     if (!this.meta) { // 部屋が消えた＝ホストが閉じた
-      if (this.role === 'guest') this.leave('ホストが部屋を閉じました。');
+      this.leave(this.role === 'guest' ? 'ホストが部屋を閉じました。' : '部屋が閉じられました。もう一度作ってください。');
       return;
+    }
+    if (this.role === 'guest') {
+      if (this.meta.away && !this.awayTimer) this.awayTimer = setTimeout(() => this.leave('ホストとの接続が切れました。'), HOST_AWAY_MS);
+      if (!this.meta.away && this.awayTimer) { clearTimeout(this.awayTimer); this.awayTimer = null; }
     }
     if (!this.begun && this.meta.status === 'play' && this.meta.roster) {
       this.beginNet(this.meta.roster, this.meta.set);
@@ -158,13 +225,16 @@ const Online = {
   leave(msg) {
     const wasBegun = this.begun;
     this.detach();
+    clearTimeout(this.awayTimer); this.awayTimer = null;
     if (this.ctx && this.code) {
       const { D, uid } = this.ctx;
+      D.onDisconnect(this.role === 'host' ? this.r('meta/away') : this.r(`members/${uid}`)).cancel().catch(() => {});
       if (this.role === 'host') D.remove(this.r()).catch(() => {});
       else D.remove(this.r(`members/${uid}`)).catch(() => {});
-      D.onDisconnect(this.role === 'host' ? this.r() : this.r(`members/${uid}`)).cancel().catch(() => {});
     }
-    this.code = null; this.role = null; this.begun = false; this.members = {}; this.meta = null;
+    this.code = null; this.role = null; this.begun = false; this.members = {}; this.meta = null; this.me = null;
+    this.chat = [];
+    renderChat();
     if (wasBegun && online()) { NET.onLeave = null; toMenu(); }
     else if (wasBegun) { /* toMenu から呼ばれた */ }
     showOnlineEntry();
@@ -187,6 +257,7 @@ function myMember() {
 function showOnlineEntry() {
   $('onEntry').hidden = false;
   $('onRoom').hidden = true;
+  $('onChatCard').hidden = true;
 }
 function openOnline(code) {
   document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'online'));
@@ -200,11 +271,14 @@ function renderLobby() {
   if (!Online.code) return;
   $('onEntry').hidden = true;
   $('onRoom').hidden = false;
+  $('onChatCard').hidden = false;
+  $('onChat').hidden = false;
   $('onRoomCode').textContent = Online.code;
   const ms = Online.memberList();
   const total = Math.min(MAX_MEMBERS, Math.max(S.total, ms.length));
   $('onCount').textContent = `${ms.length}人`;
-  const rows = ms.map((m, i) => `<li>${esc(m.name)}${i === 0 ? '<span class="tag-host">ホスト</span>' : ''}${m.uid === Online.ctx.uid ? '（あなた）' : ''}</li>`);
+  const away = Online.meta && Online.meta.away;
+  const rows = ms.map((m, i) => `<li>${esc(m.name)}${i === 0 ? '<span class="tag-host">ホスト</span>' : ''}${m.uid === Online.ctx.uid ? '（あなた）' : ''}${i === 0 && away ? '（接続待ち…）' : ''}</li>`);
   for (let i = ms.length; i < total; i++) rows.push('<li class="tag-cpu">CPU</li>');
   $('onMembers').innerHTML = rows.join('');
   const host = Online.role === 'host';
@@ -224,6 +298,40 @@ function errText(e) {
   if (/^[\u3000-\u9fff]/.test((e && e.message) || '')) return e.message; // こちらで用意した日本語のメッセージ
   return `うまくいきませんでした（${c.slice(0, 60)}）。`;
 }
+/* ---------- チャット・定型文 ---------- */
+function renderChat() {
+  const html = Online.chat.length
+    ? Online.chat.map((m) => `<div class="m"><b>${esc(m.name || '？')}</b>${m.stamp ? `<span class="st">${esc(m.stamp)}</span>` : esc(m.text || '')}</div>`).join('')
+    : '<div class="empty">まだ発言はありません。定型文を押すと声付きで送れます。</div>';
+  ['onChatLog', 'ovChatLog'].forEach((id) => { const el = $(id); el.innerHTML = html; el.scrollTop = el.scrollHeight; });
+}
+/** 定型文を送る：自分の端末ではすぐ声を鳴らし、対戦中なら自分の席に吹き出しを出す */
+function sendStamp(label) {
+  if (!Online.sendChat({ stamp: label })) return;
+  const seat = Online.seatOf(Online.ctx.uid);
+  if (seat >= 0) playStamp(seat, label);
+  if (Online.begun && seat >= 0) showBubble(seat, label);
+}
+function sendText(input) {
+  const text = (input.value || '').trim().slice(0, 60);
+  if (!text) return;
+  if (Online.sendChat({ text })) input.value = '';
+}
+['on', 'ov'].forEach((pre) => {
+  $(`${pre}Stamps`).innerHTML = STAMPS.map(([l]) => `<button data-s="${esc(l)}">${esc(l)}</button>`).join('');
+  $(`${pre}Stamps`).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => sendStamp(b.dataset.s)));
+  $(`${pre}ChatSend`).addEventListener('click', () => sendText($(`${pre}ChatIn`)));
+  $(`${pre}ChatIn`).addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendText(e.target); } });
+});
+$('gameStamps').innerHTML = STAMPS.map(([l]) => `<button data-s="${esc(l)}">${esc(l)}</button>`).join('');
+$('gameStamps').querySelectorAll('button').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); sendStamp(b.dataset.s); $('stampSheet').hidden = true; }));
+$('stampBtn').addEventListener('click', () => { $('stampSheet').hidden = !$('stampSheet').hidden; });
+// 定型文の外をタップしたら閉じる
+document.addEventListener('pointerdown', (e) => {
+  if (!$('stampSheet').hidden && !e.target.closest('#stampSheet') && !e.target.closest('#stampBtn')) $('stampSheet').hidden = true;
+});
+renderChat();
+
 async function withBusy(btn, fn) {
   btn.disabled = true;
   try { await fn(); } catch (e) { onMsg(errText(e)); } finally { btn.disabled = false; }

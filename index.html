@@ -141,6 +141,24 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .members { margin: 0 0 10px; padding-left: 1.6em; line-height: 1.9; font-size: 16px; }
 .members .tag-host { font-size: 11px; color: var(--accent-ink); background: var(--gold); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
 .members .tag-cpu { color: var(--muted); }
+.topbtns { display: flex; gap: 6px; }
+.chat { display: flex; flex-direction: column; gap: 8px; }
+.chatlog { max-height: 180px; min-height: 44px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 10px;
+  background: var(--seat); border: 1px solid var(--line); font-size: 14px; line-height: 1.45; text-align: left; }
+.chatlog .empty { color: var(--muted); font-size: 13px; }
+.chatlog .m b { margin-right: 6px; }
+.chatlog .m .st { display: inline-block; border: 2px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 0 8px; font-weight: bold; }
+.overlay .chatlog { max-height: 110px; }
+.stamps { display: flex; flex-wrap: wrap; gap: 5px; }
+.stamps button { flex: 1 1 auto; padding: 7px 8px; border-radius: 8px; border: 2px solid var(--accent); background: var(--seat); color: var(--accent); font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+.stamps button:active { background: var(--accent); color: var(--accent-ink); }
+.chatin { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 6px; }
+.chatin .field { font-size: 16px; padding: 8px 10px; }
+.chatin .big { font-size: 15px; padding: 8px; letter-spacing: 0; }
+.stampsheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: var(--panel); border-top: 2px solid var(--accent); box-shadow: 0 -6px 18px rgba(0,0,0,.18); }
+.stampsheet .stamps { gap: 8px; }
+.stampsheet .stamps button { padding: 12px 10px; font-size: 15px; }
 .ver { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 0; }
 .ver button { background: none; border: none; color: var(--accent); text-decoration: underline; font-size: 12px; cursor: pointer; padding: 0 0 0 6px; }
 .notes-ver { margin: 0 0 4px; font-size: 18px; color: var(--accent); }
@@ -440,6 +458,17 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     <p class="note" id="onWait" hidden>ホストが始めるのを待っています…</p>
     <button class="ghost-btn" id="onLeave">部屋を出る</button>
   </div>
+  <div class="card" id="onChatCard" hidden>
+    <h2>チャット</h2>
+    <div class="chat" id="onChat" hidden>
+      <div class="chatlog" id="onChatLog"></div>
+      <div class="stamps" id="onStamps"></div>
+      <div class="chatin">
+        <input class="field" id="onChatIn" maxlength="60" placeholder="メッセージ" aria-label="メッセージ" enterkeyhint="send">
+        <button class="big" id="onChatSend">送信</button>
+      </div>
+    </div>
+  </div>
   <p class="msg" id="onMsg"></p>
 </section>
 
@@ -456,7 +485,10 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 <section class="screen" id="game">
   <div class="topbar">
     <span id="modeLabel">セリフボタン</span>
-    <button id="quitBtn">やめる</button>
+    <span class="topbtns">
+      <button id="stampBtn" hidden>定型文</button>
+      <button id="quitBtn">やめる</button>
+    </span>
   </div>
 
   <div class="stage" id="stage">
@@ -497,6 +529,11 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </section>
 
+<!-- ===== 対戦中の定型文 ===== -->
+<div class="stampsheet" id="stampSheet" hidden>
+  <div class="stamps" id="gameStamps"></div>
+</div>
+
 <!-- ===== 切腹ムービー ===== -->
 <div class="cut" id="cut" aria-hidden="true">
   <div class="flash"></div>
@@ -524,11 +561,19 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button id="menuBtn2">メニュー</button>
       <button class="primary" id="contBtn">つづける</button>
     </div>
+    <div class="chat" id="ovChat" hidden style="margin-top:12px">
+      <div class="chatlog" id="ovChatLog"></div>
+      <div class="stamps" id="ovStamps"></div>
+      <div class="chatin">
+        <input class="field" id="ovChatIn" maxlength="60" placeholder="メッセージ" aria-label="メッセージ" enterkeyhint="send">
+        <button class="big" id="ovChatSend">送信</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.0.1"></script>
-<script src="voices.js?v=1.0.1"></script>
+<script src="firebase-config.js?v=1.1.0"></script>
+<script src="voices.js?v=1.1.0"></script>
 <script>
 'use strict';
 
@@ -559,9 +604,31 @@ let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bo
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.1.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.1.0",
+  "2026-11-15",
+  "オンラインでチャットと定型文",
+  [
+   "オンライン対戦の待合室と結果画面で、文字のチャットができる（60文字まで）",
+   "声付きの定型文：いざ、勝負！／お見事！／無念…／もう一回！／待たれよ！／かたじけない／ちんちん侍！／シャキーン／びろーん／切腹！",
+   "定型文はその人の席のキャラの声で鳴る（「キャラの声を受け取る」がオフなら鳴らない）",
+   "対戦中は右上の「定型文」からワンタップで送れて、自分の席に吹き出しが出る"
+  ]
+ ],
+ [
+  "1.0.2",
+  "2026-11-15",
+  "オンライン対戦の部屋が消えないように",
+  [
+   "部屋番号をコピーして別のアプリやタブに移ると、部屋が消えてしまうことがあるのを修正",
+   "ホストの通信が一時的に切れても部屋は残り、戻ればそのまま続けられる（参加者の画面には「接続待ち…」）",
+   "参加者が待合室で一時的に切れても、戻ったら自動で入り直す",
+   "ホストが45秒たっても戻らないときは、参加者はメニューに戻る"
+  ]
+ ],
  [
   "1.0.1",
   "2026-11-14",
@@ -683,6 +750,9 @@ const PATCH_NOTES = [
  ]
 ];
 const CPU_NAMES = ['たろう', 'はなこ', 'じろう', 'さくら', 'ごろう'];
+/** オンライン対戦の定型文：[表示する言葉, 声（VOICES のキー）] */
+const STAMPS = [['いざ、勝負！', 'いざ、勝負！'], ['お見事！', 'お見事！'], ['無念…', '無念…'], ['もう一回！', 'もう一回！'], ['待たれよ！', '待たれよ！'],
+  ['かたじけない', 'かたじけない'], ['ちんちん侍！', 'ちんちん侍'], ['シャキーン', 'シャキーン'], ['びろーん', 'びろーん'], ['切腹！', '切腹']];
 /** 円の上に、下（自分）から時計回りに並べる */
 function layoutSeats(n) {
   const R = n <= 4 ? 34 : 36;
@@ -1001,6 +1071,20 @@ function playLine(p, word, hurried) {
   } catch (e) { /* 音が出なくても続行 */ }
   if (!isMine(p)) ttsBusyUntil = Math.max(ttsBusyUntil, performance.now() + dur * 1000 + 350);
 }
+/** 定型文の声（その席のキャラのふつうの声）。「セリフの音声を出す」がオフなら鳴らさない */
+function playStamp(p, label) {
+  const st = STAMPS.find(([l]) => l === label);
+  if (!st || !$('ttsChk').checked || typeof VOICES === 'undefined') return;
+  const v = 'p' + p, key = st[1];
+  const takes = VOICES[v] && VOICES[v][key];
+  if (!takes) return;
+  const n = Math.min(1 - HIGH_TAKE[v], takes.length - 1);
+  const buf = buffers[v] && buffers[v][key] && buffers[v][key][n];
+  try {
+    if (actx && buf) { const src = actx.createBufferSource(); src.buffer = buf; src.connect(actx.destination); src.start(); }
+    else new Audio(takes[n]).play().catch(() => {});
+  } catch (e) { /* 音が出なくても続行 */ }
+}
 function stopAllLines() {
   playing.forEach((src) => { try { src.stop(); } catch (e) { /* noop */ } });
   playing.clear();
@@ -1288,6 +1372,7 @@ function showOverlay(final) {
   $('contBtns').hidden = final || isGuest();
   $('againBtn').hidden = isGuest();
   $('guestWait').hidden = !isGuest();
+  $('ovChat').hidden = !online();
   later(S.overlayDelay, () => $('overlay').classList.add('show'));
 }
 /** 切腹ムービー：アバターが斜めにスパッと斬れる */
@@ -1392,12 +1477,16 @@ function netBegin({ roster, set, me, role }) {
   initAudio(S.total);
   buildSeats();
   if (S.mode === 'voice' && !startVoice()) $('micBtn').hidden = false;
+  $('stampBtn').hidden = false;
   if (isHost()) startGame(0);
   else { resetBoard('いざ！', true); refreshSeats(); }
 }
 /** オンライン対戦を終える（部屋を出た・閉じられた） */
 function netEnd() {
   NET.role = null; NET.me = 0; NET.send = NET.emit = NET.push = null;
+  $('stampBtn').hidden = true;
+  $('stampSheet').hidden = true;
+  $('ovChat').hidden = true;
 }
 
 /* ================= 保存（設定・最高記録） ================= */
@@ -2043,6 +2132,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.0.1"></script>
+<script src="online.js?v=1.1.0"></script>
 </body>
 </html>
