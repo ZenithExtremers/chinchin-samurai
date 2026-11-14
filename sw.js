@@ -1,7 +1,7 @@
 /* ちんちん侍：オフラインでも開けるようにするキャッシュ。
    版を上げたら CACHE の番号も上げる（古いキャッシュは消える） */
-const CACHE = 'chinchin-samurai-v1.0.0';
-const ASSETS = ['./', './index.html', './voices.js', './online.js', './firebase-config.js', './manifest.webmanifest',
+const CACHE = 'chinchin-samurai-v1.0.1';
+const ASSETS = ['./', './index.html', './voices.js', './online.js', './firebase-config.js', './CHANGELOG.md', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
@@ -15,8 +15,10 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  // ブラウザに残った古いファイルを使わず、毎回サーバーに新しい版がないか確かめる
+  const req = e.request.mode === 'navigate' ? e.request : new Request(e.request, { cache: 'no-cache' });
   e.respondWith(
-    fetch(e.request).then((r) => {
+    fetch(req).then((r) => {
       const copy = r.clone();
       caches.open(CACHE).then((c) => c.put(e.request, copy));
       return r;
