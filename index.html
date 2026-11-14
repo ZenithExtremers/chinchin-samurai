@@ -336,7 +336,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     </p>
     <p class="note" id="voiceNote" hidden>
       言葉は声で言い、指す人は画面をタップします。マイクの使用を許可してください（Chrome 推奨）。
-      CPUの声をマイクが拾いやすいので、セリフの音声は最初オフにしています（イヤホンならオンでも大丈夫）。
+      CPUが喋っている最中にマイクが拾った言葉は、今あなたが言うべき言葉以外は無視するので、セリフの音声はオンのままで大丈夫です。
     </p>
   </div>
 
@@ -1473,7 +1473,6 @@ function segInit(id, apply) {
 segInit('modeSeg', (v) => {
   S.mode = v;
   $('voiceNote').hidden = v !== 'voice';
-  $('ttsChk').checked = v !== 'voice'; // 音声モードは読み上げを最初オフ
 });
 segInit('humanSeg', (v) => { S.humans = +v; $('humanNote').hidden = S.humans === 1; renderPlist(); });
 segInit('totalSeg', (v) => {
