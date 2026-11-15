@@ -341,7 +341,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .pad button.call { border-color: var(--accent); }
 .pad button.react { border-color: var(--gold); }
 .pad button.picked { background: var(--accent); color: var(--accent-ink); }
-/* ===== 新しい対戦画面（お試し） ===== */
+/* ===== 対戦画面の手ごたえ・残り時間・自分の席 ===== */
 /* 7. 押した手ごたえ：押した瞬間に色が付いて、ふわっと戻る */
 .newui .pad button { transition: transform .08s; }
 .newui .pad button:active { transform: scale(.93); }
@@ -486,10 +486,6 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     <h2>演出</h2>
     <div class="toggles">
       <div class="row">
-        <label for="newuiChk">新しい対戦画面（お試し）<small>ボタンを押した手ごたえ（光る・振動）、残り時間が少ないと赤く点滅、自分の席に「あなた」</small></label>
-        <input type="checkbox" id="newuiChk" checked>
-      </div>
-      <div class="row">
         <label for="ttsChk">セリフの音声を出す</label>
         <input type="checkbox" id="ttsChk" checked>
       </div>
@@ -500,6 +496,10 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <div class="row">
         <label for="guideChk">案内を出す（初心者向け）<small>誰の番か・何と言えばいいかを画面の下に出す。親の金枠・指された人の赤丸も出る</small></label>
         <input type="checkbox" id="guideChk">
+      </div>
+      <div class="row">
+        <label for="vibeChk">振動<small>ボタンや席を押したときに短く震える（対応しているスマホだけ）</small></label>
+        <input type="checkbox" id="vibeChk" checked>
       </div>
       <div class="row">
         <label for="movieChk">切腹ムービー</label>
@@ -740,9 +740,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.9.0"></script>
-<script src="voices.js?v=1.9.0"></script>
-<script src="qrcode.js?v=1.9.0"></script>
+<script src="firebase-config.js?v=1.9.1"></script>
+<script src="voices.js?v=1.9.1"></script>
+<script src="qrcode.js?v=1.9.1"></script>
 <script>
 'use strict';
 
@@ -800,9 +800,19 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.9.0";
+const APP_VERSION = "1.9.1";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.9.1",
+  "2026-11-15",
+  "対戦画面を正式に・振動オンオフ・設定が戻るのを修正",
+  [
+   "1.9.0 のお試しだった対戦画面の見た目（押した手ごたえ・残り時間の点滅・自分の席）を正式に。お試しのスイッチはなくした",
+   "設定に「振動」のオンオフを追加（対応しているスマホだけ）",
+   "アプデのあと、ルールや演出のスイッチが最初の状態に戻ってしまうことがあるのを修正"
+  ]
+ ],
  [
   "1.9.0",
   "2026-11-15",
@@ -2171,12 +2181,11 @@ function applySwipeMode() {
 }
 
 /* ================= 入力：ボタン ================= */
-/** 押した手ごたえ（新しい対戦画面のときだけ）：光らせて、対応している端末は少し振動 */
+/** 押した手ごたえ：光らせて、振動がオンなら少し震える（対応している端末だけ） */
 function feel(el, cls = 'hit') {
-  if (!document.body.classList.contains('newui')) return;
   el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
   clearTimeout(el._feel); el._feel = setTimeout(() => el.classList.remove(cls), 400);
-  try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* noop */ }
+  try { if ($('vibeChk').checked && navigator.vibrate) navigator.vibrate(12); } catch (e) { /* noop */ }
 }
 document.querySelectorAll('#pad button').forEach((b) => {
   b.addEventListener('pointerdown', (e) => {
@@ -2631,8 +2640,10 @@ segInit('ruleSeg', (v) => {
 
 /** 設定を覚えておく（次に開いたときも同じ設定） */
 const SEGS = { modeSeg: 'mode', totalSeg: 'total', ruleSeg: 'rule', cpuSeg: 'cpu', diffSeg: 'diff' };
-const CHECKS = ['newuiChk', 'safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'swipeChk', 'netCharSendChk', 'netCharRecvChk', 'netLiveSendChk', 'netLiveRecvChk'];
+const CHECKS = ['vibeChk', 'safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'swipeChk', 'netCharSendChk', 'netCharRecvChk', 'netLiveSendChk', 'netLiveRecvChk'];
+let restoring = false; // 読み込み中は保存しない（途中の、まだ戻していない設定で上書きしないように）
 function saveSettings() {
+  if (restoring) return;
   const v = { profiles: PROFILES };
   Object.entries(SEGS).forEach(([id, key]) => { v[key] = String(S[key]); });
   CHECKS.forEach((id) => { v[id] = $(id).checked; });
@@ -2651,20 +2662,21 @@ function restoreSettings() {
       };
     });
   }
-  ['modeSeg', 'totalSeg', 'ruleSeg', 'cpuSeg', 'diffSeg'].forEach((id) => {
-    const b = v[SEGS[id]] != null && $(id).querySelector(`button[data-v="${v[SEGS[id]]}"]`);
-    if (b && !b.hidden) b.click();
-  });
-  CHECKS.forEach((id) => { if (typeof v[id] === 'boolean') $(id).checked = v[id]; });
+  // ボタンを押して戻す（押すと保存が走るので、戻し終わるまで保存を止める）
+  restoring = true;
+  try {
+    ['modeSeg', 'totalSeg', 'ruleSeg', 'cpuSeg', 'diffSeg'].forEach((id) => {
+      const b = v[SEGS[id]] != null && $(id).querySelector(`button[data-v="${v[SEGS[id]]}"]`);
+      if (b && !b.hidden) b.click();
+    });
+    CHECKS.forEach((id) => { if (typeof v[id] === 'boolean') $(id).checked = v[id]; });
+  } finally { restoring = false; }
 }
 document.querySelectorAll('#title .seg button').forEach((b) => b.addEventListener('click', () => saveSettings()));
 CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
 
 restoreSettings();
-// 新しい対戦画面（お試し）
-const applyNewUi = () => document.body.classList.toggle('newui', $('newuiChk').checked);
-$('newuiChk').addEventListener('change', applyNewUi);
-applyNewUi();
+document.body.classList.add('newui'); // 対戦画面の見た目（1.9.0 のお試しから正式に）
 renderPlist();
 renderSlots();
 // 版とパッチノート
@@ -2724,6 +2736,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.9.0"></script>
+<script src="online.js?v=1.9.1"></script>
 </body>
 </html>
