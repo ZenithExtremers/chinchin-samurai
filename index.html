@@ -712,9 +712,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.8.0"></script>
-<script src="voices.js?v=1.8.0"></script>
-<script src="qrcode.js?v=1.8.0"></script>
+<script src="firebase-config.js?v=1.8.1"></script>
+<script src="voices.js?v=1.8.1"></script>
+<script src="qrcode.js?v=1.8.1"></script>
 <script>
 'use strict';
 
@@ -772,20 +772,27 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.8.0";
+const APP_VERSION = "1.8.1";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
  [
+  "1.8.1",
+  "2026-11-15",
+  "ダークモード",
+  [
+   "設定タブに「画面の色」：自動（端末に合わせる）・ライト・ダークを選べる"
+  ]
+ ],
+ [
   "1.8.0",
   "2026-11-15",
-  "チャットボタン・「うおw」・ダークモード",
+  "チャットボタンと「うおw」",
   [
    "オンラインの待合室と結果画面のチャットは、右下に浮かぶボタンから開く形に（押したときだけ下からせり上がる）。閉じている間に届いた発言の数をボタンに表示",
    "対戦中の定型文は、送ったあとも開いたまま（外をタップか「定型文」ボタンで閉じる）",
    "定型文に「うおw」を追加（声付き）",
    "デスマッチで脱落した人は、決着がつくまで「ちんちん侍！」「シャキーン」「びろーん」「切腹！」の定型文を送れない。ほかの定型文も声は鳴らない（吹き出しと文字は出る）",
-   "遊び方のルール欄から、スワイプモードの説明を外した（設定の説明は残る）",
-   "設定タブに「画面の色」：自動（端末に合わせる）・ライト・ダークを選べる"
+   "遊び方のルール欄から、スワイプモードの説明を外した（設定の説明は残る）"
   ]
  ],
  [
@@ -2661,6 +2668,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.8.0"></script>
+<script src="online.js?v=1.8.1"></script>
 </body>
 </html>
