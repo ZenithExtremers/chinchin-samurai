@@ -587,8 +587,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.3.0"></script>
-<script src="voices.js?v=1.3.0"></script>
+<script src="firebase-config.js?v=1.3.1"></script>
+<script src="voices.js?v=1.3.1"></script>
 <script>
 'use strict';
 
@@ -619,9 +619,18 @@ let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bo
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.3.1",
+  "2026-11-15",
+  "焦った声はギリギリのときだけ",
+  [
+   "声が高く（焦った声に）なるのは、残り時間が20%を切ってから言ったときだけに",
+   "CPUもたまに残り20%を切るまで粘って、焦った声を出す"
+  ]
+ ],
  [
   "1.3.0",
   "2026-11-15",
@@ -1068,7 +1077,7 @@ const playing = new Set();
 const HIGH_TAKE = { p0: 1, p1: 1, p2: 1, p3: 1, p4: 0, p5: 0 };
 function isHurried() {
   if (S.phase !== 'call' && S.phase !== 'respond') return false;
-  return S.deadline - performance.now() < S.barMs / 2;
+  return S.deadline - performance.now() < S.barMs * 0.2; // 残り時間が20%を切ったら焦った声
 }
 /**
  * この端末でその人の声を鳴らすか。
@@ -1088,7 +1097,7 @@ function playLine(p, word, hurried) {
   const v = 'p' + p;
   const takes = VOICES[v] && VOICES[v][word];
   if (!takes) return;
-  // 残り時間が制限時間の半分を切ってから言ったときだけ、声が高いほう（焦って上ずった声）
+  // 残り時間が制限時間の20%を切ってから言ったときだけ、声が高いほう（焦って上ずった声）
   const n = (hurried ?? isHurried()) ? HIGH_TAKE[v] : 1 - HIGH_TAKE[v];
   const buf = buffers[v] && buffers[v][word] && buffers[v][word][n];
   let dur = 1;
@@ -1563,10 +1572,10 @@ function pickWeighted() {
   return W.CHIN;
 }
 const cpuMisses = () => !S.cpuSafe && Math.random() < CPU_LEVEL[S.cpu].miss(S.combo);
-/** たまにギリギリ（制限時間の55〜80%）で答えて、焦った高い声を出す。強いCPUはめったにしない */
+/** たまにギリギリ（制限時間の82〜92%）で答えて、焦った高い声を出す。強いCPUはめったにしない */
 const CPU_LATE_RATE = { weak: 0.15, normal: 0.12, strong: 0.05 };
 const cpuDelay = (allowLate = true) => {
-  if (allowLate && Math.random() < CPU_LATE_RATE[S.cpu]) return rand(S.limitMs * 0.55, S.limitMs * 0.8);
+  if (allowLate && Math.random() < CPU_LATE_RATE[S.cpu]) return rand(S.limitMs * 0.82, S.limitMs * 0.92);
   const [a, b] = CPU_LEVEL[S.cpu].speed;
   return rand(S.limitMs * a, S.limitMs * b);
 };
@@ -2216,6 +2225,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.3.0"></script>
+<script src="online.js?v=1.3.1"></script>
 </body>
 </html>
