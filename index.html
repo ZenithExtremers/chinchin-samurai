@@ -658,12 +658,15 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
       <summary><h2>パッチノート <small class="ver-now" id="verLabel"></small></h2></summary>
       <div id="notesInline"></div>
     </details>
-  <p class="note" style="text-align:center">
+  <details class="card notes-fold">
+    <summary><h2>クレジット</h2></summary>
+    <p class="note" style="margin:0;line-height:1.8">
     音声：Open JTalk／HTS Voice「Mei」「Takumi」「NIT ATR503 M001」<br>
     QRコード生成：qrcode-generator（© Kazuhiko Arase, MIT）。QRコードは株式会社デンソーウェーブの登録商標です<br>
     © Nagoya Institute of Technology（Mei・Takumi は CC BY 3.0, MMDAgent Project）<br>
     フォント：しっぽり明朝 B1（© The Shippori Mincho Project Authors）、Yuji Boku（© The Yuji Project Authors）。どちらも SIL Open Font License 1.1
   </p>
+  </details>
   </div>
 </section>
 
@@ -992,7 +995,8 @@ const PATCH_NOTES = [
    "アプリのアイコンを新しく：4つの原案をまぜた（筆の円相・侍の顔・白い一閃・朱の「侍」のハンコ）",
    "対戦の円を、本物の筆で描いたような円相に（入りは太く、終わりがかすれる）",
    "遊び方ガイドに、どのページからでも押せる「スキップ」を追加",
-   "兜をかぶったとき、おでこのあたりが透けて見えるのを修正"
+   "兜をかぶったとき、おでこのあたりが透けて見えるのを修正",
+   "情報タブのクレジットを、パッチノートと同じようにたためるように（最初は閉じている）"
   ]
  ],
  [
