@@ -1,7 +1,7 @@
 /* ちんちん侍：オフラインでも開けるようにするキャッシュ。
    版を上げたら CACHE の番号も上げる（古いキャッシュは消える） */
-const CACHE = 'chinchin-samurai-v1.4.0';
-const ASSETS = ['./', './index.html', './voices.js', './online.js', './firebase-config.js', './CHANGELOG.md', './manifest.webmanifest',
+const CACHE = 'chinchin-samurai-v1.4.1';
+const ASSETS = ['./', './index.html', './voices.js', './qrcode.js', './online.js', './firebase-config.js', './CHANGELOG.md', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
