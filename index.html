@@ -991,7 +991,8 @@ const PATCH_NOTES = [
   [
    "アプリのアイコンを新しく：4つの原案をまぜた（筆の円相・侍の顔・白い一閃・朱の「侍」のハンコ）",
    "対戦の円を、本物の筆で描いたような円相に（入りは太く、終わりがかすれる）",
-   "遊び方ガイドに、どのページからでも押せる「スキップ」を追加"
+   "遊び方ガイドに、どのページからでも押せる「スキップ」を追加",
+   "兜をかぶったとき、おでこのあたりが透けて見えるのを修正"
   ]
  ],
  [
@@ -1434,7 +1435,7 @@ function avatarSvg(lk, i = 0) {
     scar: '<path d="M60 60 L71 71 M63 67 L68 62" stroke="#9b3b2b" stroke-width="1.8" stroke-linecap="round"></path>',
   }[L.acc] || '';
   const hatSvg = {
-    kabuto: '<path d="M15 50 Q15 17 50 15 Q85 17 85 50 L77 50 Q73 29 50 27 Q27 29 23 50 Z" fill="#2b3a55"></path><path d="M9 53 Q50 40 91 53 L87 59 Q50 48 13 59 Z" fill="#1d2a40"></path><path d="M50 27 L35 3 L43 5 L50 19 L57 5 L65 3 Z" fill="#d4a017"></path>',
+    kabuto: '<path d="M15 51 Q15 17 50 15 Q85 17 85 51 Z" fill="#2b3a55"></path><path d="M23 49 Q27 29 50 27 Q73 29 77 49" fill="none" stroke="#3e5174" stroke-width="2"></path><path d="M26 22 Q38 16 50 16" fill="none" stroke="#4d6488" stroke-width="2.5" stroke-linecap="round"></path><path d="M9 53 Q50 40 91 53 L87 59 Q50 48 13 59 Z" fill="#1d2a40"></path><path d="M50 27 L35 3 L43 5 L50 19 L57 5 L65 3 Z" fill="#d4a017"></path>',
     kasa: '<path d="M2 45 L50 8 L98 45 Q50 54 2 45 Z" fill="#d9b26a" stroke="#8a6a2a" stroke-width="1.5"></path><path d="M26 27 L50 45 M74 27 L50 45" stroke="#a88442" stroke-width="1"></path>',
     eboshi: '<path d="M33 31 Q29 3 57 0 Q67 13 67 33 Z" fill="#1b1b1b"></path><rect x="31" y="29" width="38" height="6" rx="2" fill="#333"></rect>',
     crown: '<path d="M28 31 L28 13 L39 22 L50 7 L61 22 L72 13 L72 31 Z" fill="#e8b923" stroke="#a07800" stroke-width="1.5"></path><circle cx="50" cy="24" r="3" fill="#c62828"></circle><circle cx="37" cy="27" r="2" fill="#1e88e5"></circle><circle cx="63" cy="27" r="2" fill="#1e88e5"></circle>',
