@@ -361,7 +361,6 @@ function myMember() {
 function showOnlineEntry() {
   $('onEntry').hidden = false;
   $('onRoom').hidden = true;
-  $('onMineCard').hidden = true;
 }
 function openOnline(code) {
   document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'online'));
@@ -375,7 +374,6 @@ function renderLobby() {
   if (!Online.code) return;
   $('onEntry').hidden = true;
   $('onRoom').hidden = false;
-  $('onMineCard').hidden = false;
   $('onRoomCode').textContent = Online.code;
   const ms = Online.memberList();
   const rs = Online.roomSet();
@@ -391,18 +389,18 @@ function renderLobby() {
   const diffName = { easy: 'ゆっくり', normal: 'ふつう', hard: 'はやい' }[rs.diff];
   $('onRule').textContent = `${rs.nocpu ? `CPUなし・${ms.length}人` : `全体 ${total}人（CPU ${total - ms.length}）`}・${rs.rule === 'death' ? 'デスマッチ' : '一発勝負'}`
     + (rs.nocpu ? '' : `・CPU ${CPU_LABEL[rs.cpu]}${rs.safe ? '（不敗）' : ''}${rs.feint ? '・フェイントあり' : ''}`) + `・制限時間 ${diffName}`;
+  $('onRuleOpen').hidden = !host; // ルールを変えられるのはホストだけ
+  if (!host && !$('roomRuleSheet').hidden) closeSheets();
   renderRoomRules(host, rs, ms.length);
   updateChatFab();
 }
 /** ホスト：待合室でルールを変える欄 */
 function renderRoomRules(host, rs, n) {
   const box = $('onRules');
-  box.hidden = !host;
   if (!host) return;
   const seg = (key, opts, cur, dis) => `<div class="seg mini" data-k="${key}">${opts.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}" ${dis && dis(v) ? 'disabled' : ''}>${l}</button>`).join('')}</div>`;
   const chk = (key, label, cur) => `<label class="row"><span>${label}</span><input type="checkbox" data-k="${key}" ${cur ? 'checked' : ''}></label>`;
   box.innerHTML = `
-    <h3>部屋のルール（ホストだけ変えられる）</h3>
     ${chk('nocpu', 'CPUなし（参加者だけで遊ぶ）', rs.nocpu)}
     ${rs.nocpu ? '' : `<h4>全体の人数</h4>${seg('total', [[3, '3人'], [4, '4人'], [5, '5人'], [6, '6人']], Math.max(rs.total, n), (v) => v < n)}`}
     <h4>対戦形式</h4>${seg('rule', [['normal', '一発勝負'], ['death', 'デスマッチ']], rs.rule)}
@@ -544,6 +542,15 @@ $('onJoin').addEventListener('click', (e) => withBusy(e.currentTarget, async () 
 $('onLeave').addEventListener('click', () => Online.leave());
 $('onQr').addEventListener('click', () => showQR(`部屋 ${Online.code} に招待`, `${appUrl()}?room=${Online.code}`));
 $('onStart').addEventListener('click', (e) => withBusy(e.currentTarget, () => Online.startGame()));
+// 待合室のタブ（参加者／自分の設定）
+document.querySelectorAll('.ltabs button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.ltabs button').forEach((x) => x.classList.toggle('on', x === b));
+  $('onPanelMembers').hidden = b.dataset.t !== 'members';
+  $('onPanelMine').hidden = b.dataset.t !== 'mine';
+  if (b.dataset.t === 'mine') renderMine();
+}));
+$('onRuleOpen').addEventListener('click', () => openSheet('roomRuleSheet'));
+$('roomRuleDone').addEventListener('click', closeSheets);
 $('lobbyBtn').addEventListener('click', () => Online.backToLobby().catch((e) => onMsg(errText(e))));
 $('onShare').addEventListener('click', () => {
   const url = `${appUrl()}?room=${Online.code}`;
