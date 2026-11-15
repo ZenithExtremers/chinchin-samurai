@@ -142,6 +142,13 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .members .tag-host { font-size: 11px; color: var(--accent-ink); background: var(--gold); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
 .members .tag-cpu { color: var(--muted); }
 .topbtns { display: flex; gap: 6px; }
+#game { touch-action: none; } /* スワイプで画面が動かないように */
+.swipe-trail { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 12; opacity: 0; }
+.swipe-trail.show { opacity: 1; }
+.swipe-trail polyline { fill: none; stroke: var(--ink); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; opacity: .35; }
+.swipe-trail.ok polyline { stroke: var(--accent); opacity: .9; filter: drop-shadow(0 0 6px var(--accent)); }
+.swipe-trail.ok, .swipe-trail.fade { animation: trailout .45s ease-out forwards; }
+@keyframes trailout { to { opacity: 0; } }
 .chat { display: flex; flex-direction: column; gap: 8px; }
 .chatlog { max-height: 180px; min-height: 44px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 10px;
   background: var(--seat); border: 1px solid var(--line); font-size: 14px; line-height: 1.45; text-align: left; }
@@ -367,6 +374,10 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
         <input type="checkbox" id="movieChk" checked>
       </div>
       <div class="row">
+        <label for="swipeChk">スワイプで言う<small>「／」でシャキーン（ちんちん侍の場面ならちんちん侍）、「｜」でびろーん</small></label>
+        <input type="checkbox" id="swipeChk" checked>
+      </div>
+      <div class="row">
         <label for="feintChk">CPUのフェイント<small>「ちんちん…」と溜めて、侍をつけるかどうか迷わせる</small></label>
         <input type="checkbox" id="feintChk">
       </div>
@@ -419,6 +430,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <li><b>「侍」</b> → 指された人が<b>「シャキーン」</b></li>
       <li><b>「ちんちん侍」</b> → 親も含めて<b>全員</b>で「ちんちん侍」</li>
       <li>反応のあと、指された人が次の親になる</li>
+      <li>ボタンのほか、画面を「／」とスワイプでシャキーン（ちんちん侍の場面ならちんちん侍）、「｜」でびろーんとも言える</li>
       <li>言い間違い・お手つき・時間切れは<b>切腹</b>。一発勝負なら一人切腹で勝負あり、デスマッチなら脱落して最後の一人まで</li>
     </ul>
   </div>
@@ -529,6 +541,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </section>
 
+<!-- ===== スワイプの跡 ===== -->
+<svg class="swipe-trail" id="swipeTrail" aria-hidden="true"><polyline id="swipeLine" points=""></polyline></svg>
+
 <!-- ===== 対戦中の定型文 ===== -->
 <div class="stampsheet" id="stampSheet" hidden>
   <div class="stamps" id="gameStamps"></div>
@@ -572,8 +587,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.1.0"></script>
-<script src="voices.js?v=1.1.0"></script>
+<script src="firebase-config.js?v=1.2.0"></script>
+<script src="voices.js?v=1.2.0"></script>
 <script>
 'use strict';
 
@@ -604,9 +619,20 @@ let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bo
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.2.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.2.0",
+  "2026-11-15",
+  "スワイプで言える",
+  [
+   "画面を「／」とスワイプすると「シャキーン」。「ちんちん侍」で指された場面なら「ちんちん侍」に変わる",
+   "「｜」と縦にスワイプすると「びろーん」",
+   "スワイプした跡に刀のような線が出る",
+   "スタート画面の「演出」の「スワイプで言う」でオンオフできる（最初はオン）"
+  ]
+ ],
  [
   "1.1.0",
   "2026-11-15",
@@ -861,7 +887,9 @@ function buildSeats() {
       e.preventDefault();
       const i = +el.dataset.i;
       // 親（人間）が自分のアイコンに触れたら、フリックで指す
-      if (S.phase === 'call' && isMine(S.oya) && i === S.oya && S.pendingTarget == null) return startFlick(e);
+      if (S.phase === 'call' && isMine(S.oya) && i === S.oya && S.pendingTarget == null) { swipeBlock = true; return startFlick(e); }
+      // 指す・アイコンで「ちんちん侍」に答える、のどちらかになるタップなら、同じ指のスワイプは数えない（2回言ったことにならないように）
+      if ((S.phase === 'call' && isMine(S.oya)) || (S.phase === 'respond' && S.need.get(i) === W.CS && S.mode === 'button' && isMine(i))) swipeBlock = true;
       seatAction(i);
     });
   });
@@ -1672,6 +1700,50 @@ function startFlick(e) {
   window.addEventListener('pointercancel', up);
 }
 
+/* ================= 入力：スワイプで言う ================= */
+/**
+ * 「／」（斜め）→ シャキーン。ただし「ちんちん侍」で指された場面なら ちんちん侍
+ * 「｜」（縦）→ びろーん
+ * 「＼」や横のスワイプは何もしない。言葉ボタンの上と、親のときの自分のアイコン（フリックで指す）は除く
+ */
+const SWIPE_MIN = 40; // これより短い動きはスワイプにしない
+let swipeBlock = false;
+function swipeWord(dx, dy) {
+  if (Math.hypot(dx, dy) < SWIPE_MIN) return null;
+  const ax = Math.abs(dx), ay = Math.abs(dy);
+  if (ax < ay * 0.45) return W.BIRO; // ほぼ縦
+  if (dx * dy < 0 && ay > ax * 0.4) return S.phase === 'respond' && S.call && S.call.word === W.CS ? W.CS : W.SHAKI; // 右上がり（左下がり）の斜め
+  return null;
+}
+function drawTrail(pts, ok) {
+  const svg = $('swipeTrail');
+  svg.setAttribute('viewBox', `0 0 ${innerWidth} ${innerHeight}`);
+  $('swipeLine').setAttribute('points', pts.map((p) => `${p[0]},${p[1]}`).join(' '));
+  svg.classList.remove('fade', 'ok'); void svg.offsetWidth;
+  svg.classList.add('show');
+  if (ok != null) svg.classList.add(ok ? 'ok' : 'fade');
+}
+$('game').addEventListener('pointerdown', (e) => {
+  const blocked = swipeBlock;
+  swipeBlock = false;
+  if (blocked || !$('swipeChk').checked || e.target.closest('button, .stampsheet, input, .overlay')) return;
+  if (S.phase !== 'call' && S.phase !== 'respond') return;
+  const x0 = e.clientX, y0 = e.clientY, pts = [[x0, y0]];
+  const move = (ev) => { pts.push([ev.clientX, ev.clientY]); if (pts.length > 2) drawTrail(pts); };
+  const up = (ev) => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    window.removeEventListener('pointercancel', up);
+    if (ev.type === 'pointercancel') return drawTrail(pts, false);
+    const w = swipeWord(ev.clientX - x0, ev.clientY - y0);
+    if (pts.length > 2) drawTrail(pts, !!w);
+    if (w) humanSay(w, 'button');
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
+});
+
 /* ================= 入力：ボタン ================= */
 document.querySelectorAll('#pad button').forEach((b) => {
   b.addEventListener('pointerdown', (e) => { e.preventDefault(); humanSay(b.dataset.w, 'button'); });
@@ -2057,7 +2129,7 @@ segInit('ruleSeg', (v) => {
 
 /** 設定を覚えておく（次に開いたときも同じ設定） */
 const SEGS = { modeSeg: 'mode', totalSeg: 'total', humanSeg: 'humans', ruleSeg: 'rule', cpuSeg: 'cpu', diffSeg: 'diff' };
-const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'netCharSendChk', 'netCharRecvChk', 'netLiveSendChk', 'netLiveRecvChk'];
+const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'swipeChk', 'netCharSendChk', 'netCharRecvChk', 'netLiveSendChk', 'netLiveRecvChk'];
 function saveSettings() {
   const v = { profiles: PROFILES };
   Object.entries(SEGS).forEach(([id, key]) => { v[key] = String(S[key]); });
@@ -2132,6 +2204,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.1.0"></script>
+<script src="online.js?v=1.2.0"></script>
 </body>
 </html>
