@@ -491,6 +491,46 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
 .ltabs button { border: 0; background: none; padding: 8px 0; font-size: 15px; font-weight: 800; color: var(--muted); cursor: pointer; font-family: inherit; }
 .ltabs button.on { color: var(--sumi); background: var(--brush-red) bottom/80% 6px no-repeat; }
 .ltabs small { font-size: 12px; }
+/* ================= 1.12.0：遊び方ガイド・練習 ================= */
+.guide { position: fixed; inset: 0; z-index: 40; background: var(--scrim); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.guide[hidden] { display: none; }
+.gbox { position: relative; width: 100%; max-width: 420px; max-height: calc(100vh - 32px); overflow-y: auto; background: var(--panel); background-image: var(--washi); border-radius: 4px; padding: 22px 18px 16px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.gclose { position: absolute; top: 6px; right: 8px; border: 0; background: none; font-size: 26px; color: var(--muted); cursor: pointer; z-index: 2; }
+.gpage h3 { font-size: 22px; font-weight: 800; color: var(--sumi); text-align: center; margin: 0 0 10px; }
+.gpage p { font-size: 15px; line-height: 1.7; margin: 10px 0 0; }
+.gpage b { color: var(--accent); }
+.gpage ul { margin: 8px 0 0; padding-left: 1.2em; line-height: 1.8; font-size: 15px; }
+.gnav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
+.gnav button { border: 2px solid var(--line); background: var(--seat); border-radius: 6px; padding: 10px 14px; font-size: 15px; font-weight: 800; cursor: pointer; min-width: 84px; font-family: inherit; color: inherit; }
+.gnav button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.gnav button:disabled { visibility: hidden; }
+.gdots { display: flex; gap: 6px; }
+.gdots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.gdots i.on { background: var(--accent); }
+.gacts { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.gacts button { padding: 13px; border-radius: 6px; font-size: 16px; font-weight: 800; border: 2px solid var(--accent); background: var(--seat); color: var(--accent); cursor: pointer; font-family: inherit; }
+.gacts button.primary { background: var(--accent); color: var(--accent-ink); }
+.gacts small { display: block; font-size: 12px; font-weight: 500; opacity: .85; }
+.gmsg { text-align: center; color: var(--you); font-weight: 800; min-height: 1.4em; margin: 8px 0 0; font-size: 14px; }
+/* 図：4人の円 */
+.gdiag { position: relative; width: 230px; height: 200px; margin: 46px auto 0; }
+.gdiag .gs { position: absolute; width: 58px; transform: translate(-50%, -50%); text-align: center; font-size: 12px; font-weight: 800; }
+.gdiag .gs .ga { width: 58px; height: 58px; border-radius: 50%; background: var(--seat); border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; }
+.gdiag .gs .ga svg { width: 80%; height: 80%; }
+.gdiag .gs.oya .ga { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,154,46,.35); }
+.gdiag .gs.tgt .ga { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(179,38,30,.3); }
+.gdiag .gs.out .ga { filter: grayscale(1); opacity: .5; }
+.gdiag .gb { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -2px); background: var(--panel); border: 2px solid var(--ink); border-radius: 10px; padding: 1px 7px; font-size: 13px; white-space: nowrap; z-index: 2; }
+.gdiag .gb.red { border-color: var(--accent); color: var(--accent); }
+.gdiag svg.garrow { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; color: var(--accent); }
+.gpad { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0 0; }
+.gpad span { border: 2px solid var(--accent); border-radius: 6px; text-align: center; padding: 6px; font-weight: 800; font-size: 14px; }
+.gpad span.r { border-color: var(--gold); }
+/* 練習・見本の説明 */
+.coach { background: var(--panel); background-image: var(--washi); border: 2px solid var(--you); border-radius: 8px; padding: 8px 10px; margin: 4px 0 6px; font-size: 15px; font-weight: 800; line-height: 1.5; text-align: center; white-space: pre-line; }
+.coach.warn { border-color: var(--accent); color: var(--accent); }
+.coach[hidden] { display: none; }
+body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { display: none; }
 </style>
 </head>
 <body>
@@ -514,6 +554,7 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
     <button class="big sub-btn" id="onlineBtn" hidden>オンライン対戦<small>友達と部屋で勝負</small></button>
   </div>
   <div class="rulechip"><span id="ruleSummary"></span><button id="ruleOpen">ルールを変える</button></div>
+  <button class="ghost-btn" id="guideBtn" style="margin:-4px 0 14px">遊び方を見る</button>
   <button class="big sub-btn" id="rejoinBtn" hidden></button>
   <p class="msg" id="titleMsg" style="margin:0 0 6px"></p>
   <div class="best" id="bestBox"></div>
@@ -576,6 +617,12 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
     </div>
     </div>
   <div class="card">
+    <h2>初心者オススメ設定</h2>
+    <p class="note" style="margin:-4px 0 10px">案内あり・セリフボタン・制限時間ゆっくり・CPU弱い・フェイントなし・4人・一発勝負にまとめて変えます。</p>
+    <button class="ghost-btn" id="beginnerBtn">初心者オススメ設定にする</button>
+    <p class="msg" id="beginnerMsg" style="margin:8px 0 0"></p>
+  </div>
+  <div class="card">
     <h2>オンライン対戦の音声</h2>
     <p class="note" style="margin:-4px 0 10px">オンライン対戦（それぞれのスマホから参加）のときに効きます。</p>
     <div class="toggles">
@@ -586,14 +633,6 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
       <div class="row">
         <label for="netCharRecvChk">キャラの声を受け取る<button type="button" class="q" aria-label="説明">？</button><small>相手の言葉を自分のスマホで鳴らす</small><span class="more" hidden>相手が言った言葉を、相手のキャラの声で自分のスマホに鳴らす</span></label>
         <input type="checkbox" id="netCharRecvChk" checked>
-      </div>
-      <div class="row">
-        <label for="netLiveSendChk">生の声を送る <small class="soon">準備中</small><button type="button" class="q" aria-label="説明">？</button><small>マイクの声を相手に流す</small><span class="more" hidden>マイクの声そのものを相手に流す（音声入力モードのとき）</span></label>
-        <input type="checkbox" id="netLiveSendChk">
-      </div>
-      <div class="row">
-        <label for="netLiveRecvChk">生の声を受け取る <small class="soon">準備中</small><button type="button" class="q" aria-label="説明">？</button><small>相手のマイクの声を流す</small><span class="more" hidden>相手のマイクの声を自分のスマホで流す</span></label>
-        <input type="checkbox" id="netLiveRecvChk">
       </div>
     </div>
   </div>
@@ -656,6 +695,7 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
     <div class="lpanel" id="onPanelMembers">
       <ol class="members" id="onMembers"></ol>
       <div class="rulechip"><span id="onRule"></span><button id="onRuleOpen" hidden>ルールを変える</button></div>
+      <button class="ghost-btn" id="onGuide" style="margin:0 0 12px">遊び方を見る</button>
     </div>
     <div class="lpanel" id="onPanelMine" hidden>
       <div class="roomrules" id="onMine"></div>
@@ -695,6 +735,7 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
     <div id="seats"></div>
   </div>
 
+  <div class="coach" id="coach" hidden></div>
   <div class="hint" id="hint"></div>
 
   <div class="pad" id="pad">
@@ -722,6 +763,19 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
 
 <!-- ===== スワイプの跡 ===== -->
 <svg class="swipe-trail" id="swipeTrail" aria-hidden="true"><polyline id="swipeLine" points=""></polyline></svg>
+
+<!-- ===== 遊び方ガイド ===== -->
+<div class="guide" id="guide" hidden role="dialog" aria-label="遊び方ガイド">
+  <div class="gbox">
+    <button class="gclose" id="gClose" aria-label="閉じる">×</button>
+    <div class="gpage" id="gPage"></div>
+    <div class="gnav">
+      <button id="gPrev">もどる</button>
+      <span class="gdots" id="gDots"></span>
+      <button class="primary" id="gNext">次へ</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== 下から出る画面（ルールを変える） ===== -->
 <div class="scrim" id="sheetScrim" hidden></div>
@@ -863,9 +917,9 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.11.0"></script>
-<script src="voices.js?v=1.11.0"></script>
-<script src="qrcode.js?v=1.11.0"></script>
+<script src="firebase-config.js?v=1.12.0"></script>
+<script src="voices.js?v=1.12.0"></script>
+<script src="qrcode.js?v=1.12.0"></script>
 <script>
 'use strict';
 
@@ -923,9 +977,21 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.11.0";
+const APP_VERSION = "1.12.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.12.0",
+  "2026-11-15",
+  "遊び方ガイドと練習",
+  [
+   "遊び方ガイドを追加。初めて開いたときに出て、タイトルと待合室の「遊び方を見る」からいつでも見られる（絵つきで8ページ。左右にスワイプでもめくれる）",
+   "「動きを見る」：CPUだけで遊ぶのを、何が起きたかの解説つきで見られる",
+   "「練習する」：切腹なし・時間ゆっくり。間違えたら正解を教えてくれて、やり直せる",
+   "「初心者オススメ設定」：案内あり・セリフボタン・ゆっくり・CPU弱い・フェイントなし・4人・一発勝負にまとめて変える（ガイドの最後と、設定タブの演出の下）",
+   "準備中のままだった「生の声を送る／受け取る」をなくした"
+  ]
+ ],
  [
   "1.11.0",
   "2026-11-15",
@@ -1469,6 +1535,7 @@ function refreshSeats() {
   });
   $('combo').textContent = `${S.combo} 回つづいた`;
   updateHint();
+  if (S.train === 'practice' && $('coach').classList.contains('warn') === false) trainTurn();
 }
 /**
  * 案内文。初心者向けがオフのときは「自分が選んだもの」の確認だけ出す
@@ -1501,6 +1568,7 @@ function updateHint() {
 
 /* ================= タイマー ================= */
 function currentLimit() {
+  if (S.train) return (DIFF.easy.limit + 400) * 1.6; // 練習・見本はとてもゆっくり、速くもならない
   const base = DIFF[S.diff].limit + (S.mode === 'voice' ? VOICE_EXTRA : 0) + (online() ? ONLINE_EXTRA : 0);
   return Math.max(base * 0.55, base * (1 - S.combo * 0.02));
 }
@@ -1771,6 +1839,7 @@ function makeCall(p, word, target) {
   S.firstOya = false;
   S.call = { from: p, word, target };
   S.combo++;
+  if (S.train) trainCall(p, word, target);
   setCenter(word);
   drawArrow(p, target);
   beep(word === W.CS ? 660 : 520, 0.08);
@@ -1849,6 +1918,7 @@ function say(p, word, target, byVoice = false) {
 const SEPPUKU_PAUSE = 800; // ミスしてから切腹が始まるまでの「間」
 const CUT_LEN = 2000;      // ムービー開始から、斬れた体が画面の外へ落ちきるまで
 function seppuku(p, why) {
+  if (S.train) return trainMiss(p, why); // 練習・見本では切腹しない
   // ミスした瞬間にゲームを止める（タイマー・CPUも止まる）
   newPhase();
   S.phase = 'over';
@@ -2786,6 +2856,184 @@ function updateRuleSummary() {
   $('ruleSummary').textContent = `${S.mode === 'voice' ? '音声入力' : 'セリフボタン'}・${S.total}人・${S.rule === 'death' ? 'デスマッチ' : '一発勝負'}・CPU ${CPU_LABEL[S.cpu]}${$('safeChk').checked ? '（不敗）' : ''}・時間 ${diff}`;
 }
 
+
+/* ================= 遊び方ガイド・見本・練習（1.12.0） ================= */
+const GUIDE_KEY = 'chinchin-samurai-guide-seen-v1';
+/** ガイドの図：4人の円。o：親、t：指された人、b：吹き出し {席: 言葉}、out：脱落 */
+function gDiag({ o = -1, t = -1, b = {}, red = [], out = [] } = {}) {
+  const pos = [[50, 84], [14, 48], [50, 14], [86, 48]]; // 下・左・上・右（%）
+  const names = ['あなた', 'たろう', 'はなこ', 'じろう'];
+  const seats = pos.map(([x, y], i) => `<div class="gs ${i === o ? 'oya' : ''} ${i === t ? 'tgt' : ''} ${out.includes(i) ? 'out' : ''}" style="left:${x}%;top:${y}%">
+      ${b[i] ? `<span class="gb ${red.includes(i) ? 'red' : ''}">${b[i]}</span>` : ''}<div class="ga">${avatarSvg(null, i)}</div>${names[i]}</div>`).join('');
+  let arrow = '';
+  if (o >= 0 && t >= 0) {
+    const [x1, y1] = pos[o], [x2, y2] = pos[t];
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy), k1 = 16 / len, k2 = 17 / len;
+    arrow = `<svg class="garrow" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><marker id="gm" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="currentColor"/></marker></defs>
+      <line x1="${x1 + dx * k1}" y1="${y1 + dy * k1}" x2="${x2 - dx * k2}" y2="${y2 - dy * k2}" stroke="currentColor" stroke-width="1.6" marker-end="url(#gm)" vector-effect="non-scaling-stroke"/></svg>`;
+  }
+  return `<div class="gdiag">${arrow}${seats}</div>`;
+}
+const GUIDE_PAGES = [
+  () => `<h3>ちんちん侍とは</h3>${gDiag({ o: 2, t: 3, b: { 2: 'おちんちん' } })}
+    <p>円になって遊ぶ、言葉のゲーム。<b>親</b>が言葉を言って、誰かを<b>指す</b>。指された人が返事をして、<b>次の親</b>になる。言い間違えたら<b>切腹</b>！</p>`,
+  () => `<h3>「ちんちん」</h3>${gDiag({ o: 2, t: 1, b: { 2: 'ちんちん' } })}
+    <p>指された人は<b>何も言わない</b>。そのまま次の親になって、すぐ言葉を言って誰かを指す。</p>`,
+  () => `<h3>「おちんちん」→「びろーん」</h3>${gDiag({ o: 2, t: 3, b: { 2: 'おちんちん', 3: 'びろーん' }, red: [3] })}
+    <p>指された人は<b>「びろーん」</b>。言えたら、その人が次の親。</p>`,
+  () => `<h3>「侍」→「シャキーン」</h3>${gDiag({ o: 2, t: 0, b: { 2: '侍', 0: 'シャキーン' }, red: [0] })}
+    <p>指された人は<b>「シャキーン」</b>。言えたら、その人が次の親。</p>`,
+  () => `<h3>「ちんちん侍」→ 全員</h3>${gDiag({ o: 2, t: 1, b: { 0: 'ちんちん侍', 1: 'ちんちん侍', 2: 'ちんちん侍', 3: 'ちんちん侍' }, red: [0, 1, 3] })}
+    <p>親も含めて<b>全員</b>で「ちんちん侍」。そのあと、指された人が次の親。</p>`,
+  () => `<h3>切腹になるとき</h3>${gDiag({ b: { 1: 'シャキーン？' }, red: [1], out: [1] })}
+    <ul><li><b>言い間違い</b>（「びろーん」のところで「シャキーン」など）</li><li><b>お手つき</b>（自分の番じゃないのに言う）</li><li><b>時間切れ</b>（言うのが遅い）</li></ul>
+    <p>だんだん速くなるので、あわてずに。</p>`,
+  () => `<h3>スマホでの操作</h3>
+    <div class="gpad"><span>ちんちん</span><span>おちんちん</span><span>侍</span><span>ちんちん侍</span><span class="r">びろーん</span><span class="r">シャキーン</span></div>
+    <p>親のときは<b>言葉のボタン</b>を押して、指す人の<b>顔をタップ</b>（どっちが先でもOK）。自分の顔から相手の方へ<b>サッと払って</b>指すこともできる。</p>
+    <p>指されたら、返事のボタンを押すだけ。</p>`,
+  () => `<h3>さっそく、やってみよう</h3>
+    <div class="gacts">
+      ${online() || (typeof Online !== 'undefined' && Online.code) ? '' : `<button data-a="demo">動きを見る<small>CPUだけで遊ぶのを、解説つきで見る</small></button>
+      <button data-a="practice">練習する<small>切腹なし・時間ゆっくり。間違えたら正解を教えてくれる</small></button>`}
+      <button data-a="beginner">初心者オススメ設定にする<small>案内あり・ゆっくり・CPU弱い・4人・一発勝負</small></button>
+      <button class="primary" data-a="close">閉じる</button>
+    </div><p class="gmsg" id="gMsg"></p>`,
+];
+let guideAt = 0;
+function openGuide(page = 0) {
+  guideAt = page;
+  $('guide').hidden = false;
+  renderGuide();
+}
+function closeGuide() {
+  $('guide').hidden = true;
+  try { localStorage.setItem(GUIDE_KEY, '1'); } catch (e) { /* noop */ }
+}
+function renderGuide() {
+  const last = GUIDE_PAGES.length - 1;
+  $('gPage').innerHTML = GUIDE_PAGES[guideAt]();
+  $('gDots').innerHTML = GUIDE_PAGES.map((_, i) => `<i class="${i === guideAt ? 'on' : ''}"></i>`).join('');
+  $('gPrev').disabled = guideAt === 0;
+  $('gNext').hidden = guideAt === last;
+  $('gPage').querySelectorAll('.gacts button').forEach((b) => b.addEventListener('click', () => {
+    const a = b.dataset.a;
+    if (a === 'close') closeGuide();
+    else if (a === 'beginner') { applyBeginner(); $('gMsg').textContent = '初心者オススメ設定にしました'; }
+    else { closeGuide(); startTraining(a); }
+  }));
+}
+$('gPrev').addEventListener('click', () => { if (guideAt > 0) { guideAt--; renderGuide(); } });
+$('gNext').addEventListener('click', () => { if (guideAt < GUIDE_PAGES.length - 1) { guideAt++; renderGuide(); } });
+$('gClose').addEventListener('click', closeGuide);
+$('guide').addEventListener('click', (e) => { if (e.target === $('guide')) closeGuide(); });
+$('guideBtn').addEventListener('click', () => openGuide(0));
+$('onGuide').addEventListener('click', () => openGuide(0));
+// 左右にスワイプでページをめくる
+{
+  let sx = null;
+  $('gPage').addEventListener('pointerdown', (e) => { sx = e.clientX; });
+  $('gPage').addEventListener('pointerup', (e) => {
+    if (sx == null) return;
+    const dx = e.clientX - sx; sx = null;
+    if (Math.abs(dx) > 50) $(dx < 0 ? 'gNext' : 'gPrev').click();
+  });
+}
+/** 初心者オススメ設定 */
+function applyBeginner() {
+  [['modeSeg', 'button'], ['totalSeg', '4'], ['ruleSeg', 'normal'], ['cpuSeg', 'weak'], ['diffSeg', 'easy']].forEach(([id, v]) => {
+    const b = $(id).querySelector(`button[data-v="${v}"]`);
+    if (b) b.click();
+  });
+  $('guideChk').checked = true;
+  $('swipeChk').checked = false;
+  $('feintChk').checked = false;
+  saveSettings();
+  updateRuleSummary();
+  if (typeof Online !== 'undefined' && Online.code) renderMine();
+}
+$('beginnerBtn').addEventListener('click', () => {
+  applyBeginner();
+  $('beginnerMsg').textContent = '初心者オススメ設定にしました';
+  setTimeout(() => { $('beginnerMsg').textContent = ''; }, 2500);
+});
+
+/** 見本（demo：CPUだけ・解説つき）と練習（practice：切腹なし） */
+const DEMO_CALLS = 12; // 見本はこれだけ回したら終わる
+function startTraining(kind) {
+  closeSheets();
+  S.train = kind;
+  S.trainBak = { total: S.total, humans: S.humans, cpuSafe: S.cpuSafe, feint: S.feint, guide: S.guide, mode: S.mode };
+  S.total = 4;
+  S.humans = kind === 'demo' ? 0 : 1;
+  S.cpuSafe = true; S.feint = false; S.guide = true; S.mode = 'button';
+  S.tts = $('ttsChk').checked; S.movie = $('movieChk').checked;
+  setupPlayers();
+  if (kind === 'demo') S.players[0].name = 'さぶろう';
+  layoutSeats(S.total);
+  document.body.classList.toggle('demo', kind === 'demo');
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'game'));
+  $('modeLabel').textContent = kind === 'demo' ? '遊び方：見るだけ' : '練習（切腹なし・時間ゆっくり）';
+  $('pad').hidden = kind === 'demo';
+  $('voicebox').hidden = true;
+  document.querySelectorAll('#pad button').forEach((b) => { b.hidden = false; });
+  $('swipeZone').hidden = true;
+  $('heard').textContent = '';
+  bgmStop();
+  initAudio(S.total);
+  buildSeats();
+  coach(kind === 'demo' ? 'CPUだけで遊ぶのを見てみよう。金の枠が親、赤い丸が指された人' : 'あなたの番になったら、下のボタンで言おう。間違えても切腹しないよ');
+  startGame(kind === 'demo' ? 2 : 0);
+}
+function endTraining() {
+  if (!S.train) return;
+  Object.assign(S, S.trainBak);
+  S.train = null;
+  document.body.classList.remove('demo');
+  coach('');
+}
+function coach(text, warn) {
+  $('coach').hidden = !text;
+  $('coach').textContent = text || '';
+  $('coach').classList.toggle('warn', !!warn);
+}
+const ANSWER = { [W.CHIN]: 'は何も言わずに、次の親', [W.OCHIN]: 'は「びろーん」', [W.SAMU]: 'は「シャキーン」' };
+/** 親が言葉を言ったときの解説 */
+function trainCall(p, word, target) {
+  const ans = word === W.CS ? '→ 全員で「ちんちん侍」' : `→ ${nameOf(target)}${ANSWER[word]}`;
+  coach(`${nameOf(p)}が「${word}」で${nameOf(target)}を指した\n${ans}`);
+  if (S.train === 'demo' && S.combo >= DEMO_CALLS) {
+    setTimeout(() => { if (S.train === 'demo') { toMenu(); openGuide(GUIDE_PAGES.length - 1); } }, 2600);
+  }
+}
+/** 練習：あなたの番が来たときの声かけ */
+function trainTurn() {
+  if (S.train !== 'practice') return;
+  if (S.phase === 'call' && isHuman(S.oya)) coach('あなたが親！ 言葉のボタンを押して、指す人の顔をタップ');
+  else if (S.phase === 'respond' && S.need.has(0)) coach(`${nameOf(S.call.from)}が「${S.call.word}」\n→ あなたは「${S.need.get(0)}」`);
+}
+/** 練習：間違えても切腹しない。正解を教えて、やり直す */
+function trainMiss(p, why) {
+  if (!isHuman(p)) return;
+  beep(300, 0.12, 'triangle', 0.05);
+  let fix;
+  if (S.phase === 'call' && p === S.oya) {
+    fix = '親は「ちんちん」「おちんちん」「侍」「ちんちん侍」のどれかを言って、誰かの顔をタップ';
+    coach(`✕ ${why}\n${fix}`, true);
+    beginCall(p); // 親をやり直し（時間もはじめから）
+    coach(`✕ ${why}\n${fix}`, true);
+    return;
+  }
+  if (S.phase === 'respond' && S.need.has(p)) {
+    fix = `正解は「${S.need.get(p)}」`;
+    if (/時間切れ/.test(why)) { // もう一度待つ
+      later(S.limitMs, () => { if (S.need.has(p)) seppuku(p, `「${S.need.get(p)}」が言えなかった（時間切れ）`); });
+      setBar(S.limitMs);
+    }
+  } else fix = '今はあなたの番じゃないので、だまって待とう';
+  coach(`✕ ${why}\n${fix}`, true);
+}
+
 /* ================= 画面遷移 ================= */
 function segInit(id, apply) {
   $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
@@ -2834,6 +3082,7 @@ $('startBtn').addEventListener('click', () => {
   startGame(0);
 });
 function toMenu() {
+  endTraining();
   if (online() && NET.onLeave) NET.onLeave();
   netEnd();
   newPhase();
@@ -2858,7 +3107,7 @@ segInit('ruleSeg', (v) => {
 
 /** 設定を覚えておく（次に開いたときも同じ設定） */
 const SEGS = { modeSeg: 'mode', totalSeg: 'total', ruleSeg: 'rule', cpuSeg: 'cpu', diffSeg: 'diff' };
-const CHECKS = ['vibeChk', 'safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'swipeChk', 'netCharSendChk', 'netCharRecvChk', 'netLiveSendChk', 'netLiveRecvChk'];
+const CHECKS = ['vibeChk', 'safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'swipeChk', 'netCharSendChk', 'netCharRecvChk'];
 let restoring = false; // 読み込み中は保存しない（途中の、まだ戻していない設定で上書きしないように）
 function saveSettings() {
   if (restoring) return;
@@ -2896,6 +3145,9 @@ CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
 
 restoreSettings();
 updateRuleSummary();
+// 初めて開いた人には遊び方ガイドを出す
+const guideSeen = () => { try { return !!localStorage.getItem(GUIDE_KEY); } catch (e) { return true; } };
+if (!guideSeen()) setTimeout(() => { if (!guideSeen() && $('title').classList.contains('active')) openGuide(0); }, 300);
 document.body.classList.add('newui'); // 対戦画面の見た目（1.9.0 のお試しから正式に）
 renderPlist();
 renderSlots();
@@ -2956,6 +3208,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.11.0"></script>
+<script src="online.js?v=1.12.0"></script>
 </body>
 </html>
