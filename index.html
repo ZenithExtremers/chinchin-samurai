@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#b3261e">
 <script>try { const t = localStorage.getItem('chinchin-samurai-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) { /* noop */ }</script>
-<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-48.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ちんちん侍">
@@ -419,7 +419,9 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
 #startBtn, .overlay .btns button.primary, #onStart { box-shadow: 0 0 0 3px rgba(255,255,255,.28) inset, 0 3px 8px rgba(120,20,10,.3); letter-spacing: .12em; }
 .pad button { font-weight: 800; }
 /* 対戦：筆で描いた丸（円相） */
-.mat { border: 0; background: var(--enso) center/100% 100% no-repeat; }
+.mat { border: 0; background: url(img/enso.png) center/125% 125% no-repeat; opacity: .8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .mat { filter: invert(1) sepia(.25); } }
+:root[data-theme="dark"] .mat { filter: invert(1) sepia(.25); }
 .center .word { color: var(--sumi); font-weight: 800; }
 .avatar { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px var(--line), var(--shadow); }
 /* 結果：巻物 */
@@ -495,6 +497,7 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
 .guide { position: fixed; inset: 0; z-index: 40; background: var(--scrim); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .guide[hidden] { display: none; }
 .gbox { position: relative; width: 100%; max-width: 420px; max-height: calc(100vh - 32px); overflow-y: auto; background: var(--panel); background-image: var(--washi); border-radius: 4px; padding: 22px 18px 16px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.gskip { position: absolute; top: 10px; left: 10px; border: 1px solid var(--line); background: var(--seat); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 800; color: var(--muted); cursor: pointer; z-index: 2; font-family: inherit; }
 .gclose { position: absolute; top: 6px; right: 8px; border: 0; background: none; font-size: 26px; color: var(--muted); cursor: pointer; z-index: 2; }
 .gpage h3 { font-size: 22px; font-weight: 800; color: var(--sumi); text-align: center; margin: 0 0 10px; }
 .gpage p { font-size: 15px; line-height: 1.7; margin: 10px 0 0; }
@@ -767,6 +770,7 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
 <!-- ===== 遊び方ガイド ===== -->
 <div class="guide" id="guide" hidden role="dialog" aria-label="遊び方ガイド">
   <div class="gbox">
+    <button class="gskip" id="gSkip">スキップ</button>
     <button class="gclose" id="gClose" aria-label="閉じる">×</button>
     <div class="gpage" id="gPage"></div>
     <div class="gnav">
@@ -917,9 +921,9 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.12.0"></script>
-<script src="voices.js?v=1.12.0"></script>
-<script src="qrcode.js?v=1.12.0"></script>
+<script src="firebase-config.js?v=1.13.0"></script>
+<script src="voices.js?v=1.13.0"></script>
+<script src="qrcode.js?v=1.13.0"></script>
 <script>
 'use strict';
 
@@ -977,9 +981,19 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.12.0";
+const APP_VERSION = "1.13.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.13.0",
+  "2026-11-15",
+  "新しいアイコンと円相",
+  [
+   "アプリのアイコンを新しく：4つの原案をまぜた（筆の円相・侍の顔・赤い一閃・朱の「侍」のハンコ）",
+   "対戦の円を、本物の筆で描いたような円相に（入りは太く、終わりがかすれる）",
+   "遊び方ガイドに、どのページからでも押せる「スキップ」を追加"
+  ]
+ ],
  [
   "1.12.0",
   "2026-11-15",
@@ -2916,6 +2930,7 @@ function renderGuide() {
   $('gDots').innerHTML = GUIDE_PAGES.map((_, i) => `<i class="${i === guideAt ? 'on' : ''}"></i>`).join('');
   $('gPrev').disabled = guideAt === 0;
   $('gNext').hidden = guideAt === last;
+  $('gSkip').hidden = guideAt === last; // 最後のページは「閉じる」があるので出さない
   $('gPage').querySelectorAll('.gacts button').forEach((b) => b.addEventListener('click', () => {
     const a = b.dataset.a;
     if (a === 'close') closeGuide();
@@ -2926,6 +2941,7 @@ function renderGuide() {
 $('gPrev').addEventListener('click', () => { if (guideAt > 0) { guideAt--; renderGuide(); } });
 $('gNext').addEventListener('click', () => { if (guideAt < GUIDE_PAGES.length - 1) { guideAt++; renderGuide(); } });
 $('gClose').addEventListener('click', closeGuide);
+$('gSkip').addEventListener('click', closeGuide);
 $('guide').addEventListener('click', (e) => { if (e.target === $('guide')) closeGuide(); });
 $('guideBtn').addEventListener('click', () => openGuide(0));
 $('onGuide').addEventListener('click', () => openGuide(0));
@@ -3208,6 +3224,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.12.0"></script>
+<script src="online.js?v=1.13.0"></script>
 </body>
 </html>
