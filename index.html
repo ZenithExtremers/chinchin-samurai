@@ -174,6 +174,14 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   background: var(--panel); border-top: 2px solid var(--accent); box-shadow: 0 -6px 18px rgba(0,0,0,.18); }
 .stampsheet .stamps { gap: 8px; }
 .stampsheet .stamps button { padding: 12px 10px; font-size: 15px; }
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 0 0 14px;
+  padding: 6px 0; background: var(--bg); }
+.tabs button { padding: 10px 0; border: none; border-bottom: 3px solid var(--line); background: none; font-size: 15px; font-weight: bold; color: var(--muted); cursor: pointer; }
+.tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
+.tabpanel[hidden] { display: none; }
+.ver-now { font-size: 12px; color: var(--muted); font-weight: normal; margin-left: 6px; }
+#notesInline .notes-ver { font-size: 15px; margin-top: 10px; }
+#notesInline .notes-ver:first-child { margin-top: 0; }
 .ver { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 0; }
 .ver button { background: none; border: none; color: var(--accent); text-decoration: underline; font-size: 12px; cursor: pointer; padding: 0 0 0 6px; }
 .notes-ver { margin: 0 0 4px; font-size: 18px; color: var(--accent); }
@@ -311,13 +319,20 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   <h1>ちんちん侍</h1>
   <p class="sub">言い間違えたら、切腹。</p>
 
+  <nav class="tabs" role="tablist" aria-label="メニュー">
+    <button role="tab" data-tab="play" class="on">遊ぶ</button>
+    <button role="tab" data-tab="chara">キャラ</button>
+    <button role="tab" data-tab="config">設定</button>
+    <button role="tab" data-tab="info">情報</button>
+  </nav>
+
+  <div class="tabpanel" id="tab-play">
+
   <button class="big" id="startBtn">いざ、勝負！</button>
   <button class="big sub-btn" id="onlineBtn" hidden>オンライン対戦</button>
   <p class="msg" id="titleMsg" style="margin:0 0 6px"></p>
   <div class="best" id="bestBox"></div>
-
-
-  <div class="card">
+    <div class="card">
     <h2>モード</h2>
     <div class="seg" id="modeSeg">
       <button data-v="button" class="on">セリフボタン</button>
@@ -354,6 +369,23 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button data-v="normal" class="on">ふつう</button>
       <button data-v="hard">はやい</button>
     </div>
+    <p class="note" id="voiceNote" hidden>
+      言葉は声で言い、指す人は画面をタップします。マイクの使用を許可してください（Chrome 推奨）。
+      CPUが喋っている最中にマイクが拾った言葉は、今あなたが言うべき言葉以外は無視するので、セリフの音声はオンのままで大丈夫です。
+    </p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tab-chara" hidden>
+  <div class="card">
+    <h2>プレイヤー</h2>
+    <p class="note" style="margin:-4px 0 10px">顔をタップで髪型、色の丸で服の色が変わります。「ハンデ」を押すと、その人だけ制限時間が +0.5／+1／+2 秒長くなります（人間だけ）。▶を押すたびに全セリフを順に試し聞き（数字はパターン）。</p>
+    <div class="plist" id="plist"></div>
+  </div>
+  </div>
+
+  <div class="tabpanel" id="tab-config" hidden>
+    <div class="card">
     <h2>演出</h2>
     <div class="toggles">
       <div class="row">
@@ -381,12 +413,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
         <input type="checkbox" id="feintChk">
       </div>
     </div>
-    <p class="note" id="voiceNote" hidden>
-      言葉は声で言い、指す人は画面をタップします。マイクの使用を許可してください（Chrome 推奨）。
-      CPUが喋っている最中にマイクが拾った言葉は、今あなたが言うべき言葉以外は無視するので、セリフの音声はオンのままで大丈夫です。
-    </p>
-  </div>
-
+    </div>
   <div class="card">
     <h2>オンライン対戦の音声</h2>
     <p class="note" style="margin:-4px 0 10px">オンライン対戦（それぞれのスマホから参加）のときに効きます。</p>
@@ -409,13 +436,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       </div>
     </div>
   </div>
-
-  <div class="card">
-    <h2>プレイヤー</h2>
-    <p class="note" style="margin:-4px 0 10px">顔をタップで髪型、色の丸で服の色が変わります。「ハンデ」を押すと、その人だけ制限時間が +0.5／+1／+2 秒長くなります（人間だけ）。▶を押すたびに全セリフを順に試し聞き（数字はパターン）。</p>
-    <div class="plist" id="plist"></div>
   </div>
 
+  <div class="tabpanel" id="tab-info" hidden>
   <div class="card">
     <h2>ルール</h2>
     <ul class="rules">
@@ -429,12 +452,15 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <li>言い間違い・お手つき・時間切れは<b>切腹</b>。一発勝負なら一人切腹で勝負あり、デスマッチなら脱落して最後の一人まで</li>
     </ul>
   </div>
-
-  <p class="ver"><span id="verLabel"></span><button id="notesBtn">パッチノート</button></p>
+    <div class="card">
+      <h2>パッチノート <small class="ver-now" id="verLabel"></small></h2>
+      <div id="notesInline"></div>
+    </div>
   <p class="note" style="text-align:center">
     音声：Open JTalk／HTS Voice「Mei」「Takumi」「NIT ATR503 M001」<br>
     © Nagoya Institute of Technology（Mei・Takumi は CC BY 3.0, MMDAgent Project）
   </p>
+  </div>
 </section>
 
 <!-- ===== オンライン対戦 ===== -->
@@ -477,15 +503,6 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     </div>
   </div>
   <p class="msg" id="onMsg"></p>
-</section>
-
-<!-- ===== パッチノート ===== -->
-<section class="screen" id="notes">
-  <div class="topbar">
-    <span>パッチノート</span>
-    <button id="notesBack">もどる</button>
-  </div>
-  <div id="notesList"></div>
 </section>
 
 <!-- ===== ゲーム画面 ===== -->
@@ -587,8 +604,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.3.1"></script>
-<script src="voices.js?v=1.3.1"></script>
+<script src="firebase-config.js?v=1.4.0"></script>
+<script src="voices.js?v=1.4.0"></script>
 <script>
 'use strict';
 
@@ -619,9 +636,19 @@ let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bo
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "1.4.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.4.0",
+  "2026-11-15",
+  "スタート画面をタブに分けた",
+  [
+   "スタート画面を「遊ぶ」「キャラ」「設定」「情報」の4つのタブに分けた",
+   "遊ぶ：開始・オンライン対戦・人数・ルール・強さ／キャラ：名前・見た目・声の試し聞き・ハンデ／設定：演出・オンラインの音声／情報：ルール・パッチノート・クレジット",
+   "最後に開いていたタブを覚えておく"
+  ]
+ ],
  [
   "1.3.1",
   "2026-11-15",
@@ -2185,19 +2212,22 @@ restoreSettings();
 renderPlist();
 // 版とパッチノート
 $('verLabel').textContent = `ver ${APP_VERSION}`;
-$('notesList').innerHTML = PATCH_NOTES.map(([v, d, head, items]) => `
-  <div class="card">
-    <h2 class="notes-ver">ver ${v}　${esc(head)}</h2>
-    <p class="notes-date">${d}</p>
-    <ul class="notes-list">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-  </div>`).join('');
-$('notesBtn').addEventListener('click', () => {
-  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'notes'));
-  window.scrollTo(0, 0);
-});
-$('notesBack').addEventListener('click', () => {
-  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'title'));
-});
+$('notesInline').innerHTML = PATCH_NOTES.map(([v, d, head, items]) => `
+  <h3 class="notes-ver">ver ${v}　${esc(head)}</h3>
+  <p class="notes-date">${d}</p>
+  <ul class="notes-list">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`).join('');
+// タブ（遊ぶ／キャラ／設定／情報）。最後に開いていたタブを覚えておく
+function openTab(name) {
+  document.querySelectorAll('.tabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === name); b.setAttribute('aria-selected', b.dataset.tab === name); });
+  document.querySelectorAll('.tabpanel').forEach((el) => { el.hidden = el.id !== `tab-${name}`; });
+  try { localStorage.setItem('chinchin-samurai-tab', name); } catch (e) { /* 保存できなくても使える */ }
+}
+document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => { openTab(b.dataset.tab); window.scrollTo(0, 0); }));
+{
+  let t = 'play';
+  try { t = localStorage.getItem('chinchin-samurai-tab') || 'play'; } catch (e) { /* noop */ }
+  openTab(document.getElementById(`tab-${t}`) ? t : 'play');
+}
 // アプリ化：ホーム画面に追加でき、電波がなくても開けるように（GitHub Pages などで開いたときだけ）
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -2225,6 +2255,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.3.1"></script>
+<script src="online.js?v=1.4.0"></script>
 </body>
 </html>
