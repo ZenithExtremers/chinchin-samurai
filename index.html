@@ -197,7 +197,24 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .chatlog .empty { color: var(--muted); font-size: 13px; }
 .chatlog .m b { margin-right: 6px; }
 .chatlog .m .st { display: inline-block; border: 2px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 0 8px; font-weight: bold; }
-.overlay .chatlog { max-height: 110px; }
+.chatfab { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 25;
+  width: 58px; height: 58px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); box-shadow: 0 4px 14px rgba(0,0,0,.3);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.chatfab[hidden] { display: none; }
+.chatfab svg { width: 28px; height: 28px; fill: currentColor; }
+.chatfab:active { transform: scale(.94); }
+.chatfab .badge { position: absolute; top: -4px; right: -4px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #e0245e; color: #fff;
+  font-size: 12px; font-weight: bold; line-height: 22px; text-align: center; border: 2px solid var(--bg); }
+.chatfab .badge[hidden] { display: none; }
+.chatpanel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 26; max-height: 70vh; overflow-y: auto; animation: rise .2s ease-out;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: var(--panel); border-top: 2px solid var(--accent); border-radius: 16px 16px 0 0; box-shadow: 0 -6px 18px rgba(0,0,0,.25); }
+.chatpanel[hidden] { display: none; }
+@keyframes rise { from { transform: translateY(100%); } to { transform: none; } }
+.chathead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.chathead button { border: 0; background: none; font-size: 24px; line-height: 1; color: var(--muted); cursor: pointer; padding: 2px 6px; }
+.chatpanel .chatlog { max-height: 30vh; }
+.stamps button:disabled { opacity: .35; }
 .stamps { display: flex; flex-wrap: wrap; gap: 5px; }
 .stamps button { flex: 1 1 auto; padding: 7px 8px; border-radius: 8px; border: 2px solid var(--accent); background: var(--seat); color: var(--accent); font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; }
 .stamps button:active { background: var(--accent); color: var(--accent-ink); }
@@ -495,7 +512,6 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <li><b>「侍」</b> → 指された人が<b>「シャキーン」</b></li>
       <li><b>「ちんちん侍」</b> → 親も含めて<b>全員</b>で「ちんちん侍」</li>
       <li>反応のあと、指された人が次の親になる</li>
-      <li>スワイプモードなら、ボタンの下を「／」とスワイプでシャキーン（ちんちん侍の場面ならちんちん侍）、「｜」でびろーん</li>
       <li>言い間違い・お手つき・時間切れは<b>切腹</b>。一発勝負なら一人切腹で勝負あり、デスマッチなら脱落して最後の一人まで</li>
     </ul>
   </div>
@@ -546,17 +562,6 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   <div class="card" id="onMineCard" hidden>
     <h2>自分の設定</h2>
     <div class="roomrules" id="onMine"></div>
-  </div>
-  <div class="card" id="onChatCard" hidden>
-    <h2>チャット</h2>
-    <div class="chat" id="onChat" hidden>
-      <div class="chatlog" id="onChatLog"></div>
-      <div class="stamps" id="onStamps"></div>
-      <div class="chatin">
-        <input class="field" id="onChatIn" maxlength="60" placeholder="メッセージ" aria-label="メッセージ" enterkeyhint="send">
-        <button class="big" id="onChatSend">送信</button>
-      </div>
-    </div>
   </div>
   <p class="msg" id="onMsg"></p>
 </section>
@@ -616,6 +621,23 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 
 <!-- ===== スワイプの跡 ===== -->
 <svg class="swipe-trail" id="swipeTrail" aria-hidden="true"><polyline id="swipeLine" points=""></polyline></svg>
+
+<!-- ===== チャット（待合室・結果画面：右下のボタンで開く） ===== -->
+<button class="chatfab" id="chatFab" hidden aria-label="チャットを開く">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4 3.5V17H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg>
+  <span class="badge" id="chatBadge" hidden>0</span>
+</button>
+<div class="chatpanel" id="chatPanel" hidden>
+  <div class="chathead"><b>チャット</b><button id="chatClose" aria-label="閉じる">×</button></div>
+  <div class="chat">
+    <div class="chatlog" id="chatLog"></div>
+    <div class="stamps" id="chatStamps"></div>
+    <div class="chatin">
+      <input class="field" id="chatIn" maxlength="60" placeholder="メッセージ" aria-label="メッセージ" enterkeyhint="send">
+      <button class="big" id="chatSend">送信</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== 対戦中の定型文 ===== -->
 <div class="stampsheet" id="stampSheet" hidden>
@@ -678,20 +700,12 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <button id="menuBtn2">メニュー</button>
       <button class="primary" id="contBtn">つづける</button>
     </div>
-    <div class="chat" id="ovChat" hidden style="margin-top:12px">
-      <div class="chatlog" id="ovChatLog"></div>
-      <div class="stamps" id="ovStamps"></div>
-      <div class="chatin">
-        <input class="field" id="ovChatIn" maxlength="60" placeholder="メッセージ" aria-label="メッセージ" enterkeyhint="send">
-        <button class="big" id="ovChatSend">送信</button>
-      </div>
-    </div>
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.7.0"></script>
-<script src="voices.js?v=1.7.0"></script>
-<script src="qrcode.js?v=1.7.0"></script>
+<script src="firebase-config.js?v=1.8.0"></script>
+<script src="voices.js?v=1.8.0"></script>
+<script src="qrcode.js?v=1.8.0"></script>
 <script>
 'use strict';
 
@@ -749,9 +763,21 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.7.0";
+const APP_VERSION = "1.8.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.8.0",
+  "2026-11-15",
+  "チャットボタンと「うおw」",
+  [
+   "オンラインの待合室と結果画面のチャットは、右下に浮かぶボタンから開く形に（押したときだけ下からせり上がる）。閉じている間に届いた発言の数をボタンに表示",
+   "対戦中の定型文は、送ったあとも開いたまま（外をタップか「定型文」ボタンで閉じる）",
+   "定型文に「うおw」を追加（声付き）",
+   "デスマッチで脱落した人は、決着がつくまで「ちんちん侍！」「シャキーン」「びろーん」「切腹！」の定型文を送れない。ほかの定型文も声は鳴らない（吹き出しと文字は出る）",
+   "遊び方のルール欄から、スワイプモードの説明を外した（設定の説明は残る）"
+  ]
+ ],
  [
   "1.7.0",
   "2026-11-15",
@@ -996,7 +1022,7 @@ const PATCH_NOTES = [
 ];
 const CPU_NAMES = ['たろう', 'はなこ', 'じろう', 'さくら', 'ごろう'];
 /** オンライン対戦の定型文：[表示する言葉, 声（VOICES のキー）] */
-const STAMPS = [['いざ、勝負！', 'いざ、勝負！'], ['お見事！', 'お見事！'], ['無念…', '無念…'], ['もう一回！', 'もう一回！'], ['待たれよ！', '待たれよ！'],
+const STAMPS = [['いざ、勝負！', 'いざ、勝負！'], ['お見事！', 'お見事！'], ['うおw', 'うおw'], ['無念…', '無念…'], ['もう一回！', 'もう一回！'], ['待たれよ！', '待たれよ！'],
   ['かたじけない', 'かたじけない'], ['ちんちん侍！', 'ちんちん侍'], ['シャキーン', 'シャキーン'], ['びろーん', 'びろーん'], ['切腹！', '切腹']];
 /** 円の上に、下（自分）から時計回りに並べる */
 function layoutSeats(n) {
@@ -1204,6 +1230,7 @@ function drawArrow(from, to, preview = false) {
 window.addEventListener('resize', () => { if (lastArrow) drawArrow(...lastArrow); });
 function refreshSeats() {
   markDirty();
+  if (online() && typeof renderStampLocks === 'function') renderStampLocks(); // 脱落したら対戦の言葉の定型文を押せなくする
   const humanOya = S.phase === 'call' && isMine(S.oya);
   S.players.forEach((p, i) => {
     const el = seatEl(i);
@@ -1659,7 +1686,6 @@ function showOverlay(final) {
   $('againBtn').hidden = isGuest();
   $('lobbyBtn').hidden = !isHost(); // オンラインのホストだけ、全員を待合室に戻せる
   $('guestWait').hidden = !isGuest();
-  $('ovChat').hidden = !online();
   later(S.overlayDelay, () => $('overlay').classList.add('show'));
 }
 /** 切腹ムービー：アバターが斜めにスパッと斬れる */
@@ -1806,7 +1832,6 @@ function netEnd() {
   NET.role = null; NET.me = 0; NET.send = NET.emit = NET.push = null;
   $('stampBtn').hidden = true;
   $('stampSheet').hidden = true;
-  $('ovChat').hidden = true;
 }
 
 /* ================= QRコードで共有 ================= */
@@ -2609,6 +2634,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.7.0"></script>
+<script src="online.js?v=1.8.0"></script>
 </body>
 </html>

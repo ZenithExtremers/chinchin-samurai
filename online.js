@@ -174,9 +174,11 @@ const Online = {
     const mine = m.uid === this.ctx.uid;
     const fresh = !m.t || m.t > this.joinedAt - 3000; // 入る前の古い発言は音を鳴らさない
     const seat = this.seatOf(m.uid);
+    if (fresh && !mine && $('chatPanel').hidden) { unread++; updateChatFab(); }
     if (this.begun && seat >= 0 && !mine) showBubble(seat, m.stamp || (m.text.length > 14 ? m.text.slice(0, 14) + '…' : m.text));
     if (!fresh || mine) return; // 自分の分は送ったときに鳴らしている
     if (m.stamp) {
+      if (outOfPlay(seat)) return; // 脱落した人の定型文は、決着まで音なし（妨害できないように）
       const sender = this.members[m.uid];
       if (seat >= 0 && $('netCharRecvChk').checked && (!sender || sender.cs !== false)) playStamp(seat, m.stamp, sender && Number.isInteger(sender.voice) ? sender.voice : undefined);
     } else beep(880, 0.06, 'sine', 0.05);
@@ -316,7 +318,9 @@ const Online = {
     clearRoom();
     showRejoin();
     this.chat = [];
+    unread = 0;
     renderChat();
+    updateChatFab();
     if (wasBegun && online()) { NET.onLeave = null; toMenu(); }
     else if (wasBegun) { /* toMenu から呼ばれた */ }
     showOnlineEntry();
@@ -339,7 +343,6 @@ function myMember() {
 function showOnlineEntry() {
   $('onEntry').hidden = false;
   $('onRoom').hidden = true;
-  $('onChatCard').hidden = true;
   $('onMineCard').hidden = true;
 }
 function openOnline(code) {
@@ -354,9 +357,7 @@ function renderLobby() {
   if (!Online.code) return;
   $('onEntry').hidden = true;
   $('onRoom').hidden = false;
-  $('onChatCard').hidden = false;
   $('onMineCard').hidden = false;
-  $('onChat').hidden = false;
   $('onRoomCode').textContent = Online.code;
   const ms = Online.memberList();
   const rs = Online.roomSet();
@@ -373,6 +374,7 @@ function renderLobby() {
   $('onRule').textContent = `${rs.nocpu ? `CPUなし・${ms.length}人` : `全体 ${total}人（CPU ${total - ms.length}）`}・${rs.rule === 'death' ? 'デスマッチ' : '一発勝負'}`
     + (rs.nocpu ? '' : `・CPU ${CPU_LABEL[rs.cpu]}${rs.safe ? '（不敗）' : ''}${rs.feint ? '・フェイントあり' : ''}`) + `・制限時間 ${diffName}`;
   renderRoomRules(host, rs, ms.length);
+  updateChatFab();
 }
 /** ホスト：待合室でルールを変える欄 */
 function renderRoomRules(host, rs, n) {
@@ -422,17 +424,57 @@ function errText(e) {
   return `うまくいきませんでした（${c.slice(0, 60)}）。`;
 }
 /* ---------- チャット・定型文 ---------- */
+let unread = 0;
+/** デスマッチで脱落していて、まだ決着がついていない人か */
+function outOfPlay(seat) {
+  return Online.begun && death() && seat >= 0 && !S.alive.has(seat) && S.alive.size > 1;
+}
+/** 脱落した人は、対戦の言葉（ちんちん侍・シャキーン・びろーん・切腹）の定型文を送れない */
+const GAME_STAMPS = ['ちんちん侍！', 'シャキーン', 'びろーん', '切腹！'];
+function stampBlocked(label) { return GAME_STAMPS.includes(label) && outOfPlay(Online.seatOf(Online.ctx.uid)); }
+function renderStampLocks() {
+  document.querySelectorAll('#chatStamps button, #gameStamps button').forEach((b) => { b.disabled = Online.code ? stampBlocked(b.dataset.s) : false; });
+}
 function renderChat() {
   const html = Online.chat.length
     ? Online.chat.map((m) => `<div class="m"><b>${esc(m.name || '？')}</b>${m.stamp ? `<span class="st">${esc(m.stamp)}</span>` : esc(m.text || '')}</div>`).join('')
     : '<div class="empty">まだ発言はありません。定型文を押すと声付きで送れます。</div>';
-  ['onChatLog', 'ovChatLog'].forEach((id) => { const el = $(id); el.innerHTML = html; el.scrollTop = el.scrollHeight; });
+  const el = $('chatLog');
+  el.innerHTML = html;
+  el.scrollTop = el.scrollHeight;
 }
+/** 右下のチャットボタン：部屋にいて、待合室か結果画面のときだけ出す（対戦中は「定型文」ボタン） */
+function updateChatFab() {
+  const lobby = $('online').classList.contains('active');
+  const result = $('game').classList.contains('active') && $('overlay').classList.contains('show');
+  const show = !!Online.code && (lobby || result);
+  $('chatFab').hidden = !show || !$('chatPanel').hidden;
+  if (!show) $('chatPanel').hidden = true;
+  $('chatBadge').hidden = unread === 0;
+  $('chatBadge').textContent = unread > 99 ? '99+' : String(unread);
+}
+function openChat(open) {
+  $('chatPanel').hidden = !open;
+  if (open) { unread = 0; renderStampLocks(); const el = $('chatLog'); el.scrollTop = el.scrollHeight; }
+  updateChatFab();
+}
+// 画面や結果画面が切り替わったら、ボタンを出す・隠す
+{
+  const mo = new MutationObserver(() => updateChatFab());
+  ['online', 'game', 'overlay'].forEach((id) => mo.observe($(id), { attributes: true, attributeFilter: ['class'] }));
+}
+$('chatFab').addEventListener('click', () => openChat(true));
+$('chatClose').addEventListener('click', () => openChat(false));
+// パネルの外をタップしたら閉じる
+document.addEventListener('pointerdown', (e) => {
+  if (!$('chatPanel').hidden && !e.target.closest('#chatPanel') && !e.target.closest('#chatFab')) openChat(false);
+});
 /** 定型文を送る：自分の端末ではすぐ声を鳴らし、対戦中なら自分の席に吹き出しを出す */
 function sendStamp(label) {
+  if (stampBlocked(label)) return;
   if (!Online.sendChat({ stamp: label })) return;
   const seat = Online.seatOf(Online.ctx.uid);
-  if (seat >= 0) playStamp(seat, label, PROFILES[0].voice);
+  if (seat >= 0 && !outOfPlay(seat)) playStamp(seat, label, PROFILES[0].voice);
   if (Online.begun && seat >= 0) showBubble(seat, label);
 }
 function sendText(input) {
@@ -440,16 +482,14 @@ function sendText(input) {
   if (!text) return;
   if (Online.sendChat({ text })) input.value = '';
 }
-['on', 'ov'].forEach((pre) => {
-  $(`${pre}Stamps`).innerHTML = STAMPS.map(([l]) => `<button data-s="${esc(l)}">${esc(l)}</button>`).join('');
-  $(`${pre}Stamps`).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => sendStamp(b.dataset.s)));
-  $(`${pre}ChatSend`).addEventListener('click', () => sendText($(`${pre}ChatIn`)));
-  $(`${pre}ChatIn`).addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendText(e.target); } });
-});
+$('chatStamps').innerHTML = STAMPS.map(([l]) => `<button data-s="${esc(l)}">${esc(l)}</button>`).join('');
+$('chatStamps').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => sendStamp(b.dataset.s)));
+$('chatSend').addEventListener('click', () => sendText($('chatIn')));
+$('chatIn').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendText(e.target); } });
+// 対戦中の定型文：送ったあとも開いたまま（外をタップか「定型文」ボタンで閉じる）
 $('gameStamps').innerHTML = STAMPS.map(([l]) => `<button data-s="${esc(l)}">${esc(l)}</button>`).join('');
-$('gameStamps').querySelectorAll('button').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); sendStamp(b.dataset.s); $('stampSheet').hidden = true; }));
-$('stampBtn').addEventListener('click', () => { $('stampSheet').hidden = !$('stampSheet').hidden; });
-// 定型文の外をタップしたら閉じる
+$('gameStamps').querySelectorAll('button').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); sendStamp(b.dataset.s); }));
+$('stampBtn').addEventListener('click', () => { $('stampSheet').hidden = !$('stampSheet').hidden; if (!$('stampSheet').hidden) renderStampLocks(); });
 document.addEventListener('pointerdown', (e) => {
   if (!$('stampSheet').hidden && !e.target.closest('#stampSheet') && !e.target.closest('#stampBtn')) $('stampSheet').hidden = true;
 });
