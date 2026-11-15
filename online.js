@@ -14,6 +14,16 @@ const FB_VER = '12.19.0';
 const FB_BASE = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
 const MAX_MEMBERS = 6;
 const HOST_AWAY_MS = 45000; // ホストの接続が切れたまま、これだけたったら参加者は抜ける
+const ROOM_KEY = 'chinchin-samurai-room'; // 入っている部屋（閉じても戻れるように）
+const ROOM_KEEP_MS = 3 * 3600 * 1000;
+function saveRoom(code) { try { localStorage.setItem(ROOM_KEY, JSON.stringify({ code, at: Date.now() })); } catch (e) { /* noop */ } }
+function clearRoom() { try { localStorage.removeItem(ROOM_KEY); } catch (e) { /* noop */ } }
+function savedRoom() {
+  try {
+    const r = JSON.parse(localStorage.getItem(ROOM_KEY) || 'null');
+    return r && /^\d{4}$/.test(r.code) && Date.now() - r.at < ROOM_KEEP_MS ? r.code : null;
+  } catch (e) { return null; }
+}
 
 const Online = {
   p: null, ctx: null,
@@ -38,6 +48,7 @@ const Online = {
     await auth.authStateReady();
     if (!auth.currentUser) await Au.signInAnonymously(auth);
     this.ctx = { D, db, uid: auth.currentUser.uid };
+    D.onValue(D.ref(db, '.info/serverTimeOffset'), (s) => { const off = s.val() || 0; NET.clock = () => Date.now() + off; });
     this.watchConnection();
     return this.ctx;
   },
@@ -56,10 +67,12 @@ const Online = {
           await D.set(this.r('meta/away'), null);
         } else if (this.role === 'guest') {
           await D.onDisconnect(this.r(`members/${uid}`)).remove();
-          if (!this.begun && this.me) {
+          if (this.me) {
+            // 一覧から外れていたら入り直す（対戦中でも、自分の席があれば戻れる。戻るまではCPUが代わりに遊ぶ）
             const mine = await D.get(this.r(`members/${uid}`));
             const meta = (await D.get(this.r('meta'))).val();
-            if (!mine.exists() && meta && meta.status === 'lobby') await D.set(this.r(`members/${uid}`), { ...this.me, at: D.serverTimestamp() });
+            const ok = meta && (meta.status === 'lobby' || (meta.seats && meta.seats[uid]));
+            if (!mine.exists() && ok) await D.set(this.r(`members/${uid}`), { ...this.me, at: D.serverTimestamp() });
           }
         }
       } catch (e) { /* 次につながったときにまた試す */ }
@@ -81,6 +94,7 @@ const Online = {
       if (!res.committed) continue;
       this.role = 'host';
       this.me = member;
+      saveRoom(this.code);
       // ホストの通信が切れても部屋は消さず「接続が切れた」印を付ける（別のアプリに切り替えただけで部屋が消えないように）
       await D.onDisconnect(this.r('meta/away')).set(D.serverTimestamp());
       await D.set(this.r(`members/${uid}`), { ...member, at: D.serverTimestamp() });
@@ -96,16 +110,37 @@ const Online = {
     this.code = code;
     const snap = await D.get(this.r('meta'));
     const meta = snap.val();
-    if (!meta) { this.code = null; throw new Error('その番号の部屋はありません。'); }
-    if (meta.status !== 'lobby') { this.code = null; throw new Error('その部屋はもう始まっています。'); }
+    if (!meta) { this.code = null; clearRoom(); throw new Error('その番号の部屋はありません。'); }
+    if (meta.host === uid) return this.rejoinAsHost(member, meta);
+    const back = meta.status === 'play' && meta.seats && meta.seats[uid]; // 対戦中に抜けた人が戻ってきた
+    if (meta.status !== 'lobby' && !back) { this.code = null; throw new Error('その部屋はもう始まっています。'); }
     const ms = (await D.get(this.r('members'))).val() || {};
-    if (Object.keys(ms).length >= MAX_MEMBERS && !ms[uid]) { this.code = null; throw new Error('その部屋は満員です（6人まで）。'); }
+    if (!back && Object.keys(ms).length >= MAX_MEMBERS && !ms[uid]) { this.code = null; throw new Error('その部屋は満員です（6人まで）。'); }
     this.role = 'guest';
     this.me = member;
+    saveRoom(code);
     await D.onDisconnect(this.r(`members/${uid}`)).remove();
     await D.set(this.r(`members/${uid}`), { ...member, at: D.serverTimestamp() });
     this.watchLobby();
     return code;
+  },
+  /**
+   * ホストが自分の部屋に戻ってきた（ページを閉じた・読み込み直した）。
+   * 対戦の進み具合はホストの端末にしかないので、対戦中だったら全員を待合室に戻す。
+   */
+  async rejoinAsHost(member, meta) {
+    const { D, uid } = this.ctx;
+    this.role = 'host';
+    this.me = member;
+    saveRoom(this.code);
+    await D.onDisconnect(this.r('meta/away')).set(D.serverTimestamp());
+    await D.update(this.r('meta'), { away: null, ...(meta.status === 'play' ? { status: 'lobby', roster: null, seats: null } : {}) });
+    D.remove(this.r('st')).catch(() => {});
+    D.remove(this.r('ev')).catch(() => {});
+    D.remove(this.r('acts')).catch(() => {});
+    await D.set(this.r(`members/${uid}`), { ...member, at: D.serverTimestamp() });
+    this.watchLobby();
+    return this.code;
   },
   /** 部屋の様子（参加者・開始）を見張る */
   watchLobby() {
@@ -186,13 +221,14 @@ const Online = {
     const set = { code: this.code, rule: rs.rule, cpu: rs.cpu, diff: rs.diff, safe: rs.safe, feint: rs.feint };
     await D.remove(this.r('ev'));
     await D.remove(this.r('acts'));
-    await D.update(this.r('meta'), { status: 'play', roster, set: { ...this.roomSet(), ...set } });
+    const seats = Object.fromEntries(roster.filter((r) => r.uid).map((r) => [r.uid, true])); // 途中で切れても戻れる人
+    await D.update(this.r('meta'), { status: 'play', roster, seats, set: { ...this.roomSet(), ...set } });
   },
   /** ホスト：対戦のあと、全員まとめて待合室に戻す */
   async backToLobby() {
     if (this.role !== 'host') return;
     const { D } = this.ctx;
-    await D.update(this.r('meta'), { status: 'lobby', roster: null });
+    await D.update(this.r('meta'), { status: 'lobby', roster: null, seats: null });
     D.remove(this.r('st')).catch(() => {});
     D.remove(this.r('ev')).catch(() => {});
     D.remove(this.r('acts')).catch(() => {});
@@ -237,9 +273,13 @@ const Online = {
   },
   onMembers() {
     if (this.begun) {
-      // 対戦中に抜けた人の席はCPUにする（ホスト）
+      // 対戦中に抜けた人の席はCPUが代わり、戻ってきたら本人に返す（ホスト）
       if (this.role === 'host' && this.meta && this.meta.roster) {
-        this.meta.roster.forEach((r, i) => { if (!r.cpu && r.uid && !this.members[r.uid]) netSeatToCpu(i); });
+        this.meta.roster.forEach((r, i) => {
+          if (r.cpu || !r.uid) return;
+          if (!this.members[r.uid]) netSeatToCpu(i);
+          else netSeatToHuman(i);
+        });
       }
       return;
     }
@@ -273,6 +313,8 @@ const Online = {
       else D.remove(this.r(`members/${uid}`)).catch(() => {});
     }
     this.code = null; this.role = null; this.begun = false; this.members = {}; this.meta = null; this.me = null;
+    clearRoom();
+    showRejoin();
     this.chat = [];
     renderChat();
     if (wasBegun && online()) { NET.onLeave = null; toMenu(); }
@@ -452,6 +494,19 @@ $('onShare').addEventListener('click', () => {
   else if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => onMsg(url));
   else onMsg(url);
 });
+/** タイトル：閉じてしまった部屋に戻るボタン */
+function showRejoin() {
+  const code = Online.configured() && !Online.code ? savedRoom() : null;
+  $('rejoinBtn').hidden = !code;
+  if (code) $('rejoinBtn').textContent = `部屋 ${code} に戻る`;
+}
+$('rejoinBtn').addEventListener('click', () => {
+  const code = savedRoom();
+  if (!code) { showRejoin(); return; }
+  openOnline(code);
+  $('onJoin').click();
+});
+showRejoin();
 // 招待リンク（?room=1234）で開いたら、部屋番号を入れた状態でオンライン画面へ
 {
   const code = new URLSearchParams(location.search).get('room');

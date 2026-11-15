@@ -370,6 +370,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 
   <button class="big" id="startBtn">いざ、勝負！</button>
   <button class="big sub-btn" id="onlineBtn" hidden>オンライン対戦</button>
+  <button class="big sub-btn" id="rejoinBtn" hidden></button>
   <p class="msg" id="titleMsg" style="margin:0 0 6px"></p>
   <div class="best" id="bestBox"></div>
   <button class="ghost-btn" id="shareAppBtn" style="margin:-4px 0 14px">アプリをQRコードで共有</button>
@@ -688,9 +689,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.6.0"></script>
-<script src="voices.js?v=1.6.0"></script>
-<script src="qrcode.js?v=1.6.0"></script>
+<script src="firebase-config.js?v=1.7.0"></script>
+<script src="voices.js?v=1.7.0"></script>
+<script src="qrcode.js?v=1.7.0"></script>
 <script>
 'use strict';
 
@@ -748,9 +749,20 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.6.0";
+const APP_VERSION = "1.7.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.7.0",
+  "2026-11-15",
+  "対戦中に切れても戻れる",
+  [
+   "オンライン対戦の途中で通信が切れても、そのまま戻れる。切れている間はCPUが代わりに遊び、戻ったら自分の席に戻る",
+   "アプリやページを閉じてしまっても、タイトル画面の「部屋 ○○○○ に戻る」から対戦に戻れる（3時間以内）",
+   "ホストが戻ってきたときは、対戦中なら全員まとめて待合室に戻る",
+   "切れていた間にたまったセリフは、戻ったときにまとめて鳴らない"
+  ]
+ ],
  [
   "1.6.0",
   "2026-11-15",
@@ -1019,7 +1031,7 @@ const S = {
 /* ================= オンライン対戦の土台（通信は online.js） =================
  * ホスト（部屋を作った人）がゲームを進めて判定する。参加者（ゲスト）は操作を送り、状態と出来事を受け取って画面を動かす。
  * NET.role: null（1台で遊ぶ）／'host'／'guest'。NET.me は自分の席。 */
-const NET = { role: null, me: 0, send: null, emit: null, onLeave: null, dirty: false };
+const NET = { role: null, me: 0, send: null, emit: null, onLeave: null, dirty: false, clock: () => Date.now() };
 const online = () => NET.role != null;
 const isHost = () => NET.role === 'host';
 const isGuest = () => NET.role === 'guest';
@@ -1027,7 +1039,7 @@ const ONLINE_EXTRA = 500; // 通信の遅れぶん、オンラインは制限時
 /** この端末で操作する席か（1台なら人間全員、オンラインなら自分の席だけ） */
 const isMine = (i) => (online() ? i === NET.me : isHuman(i));
 /** ホストが出来事を全員に配る */
-const emitFx = (e) => { if (isHost() && NET.emit) NET.emit(e); };
+const emitFx = (e) => { if (isHost() && NET.emit) NET.emit({ ...e, at: NET.clock() }); };
 const markDirty = () => { if (isHost() && NET.dirty === false) { NET.dirty = true; setTimeout(() => { NET.dirty = false; if (NET.push) NET.push(); }, 0); } };
 
 const $ = (id) => document.getElementById(id);
@@ -1682,12 +1694,18 @@ function netApplyState(st) {
   S.barMs = st.bm || 1; S.limitMs = st.lm || 1; S.deadline = performance.now() + (st.lf || 0);
   S.pendingWord = st.pw || null; S.pendingTarget = st.pt ?? null; S.firstOya = !!st.fo;
   (st.sp || []).forEach((n, i) => { if (S.players[i]) S.players[i].sep = n; });
-  (st.cpu || []).forEach((c, i) => { if (S.players[i] && c && !S.players[i].cpu) netSeatToCpu(i); });
+  (st.cpu || []).forEach((c, i) => {
+    if (!S.players[i]) return;
+    if (c && !S.players[i].cpu) netSeatToCpu(i);
+    else if (!c && S.players[i].cpu && !S.players[i].bot) netSeatToHuman(i);
+  });
   refreshSeats();
 }
 /** ゲスト：届いた出来事（セリフ・矢印・切腹など）を再生 */
 function netApplyEvent(e) {
   if (!e || !isGuest()) return;
+  // 通信が切れていた間にたまった古い出来事は、声や吹き出しを出さない（状態は st で追いつく）
+  if (e.at && NET.clock() - e.at > 2500 && ['say', 'bub', 'fl', 'ar', 'cw'].includes(e.t)) return;
   switch (e.t) {
     case 'say':
       if (e.p !== NET.me) { showBubble(e.p, e.w); if (shouldPlay(e.p)) playLine(e.p, e.w, e.h); }
@@ -1704,6 +1722,7 @@ function netApplyEvent(e) {
     case 'reset': resetBoard(e.s, e.rv); break;
     case 'sep': S.phase = 'over'; seppukuFx(e); break;
     case 'cpu': netSeatToCpu(e.p); break;
+    case 'hum': netSeatToHuman(e.p); break;
   }
 }
 /** 抜けた人の席をCPUにする（ホストは代わりにCPUを動かす） */
@@ -1718,6 +1737,18 @@ function netSeatToCpu(i) {
   emitFx({ t: 'cpu', p: i });
   if (S.phase === 'call' && S.oya === i) cpuCall(i);
   if (S.phase === 'respond' && S.need.has(i)) cpuRespond(i, S.need.get(i));
+  refreshSeats();
+}
+/** 切れていた人が戻ってきた：CPUが代わっていた席を本人に返す */
+function netSeatToHuman(i) {
+  const pl = S.players[i];
+  if (!pl || !pl.cpu || pl.bot) return;
+  pl.cpu = false;
+  const el = seatEl(i);
+  el.classList.add('human');
+  const tag = el.querySelector('.cpu-tag');
+  if (tag) tag.remove();
+  if (isHost()) emitFx({ t: 'hum', p: i });
   refreshSeats();
 }
 /** ホスト：ゲストから届いた操作 */
@@ -1737,7 +1768,7 @@ function netBegin({ roster, set, me, role }) {
   S.rule = set.rule; S.cpu = set.cpu; S.diff = set.diff; S.cpuSafe = !!set.safe; S.feint = !!set.feint;
   S.humans = roster.filter((r) => !r.cpu).length;
   S.players = roster.map((r) => ({
-    name: r.name, cpu: !!r.cpu, sep: 0, look: cleanLook(r, defaultProfile(0)), voice: cleanLook(r, defaultProfile(0)).voice, bonus: r.bonus || 0, cs: r.cs !== false,
+    name: r.name, cpu: !!r.cpu, bot: !!r.cpu, sep: 0, look: cleanLook(r, defaultProfile(0)), voice: cleanLook(r, defaultProfile(0)).voice, bonus: r.bonus || 0, cs: r.cs !== false,
   }));
   S.tts = $('ttsChk').checked; S.movie = $('movieChk').checked; S.guide = $('guideChk').checked;
   S.alive = new Set(S.players.map((_, i) => i));
@@ -1854,6 +1885,7 @@ function cpuCall(p) {
   // フェイントは溜める時間があるので、ギリギリには答えない（時間切れにならないように）
   const feint = !miss && S.feint && Math.random() < 0.3;
   later(cpuDelay(!feint), () => {
+    if (!S.players[p].cpu) return; // 人が戻ってきた
     if (miss) { say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); return; } // うっかり
     const others = aliveList().filter((i) => i !== p);
     const target = others[Math.floor(Math.random() * others.length)];
@@ -1871,6 +1903,7 @@ function cpuFeint(p, target) {
   emitFx({ t: 'bub', p, s: `${W.CHIN}…`, w: W.CHIN });
   drawArrow(p, target);
   later(Math.max(380, S.limitMs * 0.25), () => {
+    if (!S.players[p].cpu) return makeCall(p, W.CHIN, target); // 人が戻ってきた：溜めたまま「ちんちん」で終える
     if (Math.random() < 0.5) {
       showBubble(p, `${W.CHIN}…侍！`);
       playLine(p, W.SAMU);
@@ -1885,6 +1918,7 @@ function cpuRespond(p, expect) {
   const miss = cpuMisses();
   if (miss && Math.random() < 0.5) return; // 固まって時間切れ
   later(cpuDelay(), () => {
+    if (!S.players[p].cpu) return; // 人が戻ってきた
     if (miss) {
       const wrong = [W.BIRO, W.SHAKI, W.CS, W.CHIN].filter((w) => w !== expect);
       say(p, wrong[Math.floor(Math.random() * wrong.length)]);
@@ -2575,6 +2609,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.6.0"></script>
+<script src="online.js?v=1.7.0"></script>
 </body>
 </html>
