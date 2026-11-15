@@ -186,6 +186,12 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
 .tabpanel[hidden] { display: none; }
 .ver-now { font-size: 12px; color: var(--muted); font-weight: normal; margin-left: 6px; }
+.notes-fold summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.notes-fold summary::-webkit-details-marker { display: none; }
+.notes-fold summary h2 { margin: 0; }
+.notes-fold summary::after { content: "▼"; font-size: 12px; color: var(--muted); transition: transform .15s; }
+.notes-fold[open] summary::after { transform: rotate(180deg); }
+.notes-fold[open] summary { margin-bottom: 10px; }
 #notesInline .notes-ver { font-size: 15px; margin-top: 10px; }
 #notesInline .notes-ver:first-child { margin-top: 0; }
 .ver { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 0; }
@@ -459,10 +465,10 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
       <li>言い間違い・お手つき・時間切れは<b>切腹</b>。一発勝負なら一人切腹で勝負あり、デスマッチなら脱落して最後の一人まで</li>
     </ul>
   </div>
-    <div class="card">
-      <h2>パッチノート <small class="ver-now" id="verLabel"></small></h2>
+    <details class="card notes-fold">
+      <summary><h2>パッチノート <small class="ver-now" id="verLabel"></small></h2></summary>
       <div id="notesInline"></div>
-    </div>
+    </details>
   <p class="note" style="text-align:center">
     音声：Open JTalk／HTS Voice「Mei」「Takumi」「NIT ATR503 M001」<br>
     QRコード生成：qrcode-generator（© Kazuhiko Arase, MIT）。QRコードは株式会社デンソーウェーブの登録商標です<br>
@@ -628,9 +634,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.4.1"></script>
-<script src="voices.js?v=1.4.1"></script>
-<script src="qrcode.js?v=1.4.1"></script>
+<script src="firebase-config.js?v=1.4.2"></script>
+<script src="voices.js?v=1.4.2"></script>
+<script src="qrcode.js?v=1.4.2"></script>
 <script>
 'use strict';
 
@@ -661,9 +667,17 @@ let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bo
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.4.1";
+const APP_VERSION = "1.4.2";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.4.2",
+  "2026-11-15",
+  "パッチノートを畳む",
+  [
+   "パッチノートは最初は閉じておき、見出しをタップで開く"
+  ]
+ ],
  [
   "1.4.1",
   "2026-11-15",
@@ -2315,6 +2329,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.4.1"></script>
+<script src="online.js?v=1.4.2"></script>
 </body>
 </html>
