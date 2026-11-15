@@ -634,9 +634,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.4.2"></script>
-<script src="voices.js?v=1.4.2"></script>
-<script src="qrcode.js?v=1.4.2"></script>
+<script src="firebase-config.js?v=1.4.3"></script>
+<script src="voices.js?v=1.4.3"></script>
+<script src="qrcode.js?v=1.4.3"></script>
 <script>
 'use strict';
 
@@ -667,9 +667,18 @@ let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bo
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.4.2";
+const APP_VERSION = "1.4.3";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.4.3",
+  "2026-11-15",
+  "更新が届かないのを修正",
+  [
+   "更新を公開してもしばらく前の版が出続けることがあるのを修正（ページ本体も開くたびに新しい版を確かめる）",
+   "開いている間に新しい版が届いたら、タイトル画面にいるときに自動で読み込み直す"
+  ]
+ ],
  [
   "1.4.2",
   "2026-11-15",
@@ -2304,7 +2313,19 @@ document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('cli
 }
 // アプリ化：ホーム画面に追加でき、電波がなくても開けるように（GitHub Pages などで開いたときだけ）
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // 新しい版が届いて入れ替わったら、タイトル画面にいるときだけ自動で読み込み直す（遊んでいる最中は邪魔しない）
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloadWanted = false;
+  const reloadIfIdle = () => {
+    if (!reloadWanted) return;
+    if (document.querySelector('.screen.active') && document.querySelector('.screen.active').id === 'title' && !online()) location.reload();
+  };
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) { reloadWanted = true; reloadIfIdle(); } });
+  setInterval(reloadIfIdle, 3000);
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    // 開いたまま裏から戻ってきたときにも、新しい版がないか確かめる
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+  }).catch(() => {});
 }
 // タイトル画面で最初に触れたときからBGM（ブラウザは触れるまで音を出せない）
 /**
@@ -2329,6 +2350,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.4.2"></script>
+<script src="online.js?v=1.4.3"></script>
 </body>
 </html>
