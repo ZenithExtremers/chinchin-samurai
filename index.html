@@ -231,7 +231,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
 .tabpanel[hidden] { display: none; }
 .ver-now { font-size: 12px; color: var(--muted); font-weight: normal; margin-left: 6px; }
-.notes-fold summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.notes-fold summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; gap: 10px; padding-right: 44px; } /* ▼は見出しの横に（右上の家紋とかぶらないように） */
 .notes-fold summary::-webkit-details-marker { display: none; }
 .notes-fold summary h2 { margin: 0; }
 .notes-fold summary::after { content: "▼"; font-size: 12px; color: var(--muted); transition: transform .15s; }
@@ -428,7 +428,7 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
   background: linear-gradient(180deg, #4a2a12, var(--wood) 35%, #b57a45 50%, var(--wood) 65%, #3d2310); box-shadow: 0 2px 4px rgba(0,0,0,.35); }
 .overlay .box:not(.avbox)::before { top: -8px; }
 .overlay .box:not(.avbox)::after { bottom: -8px; }
-.rx { text-align: center; }
+.rx { text-align: center; margin-bottom: 12px; }
 .rx .stamp { display: inline-block; font-size: 52px; font-weight: 800; color: var(--accent); letter-spacing: .08em; line-height: 1; padding: 10px 16px 12px;
   border: 5px double var(--accent); border-radius: 10px; transform: rotate(-6deg); margin: 2px 0 10px; }
 .rx .stamp.brush { font-family: 'Yuji Boku Seppuku', 'Shippori Mincho B1', serif; font-weight: 400; border: 0; color: var(--sumi); font-size: 84px; padding: 6px 12px 2px; transform: rotate(-4deg);
@@ -448,10 +448,7 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
 .rx .cnt .n { font-size: 50px; font-weight: 800; color: var(--sumi); font-variant-numeric: tabular-nums; line-height: 1; }
 .rx .cnt .u { font-size: 15px; color: var(--muted); }
 .rx .ribbon { display: inline-block; background: linear-gradient(90deg,#b88a22,#e2b54a,#b88a22); color: #fff; font-weight: 800; font-size: 14px; padding: 4px 14px; border-radius: 999px; margin: 4px 0 10px; box-shadow: 0 2px 8px rgba(184,138,34,.45); }
-.rx .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin: 4px 0 14px; }
-.rx .stats div { background: var(--seat); border: 1px solid var(--line); border-radius: 8px; padding: 6px 2px; }
-.rx .stats b { display: block; font-size: 18px; font-weight: 800; }
-.rx .stats small { color: var(--muted); font-size: 11px; }
+.rx .stats { color: var(--muted); font-size: 13px; margin: 2px 0 14px; }
 .rx h4 { margin: 4px 0 6px; font-size: 13px; color: var(--muted); text-align: left; }
 .rx .rank { list-style: none; margin: 0 0 14px; padding: 0; text-align: left; font-size: 14px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .rx .rank li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-top: 1px solid var(--line); background: var(--seat); }
@@ -459,6 +456,41 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
 .rx .rank li.me { background: color-mix(in srgb, var(--you) 14%, var(--seat)); font-weight: 800; }
 .rx .rank li.lose { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) { .overlay.show .rx .stamp { animation: none; } }
+/* ================= 1.11.0：スイッチ・説明・タイトル・待合室 ================= */
+/* スライド式のスイッチ */
+input[type=checkbox] { appearance: none; -webkit-appearance: none; width: 48px; height: 28px; border-radius: 14px; background: var(--line); position: relative; flex: 0 0 auto; cursor: pointer; transition: background .15s; margin: 0; border: 0; }
+input[type=checkbox]::before { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s; }
+input[type=checkbox]:checked { background: var(--accent); }
+input[type=checkbox]:checked::before { transform: translateX(20px); }
+input[type=checkbox]:disabled { opacity: .45; cursor: default; }
+input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* 説明：1行＋「？」で詳しく */
+.q { display: inline-flex; width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 1.5px solid var(--muted); background: none; color: var(--muted); font-size: 12px; align-items: center; justify-content: center; margin-left: 6px; vertical-align: 1px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.q[aria-expanded="true"] { background: var(--muted); color: var(--panel); }
+.row label .more { display: block; font-size: 12px; color: var(--muted); background: var(--seat); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; margin-top: 4px; line-height: 1.5; }
+.row label .more[hidden] { display: none; }
+/* タイトル：2つの大きいボタン */
+.hero { display: flex; flex-direction: column; gap: 12px; margin: 6px 0 12px; }
+.hero button { padding: 20px 10px; font-size: 26px; margin: 0; }
+.hero small { display: block; font-size: 13px; font-weight: 500; letter-spacing: 0; opacity: .85; margin-top: 4px; }
+.rulechip { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; background: var(--panel); background-image: var(--washi); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 0 0 14px; }
+.rulechip button { border: 1px solid var(--accent); color: var(--accent); background: none; border-radius: 6px; padding: 6px 10px; font-size: 13px; font-weight: 800; white-space: nowrap; cursor: pointer; flex: 0 0 auto; }
+/* 下から出る画面 */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 27; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 28; max-height: 85vh; overflow-y: auto; overscroll-behavior: contain; background: var(--panel); background-image: var(--washi);
+  border-top: 2px solid var(--accent); border-radius: 16px 16px 0 0; box-shadow: 0 -8px 24px rgba(0,0,0,.3); animation: rise .2s ease-out;
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.sheet[hidden], .scrim[hidden] { display: none; }
+.sheethead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 17px; }
+.sheetclose { border: 0; background: none; font-size: 26px; line-height: 1; color: var(--muted); cursor: pointer; padding: 2px 6px; }
+.sheet .big { margin-top: 12px; }
+.sheet .card { border: 0; box-shadow: none; background: none; padding: 0; margin: 0; }
+.sheet .card::after { display: none; }
+/* 待合室のタブ */
+.ltabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 14px 0 10px; }
+.ltabs button { border: 0; background: none; padding: 8px 0; font-size: 15px; font-weight: 800; color: var(--muted); cursor: pointer; font-family: inherit; }
+.ltabs button.on { color: var(--sumi); background: var(--brush-red) bottom/80% 6px no-repeat; }
+.ltabs small { font-size: 12px; }
 </style>
 </head>
 <body>
@@ -477,54 +509,15 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
 
   <div class="tabpanel" id="tab-play">
 
-  <button class="big" id="startBtn">いざ、勝負！</button>
-  <button class="big sub-btn" id="onlineBtn" hidden>オンライン対戦</button>
+  <div class="hero">
+    <button class="big" id="startBtn">一人で遊ぶ<small>CPUと勝負</small></button>
+    <button class="big sub-btn" id="onlineBtn" hidden>オンライン対戦<small>友達と部屋で勝負</small></button>
+  </div>
+  <div class="rulechip"><span id="ruleSummary"></span><button id="ruleOpen">ルールを変える</button></div>
   <button class="big sub-btn" id="rejoinBtn" hidden></button>
   <p class="msg" id="titleMsg" style="margin:0 0 6px"></p>
   <div class="best" id="bestBox"></div>
   <button class="ghost-btn" id="shareAppBtn" style="margin:-4px 0 14px">アプリをQRコードで共有</button>
-    <div class="card">
-    <h2>モード</h2>
-    <div class="seg" id="modeSeg">
-      <button data-v="button" class="on">セリフボタン</button>
-      <button data-v="voice">音声入力</button>
-    </div>
-    <h2>全体の人数（あなた＋CPU）</h2>
-    <div class="seg" id="totalSeg">
-      <button data-v="3">3人</button>
-      <button data-v="4" class="on">4人</button>
-      <button data-v="5">5人</button>
-      <button data-v="6">6人</button>
-    </div>
-    <h2>対戦形式</h2>
-    <div class="seg" id="ruleSeg">
-      <button data-v="normal" class="on">一発勝負</button>
-      <button data-v="death">デスマッチ</button>
-    </div>
-    <p class="note" id="ruleNote" style="margin:-8px 0 14px">一人切腹したら勝負あり</p>
-    <h2>CPUの強さ</h2>
-    <div class="seg" id="cpuSeg">
-      <button data-v="weak">弱い</button>
-      <button data-v="normal" class="on">普通</button>
-      <button data-v="strong">強い</button>
-    </div>
-    <p class="note" id="cpuNote" style="margin:-8px 0 10px"></p>
-    <div class="row" style="margin-bottom:4px">
-      <label for="safeChk">CPUは絶対に負けない</label>
-      <input type="checkbox" id="safeChk">
-    </div>
-    <p class="note" id="safeNote" style="margin:0 0 14px">オンにすると、CPUは言い間違えも時間切れもしません。切腹するのは人間だけ。強さはスピードと言葉の選び方だけに効きます。</p>
-    <h2>制限時間</h2>
-    <div class="seg" id="diffSeg">
-      <button data-v="easy">ゆっくり</button>
-      <button data-v="normal" class="on">ふつう</button>
-      <button data-v="hard">はやい</button>
-    </div>
-    <p class="note" id="voiceNote" hidden>
-      言葉は声で言い、指す人は画面をタップします。マイクの使用を許可してください（Chrome 推奨）。
-      CPUが喋っている最中にマイクが拾った言葉は、今あなたが言うべき言葉以外は無視するので、セリフの音声はオンのままで大丈夫です。
-    </p>
-    </div>
   </div>
 
   <div class="tabpanel" id="tab-chara" hidden>
@@ -557,15 +550,15 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
         <input type="checkbox" id="ttsChk" checked>
       </div>
       <div class="row">
-        <label for="bgmChk">BGM<small>タイトル画面で和太鼓と三味線が鳴る</small></label>
+        <label for="bgmChk">BGM<button type="button" class="q" aria-label="説明">？</button><small>タイトル画面の音楽</small><span class="more" hidden>タイトル画面で和太鼓と三味線が鳴る</span></label>
         <input type="checkbox" id="bgmChk" checked>
       </div>
       <div class="row">
-        <label for="guideChk">案内を出す（初心者向け）<small>誰の番か・何と言えばいいかを画面の下に出す。親の金枠・指された人の赤丸も出る</small></label>
+        <label for="guideChk">案内を出す（初心者向け）<button type="button" class="q" aria-label="説明">？</button><small>誰の番か・何と言うかを出す</small><span class="more" hidden>誰の番か・何と言えばいいかを画面の下に出す。親の金枠・指された人の赤丸も出る</span></label>
         <input type="checkbox" id="guideChk">
       </div>
       <div class="row">
-        <label for="vibeChk">振動<small>ボタンや席を押したときに短く震える（対応しているスマホだけ）</small></label>
+        <label for="vibeChk">振動<button type="button" class="q" aria-label="説明">？</button><span class="more" hidden>ボタンや席を押したときに短く震える（対応しているスマホだけ）</span></label>
         <input type="checkbox" id="vibeChk" checked>
       </div>
       <div class="row">
@@ -573,11 +566,11 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
         <input type="checkbox" id="movieChk" checked>
       </div>
       <div class="row">
-        <label for="swipeChk">スワイプモード<small>シャキーン・びろーんのボタンを消して、ボタンの下を「／」とスワイプでシャキーン（ちんちん侍の場面ならちんちん侍）、「｜」でびろーん</small></label>
+        <label for="swipeChk">スワイプモード<button type="button" class="q" aria-label="説明">？</button><small>「／」でシャキーン、「｜」でびろーん</small><span class="more" hidden>シャキーン・びろーんのボタンを消して、ボタンの下を「／」とスワイプでシャキーン（ちんちん侍の場面ならちんちん侍）、「｜」でびろーん</span></label>
         <input type="checkbox" id="swipeChk">
       </div>
       <div class="row">
-        <label for="feintChk">CPUのフェイント<small>「ちんちん…」と溜めて、侍をつけるかどうか迷わせる</small></label>
+        <label for="feintChk">CPUのフェイント<button type="button" class="q" aria-label="説明">？</button><small>「ちんちん…」と溜めて迷わせる</small><span class="more" hidden>「ちんちん…」と溜めて、侍をつけるかどうか迷わせる</span></label>
         <input type="checkbox" id="feintChk">
       </div>
     </div>
@@ -587,19 +580,19 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
     <p class="note" style="margin:-4px 0 10px">オンライン対戦（それぞれのスマホから参加）のときに効きます。</p>
     <div class="toggles">
       <div class="row">
-        <label for="netCharSendChk">キャラの声を送る<small>自分が言った言葉を、自分のキャラの声で相手のスマホに鳴らす</small></label>
+        <label for="netCharSendChk">キャラの声を送る<button type="button" class="q" aria-label="説明">？</button><small>自分の言葉を相手のスマホで鳴らす</small><span class="more" hidden>自分が言った言葉を、自分のキャラの声で相手のスマホに鳴らす</span></label>
         <input type="checkbox" id="netCharSendChk" checked>
       </div>
       <div class="row">
-        <label for="netCharRecvChk">キャラの声を受け取る<small>相手が言った言葉を、相手のキャラの声で自分のスマホに鳴らす</small></label>
+        <label for="netCharRecvChk">キャラの声を受け取る<button type="button" class="q" aria-label="説明">？</button><small>相手の言葉を自分のスマホで鳴らす</small><span class="more" hidden>相手が言った言葉を、相手のキャラの声で自分のスマホに鳴らす</span></label>
         <input type="checkbox" id="netCharRecvChk" checked>
       </div>
       <div class="row">
-        <label for="netLiveSendChk">生の声を送る <small class="soon">準備中</small><small>マイクの声そのものを相手に流す（音声入力モードのとき）</small></label>
+        <label for="netLiveSendChk">生の声を送る <small class="soon">準備中</small><button type="button" class="q" aria-label="説明">？</button><small>マイクの声を相手に流す</small><span class="more" hidden>マイクの声そのものを相手に流す（音声入力モードのとき）</span></label>
         <input type="checkbox" id="netLiveSendChk">
       </div>
       <div class="row">
-        <label for="netLiveRecvChk">生の声を受け取る <small class="soon">準備中</small><small>相手のマイクの声を自分のスマホで流す</small></label>
+        <label for="netLiveRecvChk">生の声を受け取る <small class="soon">準備中</small><button type="button" class="q" aria-label="説明">？</button><small>相手のマイクの声を流す</small><span class="more" hidden>相手のマイクの声を自分のスマホで流す</span></label>
         <input type="checkbox" id="netLiveRecvChk">
       </div>
     </div>
@@ -656,17 +649,20 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
       <button class="ghost-btn" id="onShare">招待リンクをコピー</button>
       <button class="ghost-btn" id="onQr">QRコード</button>
     </div>
-    <h2 style="margin-top:14px">参加者 <small id="onCount"></small></h2>
-    <ol class="members" id="onMembers"></ol>
-    <p class="note" id="onRule" style="margin-bottom:12px"></p>
-    <div class="roomrules" id="onRules" hidden></div>
+    <div class="ltabs" role="tablist">
+      <button data-t="members" class="on">参加者 <small id="onCount"></small></button>
+      <button data-t="mine">自分の設定</button>
+    </div>
+    <div class="lpanel" id="onPanelMembers">
+      <ol class="members" id="onMembers"></ol>
+      <div class="rulechip"><span id="onRule"></span><button id="onRuleOpen" hidden>ルールを変える</button></div>
+    </div>
+    <div class="lpanel" id="onPanelMine" hidden>
+      <div class="roomrules" id="onMine"></div>
+    </div>
     <button class="big" id="onStart" hidden>この人数で始める</button>
     <p class="note" id="onWait" hidden>ホストが始めるのを待っています…</p>
     <button class="ghost-btn" id="onLeave">部屋を出る</button>
-  </div>
-  <div class="card" id="onMineCard" hidden>
-    <h2>自分の設定</h2>
-    <div class="roomrules" id="onMine"></div>
   </div>
   <p class="msg" id="onMsg"></p>
 </section>
@@ -726,6 +722,59 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
 
 <!-- ===== スワイプの跡 ===== -->
 <svg class="swipe-trail" id="swipeTrail" aria-hidden="true"><polyline id="swipeLine" points=""></polyline></svg>
+
+<!-- ===== 下から出る画面（ルールを変える） ===== -->
+<div class="scrim" id="sheetScrim" hidden></div>
+<div class="sheet" id="ruleSheet" hidden>
+  <div class="sheethead"><b>ルールを変える</b><button class="sheetclose" aria-label="閉じる">×</button></div>
+    <div class="card sheetbody">
+    <h2>モード</h2>
+    <div class="seg" id="modeSeg">
+      <button data-v="button" class="on">セリフボタン</button>
+      <button data-v="voice">音声入力</button>
+    </div>
+    <h2>全体の人数（あなた＋CPU）</h2>
+    <div class="seg" id="totalSeg">
+      <button data-v="3">3人</button>
+      <button data-v="4" class="on">4人</button>
+      <button data-v="5">5人</button>
+      <button data-v="6">6人</button>
+    </div>
+    <h2>対戦形式</h2>
+    <div class="seg" id="ruleSeg">
+      <button data-v="normal" class="on">一発勝負</button>
+      <button data-v="death">デスマッチ</button>
+    </div>
+    <p class="note" id="ruleNote" style="margin:-8px 0 14px">一人切腹したら勝負あり</p>
+    <h2>CPUの強さ</h2>
+    <div class="seg" id="cpuSeg">
+      <button data-v="weak">弱い</button>
+      <button data-v="normal" class="on">普通</button>
+      <button data-v="strong">強い</button>
+    </div>
+    <p class="note" id="cpuNote" style="margin:-8px 0 10px"></p>
+    <div class="row" style="margin-bottom:14px">
+      <label for="safeChk">CPUは絶対に負けない<button type="button" class="q" aria-label="説明">？</button><small>切腹するのは人間だけ</small><span class="more" hidden>オンにすると、CPUは言い間違えも時間切れもしません。切腹するのは人間だけ。強さはスピードと言葉の選び方だけに効きます。</span></label>
+      <input type="checkbox" id="safeChk">
+    </div>
+    <h2>制限時間</h2>
+    <div class="seg" id="diffSeg">
+      <button data-v="easy">ゆっくり</button>
+      <button data-v="normal" class="on">ふつう</button>
+      <button data-v="hard">はやい</button>
+    </div>
+    <p class="note" id="voiceNote" hidden>
+      言葉は声で言い、指す人は画面をタップします。マイクの使用を許可してください（Chrome 推奨）。
+      CPUが喋っている最中にマイクが拾った言葉は、今あなたが言うべき言葉以外は無視するので、セリフの音声はオンのままで大丈夫です。
+    </p>
+    </div>
+  <button class="big" id="ruleDone">決定</button>
+</div>
+<div class="sheet" id="roomRuleSheet" hidden>
+  <div class="sheethead"><b>部屋のルールを変える</b><button class="sheetclose" aria-label="閉じる">×</button></div>
+  <div class="roomrules" id="onRules"></div>
+  <button class="big" id="roomRuleDone">決定</button>
+</div>
 
 <!-- ===== チャット（待合室・結果画面：右下のボタンで開く） ===== -->
 <button class="chatfab" id="chatFab" hidden aria-label="チャットを開く">
@@ -814,9 +863,9 @@ h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 3
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.10.0"></script>
-<script src="voices.js?v=1.10.0"></script>
-<script src="qrcode.js?v=1.10.0"></script>
+<script src="firebase-config.js?v=1.11.0"></script>
+<script src="voices.js?v=1.11.0"></script>
+<script src="qrcode.js?v=1.11.0"></script>
 <script>
 'use strict';
 
@@ -874,9 +923,23 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.10.0";
+const APP_VERSION = "1.11.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.11.0",
+  "2026-11-15",
+  "画面をすっきり",
+  [
+   "タイトルを「一人で遊ぶ」「オンライン対戦」の2つの大きいボタンに。「一人で遊ぶ」は前回のルールですぐ始まる",
+   "ルールはタイトルの「ルールを変える」から（下から出る画面）。今のルールは1行で表示",
+   "待合室を「参加者」「自分の設定」のタブに。部屋のルールはホストだけ「ルールを変える」から",
+   "スイッチをスライド式に統一",
+   "設定の説明を1行に縮めて、「？」を押すと詳しい説明が開く",
+   "結果画面の「あそんだ回数」「あなたの切腹」をなくした（自己ベストは残す）",
+   "パッチノートの▼が桜の家紋にかぶるのを修正"
+  ]
+ ],
  [
   "1.10.0",
   "2026-11-15",
@@ -1847,23 +1910,13 @@ function renderResult(info) {
   $('ovN').textContent = info.combo ?? S.combo;
   $('ovNew').hidden = !info.final || !info.best || online(); // 自己ベストは1人で遊ぶときだけ
   $('ovNew').textContent = info.best || '';
-  countResult(p, info.final);
+  if (online() && typeof Online !== 'undefined') Online.countGame(p, info.final);
   // 下の欄：1人なら自分の記録、オンラインなら部屋の戦績
-  const st = loadJSON(STATS_KEY) || {};
-  $('ovStats').hidden = !info.final || online();
-  $('ovStats').innerHTML = `<div><b>${bestOf(S.cpu)}回</b><small>自己ベスト</small></div>`
-    + `<div><b>${st.games || 0}戦</b><small>あそんだ回数</small></div><div><b>${st.mySep || 0}回</b><small>あなたの切腹</small></div>`;
+  // 更新していないときは、自己ベストを小さく添える（1人で遊ぶときだけ）
+  $('ovStats').hidden = !info.final || online() || !!info.best || bestOf(S.cpu) <= 0;
+  $('ovStats').textContent = `自己ベスト（${CPU_LABEL[S.cpu]}）${bestOf(S.cpu)}回`;
   $('ovRank').hidden = !info.final || !online();
   if (online() && typeof Online !== 'undefined') $('ovRank').innerHTML = roomRanking(p);
-}
-/** 1人で遊んだ記録（あそんだ回数・自分の切腹） */
-const STATS_KEY = 'chinchin-samurai-stats-v1';
-function countResult(p, final) {
-  if (online()) { if (typeof Online !== 'undefined') Online.countGame(p, final); return; }
-  const st = loadJSON(STATS_KEY) || {};
-  if (final) st.games = (st.games || 0) + 1;
-  if (isMine(p)) st.mySep = (st.mySep || 0) + 1;
-  saveJSON(STATS_KEY, st);
 }
 /** オンライン：この部屋の戦績（切腹の少ない順） */
 function roomRanking(p) {
@@ -1987,6 +2040,7 @@ function netHostAct(seat, a) {
  * roster：席ごとの {name, cpu, hair, color, bonus, cs}、set：ホストのルール設定、me：自分の席
  */
 function netBegin({ roster, set, me, role }) {
+  closeSheets();
   NET.role = role;
   NET.me = me;
   S.total = roster.length;
@@ -2701,6 +2755,37 @@ function renderSlots() {
   });
 }
 
+/* ================= 下から出る画面・説明の「？」 ================= */
+function openSheet(id) {
+  document.querySelectorAll('.sheet').forEach((el) => { el.hidden = el.id !== id; });
+  $('sheetScrim').hidden = false;
+  $(id).scrollTop = 0;
+}
+function closeSheets() {
+  document.querySelectorAll('.sheet').forEach((el) => { el.hidden = true; });
+  $('sheetScrim').hidden = true;
+}
+$('sheetScrim').addEventListener('click', closeSheets);
+document.querySelectorAll('.sheetclose').forEach((b) => b.addEventListener('click', closeSheets));
+$('ruleOpen').addEventListener('click', () => openSheet('ruleSheet'));
+$('ruleDone').addEventListener('click', closeSheets);
+// 「？」を押すと詳しい説明を開く（スイッチは切り替えない）
+document.addEventListener('click', (e) => {
+  const q = e.target.closest('.q');
+  if (!q) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const more = q.parentNode.querySelector('.more');
+  if (!more) return;
+  more.hidden = !more.hidden;
+  q.setAttribute('aria-expanded', String(!more.hidden));
+}, true);
+/** タイトル：今のルールを1行で */
+function updateRuleSummary() {
+  const diff = { easy: 'ゆっくり', normal: 'ふつう', hard: 'はやい' }[S.diff];
+  $('ruleSummary').textContent = `${S.mode === 'voice' ? '音声入力' : 'セリフボタン'}・${S.total}人・${S.rule === 'death' ? 'デスマッチ' : '一発勝負'}・CPU ${CPU_LABEL[S.cpu]}${$('safeChk').checked ? '（不敗）' : ''}・時間 ${diff}`;
+}
+
 /* ================= 画面遷移 ================= */
 function segInit(id, apply) {
   $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
@@ -2721,6 +2806,7 @@ segInit('cpuSeg', (v) => { S.cpu = v; $('cpuNote').textContent = CPU_LEVEL[v].no
 $('cpuNote').textContent = CPU_LEVEL[S.cpu].note;
 
 $('startBtn').addEventListener('click', () => {
+  closeSheets();
   $('titleMsg').textContent = '';
   if (S.mode === 'voice' && !startVoice()) {
     $('titleMsg').textContent = 'この画面では音声入力が使えません。セリフボタンモードで遊んでください。';
@@ -2804,10 +2890,12 @@ function restoreSettings() {
     CHECKS.forEach((id) => { if (typeof v[id] === 'boolean') $(id).checked = v[id]; });
   } finally { restoring = false; }
 }
-document.querySelectorAll('#title .seg button').forEach((b) => b.addEventListener('click', () => saveSettings()));
+document.querySelectorAll('#ruleSheet .seg button').forEach((b) => b.addEventListener('click', () => { saveSettings(); updateRuleSummary(); }));
+$('safeChk').addEventListener('change', updateRuleSummary);
 CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
 
 restoreSettings();
+updateRuleSummary();
 document.body.classList.add('newui'); // 対戦画面の見た目（1.9.0 のお試しから正式に）
 renderPlist();
 renderSlots();
@@ -2868,6 +2956,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.10.0"></script>
+<script src="online.js?v=1.11.0"></script>
 </body>
 </html>
