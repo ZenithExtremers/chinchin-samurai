@@ -163,6 +163,13 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .slot .nm .empty { color: var(--muted); }
 .slot button { height: 34px; padding: 0 9px; border-radius: 8px; border: 2px solid var(--line); background: var(--seat); font-size: 12px; cursor: pointer; }
 .slot button:disabled { opacity: .4; }
+.roomrules { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.roomrules h3 { font-size: 14px; margin: 4px 0 2px; color: var(--accent); }
+.roomrules h4 { font-size: 13px; margin: 6px 0 0; color: var(--muted); }
+.roomrules .row { margin: 0; }
+.seg.mini { margin: 0; }
+.seg.mini button { padding: 8px 2px; font-size: 13px; }
+.seg.mini button:disabled { opacity: .35; }
 .sharerow { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 8px; }
 .qrbox { border-color: var(--accent); }
 .qr-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
@@ -530,9 +537,14 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     <h2 style="margin-top:14px">参加者 <small id="onCount"></small></h2>
     <ol class="members" id="onMembers"></ol>
     <p class="note" id="onRule" style="margin-bottom:12px"></p>
+    <div class="roomrules" id="onRules" hidden></div>
     <button class="big" id="onStart" hidden>この人数で始める</button>
     <p class="note" id="onWait" hidden>ホストが始めるのを待っています…</p>
     <button class="ghost-btn" id="onLeave">部屋を出る</button>
+  </div>
+  <div class="card" id="onMineCard" hidden>
+    <h2>自分の設定</h2>
+    <div class="roomrules" id="onMine"></div>
   </div>
   <div class="card" id="onChatCard" hidden>
     <h2>チャット</h2>
@@ -658,6 +670,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     <p class="note" id="guestWait" hidden style="margin:0 0 10px">次の勝負はホストが始めます</p>
     <div class="btns" id="endBtns">
       <button id="menuBtn">メニュー</button>
+      <button id="lobbyBtn" hidden>待合室へ</button>
       <button class="primary" id="againBtn">もう一回</button>
     </div>
     <div class="btns" id="contBtns" hidden>
@@ -675,9 +688,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.5.0"></script>
-<script src="voices.js?v=1.5.0"></script>
-<script src="qrcode.js?v=1.5.0"></script>
+<script src="firebase-config.js?v=1.6.0"></script>
+<script src="voices.js?v=1.6.0"></script>
+<script src="qrcode.js?v=1.6.0"></script>
 <script>
 'use strict';
 
@@ -735,9 +748,20 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.5.0";
+const APP_VERSION = "1.6.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.6.0",
+  "2026-11-15",
+  "待合室に戻ってルール変更",
+  [
+   "オンラインの結果画面に「待合室へ」（ホストだけ）。全員まとめて待合室に戻り、同じ部屋でルールを変えて続けられる",
+   "ホストは待合室で部屋のルールを変えられる：全体の人数・対戦形式・CPUの強さ・CPU不敗・フェイント・制限時間",
+   "CPUなしモード（オンラインのみ）：参加者だけで遊ぶ。2人から",
+   "待合室に「自分の設定」：入力モード・スワイプ・案内・切腹ムービー・セリフの音声を、各自が自分の画面用に変えられる"
+  ]
+ ],
  [
   "1.5.0",
   "2026-11-15",
@@ -1621,6 +1645,7 @@ function showOverlay(final) {
   $('endBtns').hidden = !final;
   $('contBtns').hidden = final || isGuest();
   $('againBtn').hidden = isGuest();
+  $('lobbyBtn').hidden = !isHost(); // オンラインのホストだけ、全員を待合室に戻せる
   $('guestWait').hidden = !isGuest();
   $('ovChat').hidden = !online();
   later(S.overlayDelay, () => $('overlay').classList.add('show'));
@@ -1731,6 +1756,19 @@ function netBegin({ roster, set, me, role }) {
   $('stampBtn').hidden = false;
   if (isHost()) startGame(0);
   else { resetBoard('いざ！', true); refreshSeats(); }
+}
+/** オンライン：ホストが待合室に戻したとき。ゲームを片付けて待合室の画面へ（部屋には残る） */
+function netToLobby() {
+  newPhase();
+  S.phase = 'idle';
+  dropChinHold();
+  stopVoice();
+  stopAllLines();
+  $('overlay').classList.remove('show');
+  $('cut').classList.remove('show', 'fade');
+  netEnd();
+  document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'online'));
+  renderMine();
 }
 /** オンライン対戦を終える（部屋を出た・閉じられた） */
 function netEnd() {
@@ -2537,6 +2575,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.5.0"></script>
+<script src="online.js?v=1.6.0"></script>
 </body>
 </html>

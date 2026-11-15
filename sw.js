@@ -1,6 +1,6 @@
 /* ちんちん侍：オフラインでも開けるようにするキャッシュ。
    版を上げたら CACHE の番号も上げる（古いキャッシュは消える） */
-const CACHE = 'chinchin-samurai-v1.5.0';
+const CACHE = 'chinchin-samurai-v1.6.0';
 const ASSETS = ['./', './index.html', './voices.js', './qrcode.js', './online.js', './firebase-config.js', './CHANGELOG.md', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
