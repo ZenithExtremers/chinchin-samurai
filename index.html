@@ -926,9 +926,9 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.13.0"></script>
-<script src="voices.js?v=1.13.0"></script>
-<script src="qrcode.js?v=1.13.0"></script>
+<script src="firebase-config.js?v=1.13.1"></script>
+<script src="voices.js?v=1.13.1"></script>
+<script src="qrcode.js?v=1.13.1"></script>
 <script>
 'use strict';
 
@@ -984,9 +984,20 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.13.0";
+const APP_VERSION = "1.13.1";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.13.1",
+  "2026-11-15",
+  "ガイドを使いやすく",
+  [
+   "「遊び方を見る」で、まずメニュー（スライド・動きを見る・練習・オススメ設定）が出るように。スライドの最後やスキップからメニューに戻れる",
+   "「動きを見る」のCPUをゆっくりにして、解説を読めるように",
+   "対戦中の「やめる」ボタンを目立つように",
+   "使っていないデータを削除（定型文の声の重複など）"
+  ]
+ ],
  [
   "1.13.0",
   "2026-11-15",
@@ -996,11 +1007,7 @@ const PATCH_NOTES = [
    "対戦の円を、本物の筆で描いたような円相に（入りは太く、終わりがかすれる）",
    "遊び方ガイドに、どのページからでも押せる「スキップ」を追加",
    "兜をかぶったとき、おでこのあたりが透けて見えるのを修正",
-   "情報タブのクレジットを、パッチノートと同じようにたためるように（最初は閉じている）",
-   "「遊び方を見る」で、まずメニュー（スライド・動きを見る・練習・オススメ設定）が出るように。スライドの最後やスキップからメニューに戻れる",
-   "「動きを見る」のCPUをゆっくりにして、解説を読めるように",
-   "対戦中の「やめる」ボタンを目立つように",
-   "使っていないデータを削除（定型文の声の重複など）"
+   "情報タブのクレジットを、パッチノートと同じようにたためるように（最初は閉じている）"
   ]
  ],
  [
@@ -3242,6 +3249,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.13.0"></script>
+<script src="online.js?v=1.13.1"></script>
 </body>
 </html>
