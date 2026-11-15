@@ -7,6 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#b3261e">
+<script>try { const t = localStorage.getItem('chinchin-samurai-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) { /* noop */ }</script>
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -450,6 +451,14 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 
   <div class="tabpanel" id="tab-config" hidden>
     <div class="card">
+    <h2>画面の色</h2>
+    <div class="seg" id="themeSeg">
+      <button data-v="auto">自動</button>
+      <button data-v="light">ライト</button>
+      <button data-v="dark">ダーク</button>
+    </div>
+    </div>
+    <div class="card">
     <h2>演出</h2>
     <div class="toggles">
       <div class="row">
@@ -703,9 +712,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.8.0"></script>
-<script src="voices.js?v=1.8.0"></script>
-<script src="qrcode.js?v=1.8.0"></script>
+<script src="firebase-config.js?v=1.8.1"></script>
+<script src="voices.js?v=1.8.1"></script>
+<script src="qrcode.js?v=1.8.1"></script>
 <script>
 'use strict';
 
@@ -763,9 +772,17 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.8.0";
+const APP_VERSION = "1.8.1";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.8.1",
+  "2026-11-15",
+  "ダークモード",
+  [
+   "設定タブに「画面の色」：自動（端末に合わせる）・ライト・ダークを選べる"
+  ]
+ ],
  [
   "1.8.0",
   "2026-11-15",
@@ -1834,6 +1851,23 @@ function netEnd() {
   $('stampSheet').hidden = true;
 }
 
+/* ================= 画面の色（ライト・ダーク） ================= */
+const THEME_KEY = 'chinchin-samurai-theme';
+function applyTheme(t) {
+  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+  $('themeSeg').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === (t || 'auto')));
+}
+{
+  let t = 'auto';
+  try { t = localStorage.getItem(THEME_KEY) || 'auto'; } catch (e) { /* noop */ }
+  applyTheme(t);
+  $('themeSeg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    applyTheme(b.dataset.v);
+    try { localStorage.setItem(THEME_KEY, b.dataset.v); } catch (e) { /* noop */ }
+  }));
+}
+
 /* ================= QRコードで共有 ================= */
 const OFFICIAL_URL = 'https://zenithextremers.github.io/chinchin-samurai/';
 /** このゲームのURL（GitHub Pages などで開いているならそのURL、それ以外は公式のURL） */
@@ -2634,6 +2668,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.8.0"></script>
+<script src="online.js?v=1.8.1"></script>
 </body>
 </html>
