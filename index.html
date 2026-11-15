@@ -7,6 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#b3261e">
+<script>try { const t = localStorage.getItem('chinchin-samurai-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) { /* noop */ }</script>
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -450,6 +451,14 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 
   <div class="tabpanel" id="tab-config" hidden>
     <div class="card">
+    <h2>画面の色</h2>
+    <div class="seg" id="themeSeg">
+      <button data-v="auto">自動</button>
+      <button data-v="light">ライト</button>
+      <button data-v="dark">ダーク</button>
+    </div>
+    </div>
+    <div class="card">
     <h2>演出</h2>
     <div class="toggles">
       <div class="row">
@@ -769,13 +778,14 @@ const PATCH_NOTES = [
  [
   "1.8.0",
   "2026-11-15",
-  "チャットボタンと「うおw」",
+  "チャットボタン・「うおw」・ダークモード",
   [
    "オンラインの待合室と結果画面のチャットは、右下に浮かぶボタンから開く形に（押したときだけ下からせり上がる）。閉じている間に届いた発言の数をボタンに表示",
    "対戦中の定型文は、送ったあとも開いたまま（外をタップか「定型文」ボタンで閉じる）",
    "定型文に「うおw」を追加（声付き）",
    "デスマッチで脱落した人は、決着がつくまで「ちんちん侍！」「シャキーン」「びろーん」「切腹！」の定型文を送れない。ほかの定型文も声は鳴らない（吹き出しと文字は出る）",
-   "遊び方のルール欄から、スワイプモードの説明を外した（設定の説明は残る）"
+   "遊び方のルール欄から、スワイプモードの説明を外した（設定の説明は残る）",
+   "設定タブに「画面の色」：自動（端末に合わせる）・ライト・ダークを選べる"
   ]
  ],
  [
@@ -1832,6 +1842,23 @@ function netEnd() {
   NET.role = null; NET.me = 0; NET.send = NET.emit = NET.push = null;
   $('stampBtn').hidden = true;
   $('stampSheet').hidden = true;
+}
+
+/* ================= 画面の色（ライト・ダーク） ================= */
+const THEME_KEY = 'chinchin-samurai-theme';
+function applyTheme(t) {
+  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+  $('themeSeg').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === (t || 'auto')));
+}
+{
+  let t = 'auto';
+  try { t = localStorage.getItem(THEME_KEY) || 'auto'; } catch (e) { /* noop */ }
+  applyTheme(t);
+  $('themeSeg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    applyTheme(b.dataset.v);
+    try { localStorage.setItem(THEME_KEY, b.dataset.v); } catch (e) { /* noop */ }
+  }));
 }
 
 /* ================= QRコードで共有 ================= */
