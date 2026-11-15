@@ -97,7 +97,6 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .prow input { width: 100%; min-width: 0; font: inherit; font-size: 16px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--seat); color: var(--ink); }
 .prow .dot { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--seat); box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
 .prow .play { height: 34px; border-radius: 8px; border: 2px solid var(--line); background: var(--seat); cursor: pointer; font-size: 13px; }
-.overlay .new { color: var(--gold); font-weight: bold; margin-bottom: 8px; }
 /* 切腹ムービー */
 .cut { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; pointer-events: none; }
 .cut.show { display: flex; }
@@ -386,12 +385,80 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   border: 3px solid var(--accent); animation: pop .3s ease-out;
 }
 @keyframes pop { from { transform: scale(.6); opacity: 0; } }
-.overlay .kanji { font-size: 56px; font-weight: bold; color: var(--accent); letter-spacing: .1em; }
-.overlay .who { font-size: 22px; font-weight: bold; margin: 4px 0; }
-.overlay .why { color: var(--muted); margin-bottom: 14px; line-height: 1.5; white-space: pre-line; }
 .overlay .btns { display: flex; gap: 8px; }
 .overlay .btns button { flex: 1; padding: 13px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; border: 2px solid var(--line); background: var(--seat); }
 .overlay .btns button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+/* ================= 和風の見た目（1.10.0） ================= */
+@font-face { font-family: 'Shippori Mincho B1'; src: url(fonts/shippori-mincho-b1-500.woff2) format('woff2'); font-weight: 100 600; font-display: swap; }
+@font-face { font-family: 'Shippori Mincho B1'; src: url(fonts/shippori-mincho-b1-800.woff2) format('woff2'); font-weight: 700 900; font-display: swap; }
+@font-face { font-family: 'Yuji Boku Seppuku'; src: url(fonts/yuji-boku-seppuku.woff2) format('woff2'); font-display: block; } /* 「切腹」の2文字だけ */
+:root { --sumi: #1e1813; --wood: #7a4a26; --washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); --fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .22 0 0 0 .10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); --brush-red: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23b3261e'/%3E%3C/svg%3E"); --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%231e1813'/%3E%3C/svg%3E"); --enso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M58 6 A44 44 0 1 0 90 30' fill='none' stroke='%231e1813' stroke-width='3.2' stroke-linecap='round' opacity='.55'/%3E%3Cpath d='M60 8 A42 42 0 1 0 88 31' fill='none' stroke='%231e1813' stroke-width='1' stroke-linecap='round' opacity='.35'/%3E%3Cpath d='M30 12 A44 44 0 0 0 9 60' fill='none' stroke='%231e1813' stroke-width='1.6' opacity='.3' stroke-dasharray='3 2'/%3E%3C/svg%3E"); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sumi: #f1e6d2; --washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .85 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); --fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .92 0 0 0 0 .8 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23f1e6d2'/%3E%3C/svg%3E"); --enso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M58 6 A44 44 0 1 0 90 30' fill='none' stroke='%23f1e6d2' stroke-width='3.2' stroke-linecap='round' opacity='.55'/%3E%3Cpath d='M60 8 A42 42 0 1 0 88 31' fill='none' stroke='%23f1e6d2' stroke-width='1' stroke-linecap='round' opacity='.35'/%3E%3Cpath d='M30 12 A44 44 0 0 0 9 60' fill='none' stroke='%23f1e6d2' stroke-width='1.6' opacity='.3' stroke-dasharray='3 2'/%3E%3C/svg%3E"); --brush-red: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23e0483d'/%3E%3C/svg%3E"); } }
+:root[data-theme="dark"] { --sumi: #f1e6d2; --washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .85 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); --fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .92 0 0 0 0 .8 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23f1e6d2'/%3E%3C/svg%3E"); --enso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M58 6 A44 44 0 1 0 90 30' fill='none' stroke='%23f1e6d2' stroke-width='3.2' stroke-linecap='round' opacity='.55'/%3E%3Cpath d='M60 8 A42 42 0 1 0 88 31' fill='none' stroke='%23f1e6d2' stroke-width='1' stroke-linecap='round' opacity='.35'/%3E%3Cpath d='M30 12 A44 44 0 0 0 9 60' fill='none' stroke='%23f1e6d2' stroke-width='1.6' opacity='.3' stroke-dasharray='3 2'/%3E%3C/svg%3E"); --brush-red: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23e0483d'/%3E%3C/svg%3E"); }
+body { font-family: 'Shippori Mincho B1', "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; background-image: var(--fiber), var(--washi); background-attachment: fixed; }
+/* 和紙のカード＋角に桜の家紋 */
+.card, .overlay .box, .chatpanel, .stampsheet { background-image: var(--washi); }
+.card { position: relative; border-radius: 6px; }
+.card::after { content: ""; position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; opacity: .13; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Ccircle r='47' fill='none' stroke='%23b3261e' stroke-width='5'/%3E%3Cg fill='%23b3261e'%3E%3Cpath id='p' d='M0 -6 C -14 -14 -16 -30 -8 -38 L 0 -32 L 8 -38 C 16 -30 14 -14 0 -6Z'/%3E%3Cuse href='%23p' transform='rotate(72)'/%3E%3Cuse href='%23p' transform='rotate(144)'/%3E%3Cuse href='%23p' transform='rotate(216)'/%3E%3Cuse href='%23p' transform='rotate(288)'/%3E%3C/g%3E%3Ccircle r='5' fill='%23b3261e'/%3E%3C/svg%3E") center/contain no-repeat; }
+/* 題字：太い明朝＋朱の「侍」のハンコ＋筆の線 */
+#title { position: relative; }
+#title::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 240px; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 240'%3E%3Cdefs%3E%3Cpath id='s' d='M0 0 C -5 -6 -4 -12 0 -14 L 2 -11 L 4 -14 C 8 -12 7 -5 0 0Z' fill='%23f2a7b5'/%3E%3C/defs%3E%3Cuse href='%23s' transform='translate(40 40) rotate(20) scale(1.3)'/%3E%3Cuse href='%23s' transform='translate(350 70) rotate(-40) scale(1.1)'/%3E%3Cuse href='%23s' transform='translate(320 30) rotate(70)'/%3E%3Cuse href='%23s' transform='translate(70 150) rotate(-15) scale(.9)'/%3E%3Cuse href='%23s' transform='translate(360 180) rotate(110) scale(1.2)'/%3E%3Cuse href='%23s' transform='translate(20 110) rotate(160) scale(.8)'/%3E%3C/svg%3E") center top/100% auto no-repeat; opacity: .8; }
+h1 { font-weight: 800; color: var(--sumi); font-size: 52px; letter-spacing: .06em; margin-bottom: 0; position: relative; align-self: center; }
+h1::after { content: "侍"; position: absolute; right: -32px; top: 4px; width: 30px; height: 30px; border-radius: 4px; background: var(--accent); color: #fff; font-size: 18px; line-height: 30px; text-align: center; letter-spacing: 0;
+  transform: rotate(8deg); box-shadow: 0 0 0 2px var(--accent) inset, 0 0 0 3px rgba(255,255,255,.4) inset; }
+.sub { position: relative; padding-top: 14px; }
+.sub::before { content: ""; position: absolute; left: 50%; top: 0; width: 230px; height: 12px; transform: translateX(-50%); background: var(--brush-red) center/100% 100% no-repeat; }
+.card h2 { font-weight: 800; color: var(--sumi); padding-bottom: 6px; position: relative; }
+.card h2::after { content: ""; position: absolute; left: 0; bottom: 0; width: 110px; height: 6px; background: var(--brush-ink) center/100% 100% no-repeat; opacity: .75; }
+.tabs { background: transparent; }
+.tabs button.on { color: var(--sumi); border-bottom-color: transparent; background: var(--brush-red) bottom/90% 7px no-repeat; }
+/* ボタン：角を控えめに、朱のボタンは二重の縁 */
+.seg button, .pad button, .overlay .btns button { border-radius: 6px; }
+.seg button.on { box-shadow: 0 0 0 2px rgba(255,255,255,.35) inset; }
+#startBtn, .overlay .btns button.primary, #onStart { box-shadow: 0 0 0 3px rgba(255,255,255,.28) inset, 0 3px 8px rgba(120,20,10,.3); letter-spacing: .12em; }
+.pad button { font-weight: 800; }
+/* 対戦：筆で描いた丸（円相） */
+.mat { border: 0; background: var(--enso) center/100% 100% no-repeat; }
+.center .word { color: var(--sumi); font-weight: 800; }
+.avatar { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px var(--line), var(--shadow); }
+/* 結果：巻物 */
+.overlay .box { position: relative; border: 0; border-radius: 2px; padding: 24px 18px 22px; box-shadow: 0 10px 30px rgba(0,0,0,.4); overflow: visible; max-height: calc(100vh - 40px); }
+.overlay .box:not(.avbox)::before, .overlay .box:not(.avbox)::after { content: ""; position: absolute; left: -12px; right: -12px; height: 16px; border-radius: 8px;
+  background: linear-gradient(180deg, #4a2a12, var(--wood) 35%, #b57a45 50%, var(--wood) 65%, #3d2310); box-shadow: 0 2px 4px rgba(0,0,0,.35); }
+.overlay .box:not(.avbox)::before { top: -8px; }
+.overlay .box:not(.avbox)::after { bottom: -8px; }
+.rx { text-align: center; }
+.rx .stamp { display: inline-block; font-size: 52px; font-weight: 800; color: var(--accent); letter-spacing: .08em; line-height: 1; padding: 10px 16px 12px;
+  border: 5px double var(--accent); border-radius: 10px; transform: rotate(-6deg); margin: 2px 0 10px; }
+.rx .stamp.brush { font-family: 'Yuji Boku Seppuku', 'Shippori Mincho B1', serif; font-weight: 400; border: 0; color: var(--sumi); font-size: 84px; padding: 6px 12px 2px; transform: rotate(-4deg);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cg fill='%23b3261e' opacity='.85'%3E%3Cpath d='M40 70 C 30 40 80 25 110 40 C 150 30 175 60 160 80 C 150 100 90 105 60 95 C 45 92 44 82 40 70Z' opacity='.4'/%3E%3Ccircle cx='170' cy='30' r='7'/%3E%3Ccircle cx='184' cy='48' r='3.5'/%3E%3Ccircle cx='22' cy='38' r='5'/%3E%3Ccircle cx='12' cy='60' r='2.5'/%3E%3Ccircle cx='150' cy='108' r='4'/%3E%3Ccircle cx='60' cy='14' r='3'/%3E%3Ccircle cx='190' cy='92' r='2.5'/%3E%3Cpath d='M160 80 L 196 104' stroke='%23b3261e' stroke-width='2.5' stroke-linecap='round'/%3E%3Cpath d='M44 88 L 10 108' stroke='%23b3261e' stroke-width='2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E") center/115% 125% no-repeat; }
+.overlay.show .rx .stamp { animation: stampin .35s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes stampin { 0% { transform: scale(1.8) rotate(-12deg); opacity: 0; } 100% { opacity: 1; } }
+.rx .winner { font-size: 24px; font-weight: 800; color: var(--gold); margin: 0 0 8px; }
+.rx .loser { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 2px 0 6px; }
+.rx .loser .av { width: 60px; height: 60px; border-radius: 50%; background: var(--seat); border: 3px solid var(--accent); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; flex: 0 0 auto; }
+.rx .loser .av svg { width: 82%; height: 82%; }
+.rx .loser .av::after { content: ""; position: absolute; left: -10%; top: 52%; width: 120%; height: 3px; background: var(--accent); transform: rotate(-35deg); }
+.rx .loser .nm { text-align: left; }
+.rx .loser .nm b { font-size: 21px; display: block; font-weight: 800; }
+.rx .loser .nm small { color: var(--muted); font-size: 13px; }
+.rx .why { color: var(--muted); font-size: 14px; margin: 0 0 8px; line-height: 1.5; white-space: pre-line; }
+.rx .cnt { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin: 2px 0 4px; }
+.rx .cnt .n { font-size: 50px; font-weight: 800; color: var(--sumi); font-variant-numeric: tabular-nums; line-height: 1; }
+.rx .cnt .u { font-size: 15px; color: var(--muted); }
+.rx .ribbon { display: inline-block; background: linear-gradient(90deg,#b88a22,#e2b54a,#b88a22); color: #fff; font-weight: 800; font-size: 14px; padding: 4px 14px; border-radius: 999px; margin: 4px 0 10px; box-shadow: 0 2px 8px rgba(184,138,34,.45); }
+.rx .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin: 4px 0 14px; }
+.rx .stats div { background: var(--seat); border: 1px solid var(--line); border-radius: 8px; padding: 6px 2px; }
+.rx .stats b { display: block; font-size: 18px; font-weight: 800; }
+.rx .stats small { color: var(--muted); font-size: 11px; }
+.rx h4 { margin: 4px 0 6px; font-size: 13px; color: var(--muted); text-align: left; }
+.rx .rank { list-style: none; margin: 0 0 14px; padding: 0; text-align: left; font-size: 14px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.rx .rank li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-top: 1px solid var(--line); background: var(--seat); }
+.rx .rank li:first-child { border-top: 0; }
+.rx .rank li.me { background: color-mix(in srgb, var(--you) 14%, var(--seat)); font-weight: 800; }
+.rx .rank li.lose { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .overlay.show .rx .stamp { animation: none; } }
 </style>
 </head>
 <body>
@@ -559,7 +626,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   <p class="note" style="text-align:center">
     音声：Open JTalk／HTS Voice「Mei」「Takumi」「NIT ATR503 M001」<br>
     QRコード生成：qrcode-generator（© Kazuhiko Arase, MIT）。QRコードは株式会社デンソーウェーブの登録商標です<br>
-    © Nagoya Institute of Technology（Mei・Takumi は CC BY 3.0, MMDAgent Project）
+    © Nagoya Institute of Technology（Mei・Takumi は CC BY 3.0, MMDAgent Project）<br>
+    フォント：しっぽり明朝 B1（© The Shippori Mincho Project Authors）、Yuji Boku（© The Yuji Project Authors）。どちらも SIL Open Font License 1.1
   </p>
   </div>
 </section>
@@ -723,10 +791,16 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 <!-- ===== 切腹 ===== -->
 <div class="overlay" id="overlay">
   <div class="box">
-    <div class="kanji" id="ovTitle">切腹</div>
-    <div class="who" id="ovWho"></div>
-    <div class="new" id="ovNew" hidden></div>
-    <div class="why" id="ovWhy"></div>
+    <div class="rx">
+      <div class="stamp brush" id="ovTitle">切腹</div>
+      <div class="winner" id="ovWin" hidden></div>
+      <div class="loser"><div class="av" id="ovAv"></div><div class="nm"><b id="ovWho"></b><small id="ovSep"></small></div></div>
+      <p class="why" id="ovWhy"></p>
+      <div class="cnt" id="ovCnt"><span class="n" id="ovN">0</span><span class="u">回つづいた</span></div>
+      <div class="ribbon" id="ovNew" hidden></div>
+      <div class="stats" id="ovStats" hidden></div>
+      <div id="ovRank" hidden></div>
+    </div>
     <p class="note" id="guestWait" hidden style="margin:0 0 10px">次の勝負はホストが始めます</p>
     <div class="btns" id="endBtns">
       <button id="menuBtn">メニュー</button>
@@ -740,9 +814,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.9.1"></script>
-<script src="voices.js?v=1.9.1"></script>
-<script src="qrcode.js?v=1.9.1"></script>
+<script src="firebase-config.js?v=1.10.0"></script>
+<script src="voices.js?v=1.10.0"></script>
+<script src="qrcode.js?v=1.10.0"></script>
 <script>
 'use strict';
 
@@ -800,9 +874,24 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.9.1";
+const APP_VERSION = "1.10.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.10.0",
+  "2026-11-15",
+  "侍の見た目に",
+  [
+   "アプリ全体を和風に：和紙の質感、筆の線、題字の横に朱色の「侍」のハンコ、カードの角に桜の家紋、タイトルに桜の花びら",
+   "文字を「しっぽり明朝」に。結果の「切腹」だけ筆文字（墨の文字に朱のしぶき）",
+   "対戦の円を、筆で描いた丸（円相）に",
+   "結果画面を巻物に：「切腹」がドンと押される、負けた人の顔、つづいた回数を大きく、自己ベスト更新の帯（前回の記録つき）",
+   "1人で遊ぶときは結果に「自己ベスト・あそんだ回数・あなたの切腹」",
+   "オンラインでは結果に「この部屋の戦績」（切腹の少ない順。待合室に戻っても続き、部屋を出たらリセット）",
+   "ダークモードも同じ和風に",
+   "フォントはアプリの中に入っているので、電波がなくても同じ見た目"
+  ]
+ ],
  [
   "1.9.1",
   "2026-11-15",
@@ -1702,20 +1791,19 @@ function seppuku(p, why) {
   S.phase = 'over';
   S.players[p].sep++;
   // 最高記録は人間がまだ遊んでいるときだけ（デスマッチで人間が全員脱落したあとのCPUだけの回数は数えない）
+  const prev = bestOf(S.cpu);
   const isNew = aliveList().some(isHuman) && recordBest(S.combo);
-  const info = { p, title: '切腹', who: `${nameOf(p)} の負け`, why: `${why}\n${S.combo} 回つづいた`, final: true,
-    best: isNew ? `新記録！ ${CPU_LABEL[S.cpu]}で ${S.combo} 回` : '' };
+  const info = { p, title: '切腹', who: nameOf(p), sep: S.players[p].sep, why, combo: S.combo, final: true,
+    best: isNew ? (prev > 0 ? `★ 自己ベスト更新！（前回 ${prev}回）` : `★ 初記録！ ${CPU_LABEL[S.cpu]}で ${S.combo}回`) : '' };
   if (death()) {
     // デスマッチ：脱落して、最後の一人になるまで続ける
     S.alive.delete(p);
     const left = aliveList();
     if (left.length <= 1 || (S.cpuSafe && !left.some(isHuman))) {
       info.title = '決着';
-      info.who = left.length === 1 ? `${nameOf(left[0])} の勝ち！` : 'CPUの勝ち';
-      info.why = `最後に切腹：${nameOf(p)}（${why}）`;
+      info.win = left.length === 1 ? `${nameOf(left[0])} の勝ち！` : 'CPUの勝ち';
     } else {
       info.final = false;
-      info.who = `${nameOf(p)} 脱落`;
       info.why = `${why}\n残り ${left.length} 人：${left.map(nameOf).join('・')}`;
       // 脱落した人の次（時計回り）の生き残りが親で再開
       let next = p;
@@ -1740,12 +1828,55 @@ function seppukuFx(info) {
     if (S.movie) playCutMovie(p);
     else { gong(); if (seppukuVoice(p)) playLine(p, W.SHAKI); }
   });
-  $('ovTitle').textContent = info.title;
-  $('ovWho').textContent = info.who;
-  $('ovWhy').textContent = info.why;
-  $('ovNew').hidden = !info.best;
-  $('ovNew').textContent = info.best || '';
+  renderResult(info);
   showOverlay(info.final);
+}
+/** 結果画面（巻物）を作る */
+function renderResult(info) {
+  const p = info.p;
+  const sep = info.title === '切腹';
+  $('ovTitle').textContent = info.title;
+  $('ovTitle').classList.toggle('brush', sep); // 筆文字は「切腹」だけ
+  $('ovWin').hidden = !info.win;
+  $('ovWin').textContent = info.win || '';
+  $('ovAv').innerHTML = S.players[p] ? seatAvatar(p) : '';
+  $('ovWho').textContent = info.who;
+  $('ovSep').textContent = info.final ? `切腹 ${info.sep || 1}回目` : '脱落';
+  $('ovWhy').textContent = info.why;
+  $('ovCnt').hidden = !info.final;
+  $('ovN').textContent = info.combo ?? S.combo;
+  $('ovNew').hidden = !info.final || !info.best || online(); // 自己ベストは1人で遊ぶときだけ
+  $('ovNew').textContent = info.best || '';
+  countResult(p, info.final);
+  // 下の欄：1人なら自分の記録、オンラインなら部屋の戦績
+  const st = loadJSON(STATS_KEY) || {};
+  $('ovStats').hidden = !info.final || online();
+  $('ovStats').innerHTML = `<div><b>${bestOf(S.cpu)}回</b><small>自己ベスト</small></div>`
+    + `<div><b>${st.games || 0}戦</b><small>あそんだ回数</small></div><div><b>${st.mySep || 0}回</b><small>あなたの切腹</small></div>`;
+  $('ovRank').hidden = !info.final || !online();
+  if (online() && typeof Online !== 'undefined') $('ovRank').innerHTML = roomRanking(p);
+}
+/** 1人で遊んだ記録（あそんだ回数・自分の切腹） */
+const STATS_KEY = 'chinchin-samurai-stats-v1';
+function countResult(p, final) {
+  if (online()) { if (typeof Online !== 'undefined') Online.countGame(p, final); return; }
+  const st = loadJSON(STATS_KEY) || {};
+  if (final) st.games = (st.games || 0) + 1;
+  if (isMine(p)) st.mySep = (st.mySep || 0) + 1;
+  saveJSON(STATS_KEY, st);
+}
+/** オンライン：この部屋の戦績（切腹の少ない順） */
+function roomRanking(p) {
+  const t = Online.tally || {};
+  const rows = Object.entries(t).sort((a, b) => a[1].sep - b[1].sep);
+  let rank = 0, last = -1;
+  const loser = Online.keyOf(p);
+  const li = rows.map(([k, r], i) => {
+    if (r.sep !== last) { rank = i + 1; last = r.sep; }
+    const cls = k === Online.keyOf(NET.me) ? 'me' : k === loser ? 'lose' : '';
+    return `<li class="${cls}"><span>${rank}位　${esc(r.name)}${r.cpu ? '（CPU）' : ''}${k === Online.keyOf(NET.me) ? '（あなた）' : ''}</span><span>切腹 ${r.sep}回</span></li>`;
+  });
+  return `<h4>この部屋の戦績（${Online.games}戦）</h4><ul class="rank">${li.join('')}</ul>`;
 }
 function showOverlay(final) {
   // ゲストはホストの操作を待つ（「もう一回」「つづける」はホストだけ）
@@ -1951,6 +2082,7 @@ const BEST_KEY = 'chinchin-samurai-best-v1';
 const CPU_LABEL = { weak: '弱い', normal: '普通', strong: '強い' };
 function loadJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
 function saveJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* 保存できなくても遊べる */ } }
+function bestOf(cpu) { const b = loadJSON(BEST_KEY) || {}; return Number.isInteger(b[cpu]) ? b[cpu] : 0; }
 function recordBest(n) {
   const best = loadJSON(BEST_KEY) || {};
   const old = Number.isInteger(best[S.cpu]) ? best[S.cpu] : 0;
@@ -2736,6 +2868,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.9.1"></script>
+<script src="online.js?v=1.10.0"></script>
 </body>
 </html>

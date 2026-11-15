@@ -29,6 +29,7 @@ const Online = {
   p: null, ctx: null,
   code: null, role: null, offs: [], gameOffs: [], begun: false, members: {}, meta: null, me: null, awayTimer: null,
   chat: [], joinedAt: 0, lastSent: 0,
+  tally: {}, games: 0, // この部屋の戦績（部屋を出たらリセット）
 
   configured() { const c = window.FIREBASE_CONFIG; return !!(c && c.apiKey && c.databaseURL); },
   start() {
@@ -235,6 +236,22 @@ const Online = {
     D.remove(this.r('ev')).catch(() => {});
     D.remove(this.r('acts')).catch(() => {});
   },
+  /** 席の持ち主（人ならuid、CPUなら席番号） */
+  keyOf(seat) {
+    const r = this.meta && this.meta.roster && this.meta.roster[seat];
+    return r && r.uid ? r.uid : `cpu${seat}`;
+  },
+  /** 戦績：切腹が出るたびに数える（final＝勝負がついた） */
+  countGame(p, final) {
+    (this.meta && this.meta.roster || []).forEach((r, i) => {
+      const k = this.keyOf(i);
+      if (!this.tally[k]) this.tally[k] = { name: r.name, cpu: !!r.cpu, sep: 0 };
+      this.tally[k].name = r.name;
+    });
+    const t = this.tally[this.keyOf(p)];
+    if (t) t.sep++;
+    if (final) this.games++;
+  },
   /** 待合室に戻ったとき（全員） */
   toLobby() {
     this.detachGame();
@@ -315,6 +332,7 @@ const Online = {
       else D.remove(this.r(`members/${uid}`)).catch(() => {});
     }
     this.code = null; this.role = null; this.begun = false; this.members = {}; this.meta = null; this.me = null;
+    this.tally = {}; this.games = 0;
     clearRoom();
     showRejoin();
     this.chat = [];
