@@ -81,8 +81,6 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 }
 .best { text-align: center; font-size: 13px; color: var(--muted); margin: 0 0 14px; font-variant-numeric: tabular-nums; }
 .best b { color: var(--ink); }
-.card h2 .soon, .row label .soon { display: inline; }
-.card h2 .soon, .row label .soon { font-size: 11px; font-weight: bold; color: var(--accent-ink); background: var(--muted); border-radius: 6px; padding: 1px 6px; vertical-align: middle; }
 .toggles { display: flex; flex-direction: column; gap: 10px; }
 .row label small { display: block; font-size: 12px; color: var(--muted); }
 .plist { display: flex; flex-direction: column; gap: 8px; }
@@ -129,9 +127,6 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 @keyframes blade { to { transform: rotate(-15.64deg) scaleX(1); } }
 @keyframes bladeout { from { transform: rotate(-15.64deg) scaleX(1); } to { transform: rotate(-15.64deg) scaleX(1); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .cut.show .top, .cut.show .bot, .cut.show .blade, .cut.show .flash { animation-duration: .01s; } }
-.voices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.voices button { padding: 9px 4px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); font-size: 14px; cursor: pointer; }
-.voices button:active { border-color: var(--accent); }
 .sub-btn { margin-top: 10px; background: var(--seat); color: var(--accent); border: 2px solid var(--accent); font-size: 18px; padding: 12px; }
 .field { width: 100%; font: inherit; font-size: 18px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--seat); color: var(--ink); }
 .joinrow { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; }
@@ -250,6 +245,8 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 /* ---------- ゲーム画面 ---------- */
 .topbar { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
 .topbar button { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+.topbar button.quit { border: 2px solid var(--accent); color: var(--accent); background: var(--seat); font-size: 15px; font-weight: 800; padding: 7px 14px; border-radius: 999px; }
+.topbar button.quit:active { background: var(--accent); color: var(--accent-ink); }
 .stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 1 / 1; margin: 6px 0; touch-action: none; } /* フリック中に画面がスクロールしないように */
 .mat {
   position: absolute; inset: var(--mat-inset, 14%); border-radius: 50%;
@@ -393,9 +390,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 @font-face { font-family: 'Shippori Mincho B1'; src: url(fonts/shippori-mincho-b1-500.woff2) format('woff2'); font-weight: 100 600; font-display: swap; }
 @font-face { font-family: 'Shippori Mincho B1'; src: url(fonts/shippori-mincho-b1-800.woff2) format('woff2'); font-weight: 700 900; font-display: swap; }
 @font-face { font-family: 'Yuji Boku Seppuku'; src: url(fonts/yuji-boku-seppuku.woff2) format('woff2'); font-display: block; } /* 「切腹」の2文字だけ */
-:root { --sumi: #1e1813; --wood: #7a4a26; --washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); --fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .22 0 0 0 .10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); --brush-red: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23b3261e'/%3E%3C/svg%3E"); --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%231e1813'/%3E%3C/svg%3E"); --enso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M58 6 A44 44 0 1 0 90 30' fill='none' stroke='%231e1813' stroke-width='3.2' stroke-linecap='round' opacity='.55'/%3E%3Cpath d='M60 8 A42 42 0 1 0 88 31' fill='none' stroke='%231e1813' stroke-width='1' stroke-linecap='round' opacity='.35'/%3E%3Cpath d='M30 12 A44 44 0 0 0 9 60' fill='none' stroke='%231e1813' stroke-width='1.6' opacity='.3' stroke-dasharray='3 2'/%3E%3C/svg%3E"); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sumi: #f1e6d2; --washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .85 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); --fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .92 0 0 0 0 .8 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23f1e6d2'/%3E%3C/svg%3E"); --enso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M58 6 A44 44 0 1 0 90 30' fill='none' stroke='%23f1e6d2' stroke-width='3.2' stroke-linecap='round' opacity='.55'/%3E%3Cpath d='M60 8 A42 42 0 1 0 88 31' fill='none' stroke='%23f1e6d2' stroke-width='1' stroke-linecap='round' opacity='.35'/%3E%3Cpath d='M30 12 A44 44 0 0 0 9 60' fill='none' stroke='%23f1e6d2' stroke-width='1.6' opacity='.3' stroke-dasharray='3 2'/%3E%3C/svg%3E"); --brush-red: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23e0483d'/%3E%3C/svg%3E"); } }
-:root[data-theme="dark"] { --sumi: #f1e6d2; --washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .85 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); --fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .92 0 0 0 0 .8 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23f1e6d2'/%3E%3C/svg%3E"); --enso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M58 6 A44 44 0 1 0 90 30' fill='none' stroke='%23f1e6d2' stroke-width='3.2' stroke-linecap='round' opacity='.55'/%3E%3Cpath d='M60 8 A42 42 0 1 0 88 31' fill='none' stroke='%23f1e6d2' stroke-width='1' stroke-linecap='round' opacity='.35'/%3E%3Cpath d='M30 12 A44 44 0 0 0 9 60' fill='none' stroke='%23f1e6d2' stroke-width='1.6' opacity='.3' stroke-dasharray='3 2'/%3E%3C/svg%3E"); --brush-red: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23e0483d'/%3E%3C/svg%3E"); }
+:root { --sumi: #1e1813; --wood: #7a4a26; --washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); --fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .22 0 0 0 .10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); --brush-red: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23b3261e'/%3E%3C/svg%3E"); --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%231e1813'/%3E%3C/svg%3E"); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sumi: #f1e6d2; --washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .85 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); --fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .92 0 0 0 0 .8 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23f1e6d2'/%3E%3C/svg%3E"); --brush-red: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23e0483d'/%3E%3C/svg%3E"); } }
+:root[data-theme="dark"] { --sumi: #f1e6d2; --washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .85 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); --fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .92 0 0 0 0 .8 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23f1e6d2'/%3E%3C/svg%3E"); --brush-red: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 11 C 50 5 150 5 297 8 L 294 11 C 200 12 120 14 6 15 Z' fill='%23e0483d'/%3E%3C/svg%3E"); }
 body { font-family: 'Shippori Mincho B1', "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; background-image: var(--fiber), var(--washi); background-attachment: fixed; }
 /* 和紙のカード＋角に桜の家紋 */
 .card, .overlay .box, .chatpanel, .stampsheet { background-image: var(--washi); }
@@ -513,7 +510,12 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
 .gacts { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
 .gacts button { padding: 13px; border-radius: 6px; font-size: 16px; font-weight: 800; border: 2px solid var(--accent); background: var(--seat); color: var(--accent); cursor: pointer; font-family: inherit; }
 .gacts button.primary { background: var(--accent); color: var(--accent-ink); }
-.gacts small { display: block; font-size: 12px; font-weight: 500; opacity: .85; }
+.gacts button { text-align: left; padding: 12px 14px; }
+.gacts button.primary { text-align: center; }
+.gacts b { display: block; font-size: 17px; }
+.gacts small { display: block; font-size: 12px; font-weight: 500; opacity: .85; margin-top: 2px; }
+.gsub { text-align: center; color: var(--muted); margin: -4px 0 4px !important; font-size: 14px !important; }
+.guide.menu .gnav, .guide.menu .gskip { display: none; }
 .gmsg { text-align: center; color: var(--you); font-weight: 800; min-height: 1.4em; margin: 8px 0 0; font-size: 14px; }
 /* 図：4人の円 */
 .gdiag { position: relative; width: 230px; height: 200px; margin: 46px auto 0; }
@@ -719,7 +721,7 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
     <span id="modeLabel">セリフボタン</span>
     <span class="topbtns">
       <button id="stampBtn" hidden>定型文</button>
-      <button id="quitBtn">やめる</button>
+      <button id="quitBtn" class="quit" aria-label="やめてメニューに戻る">✕ やめる</button>
     </span>
   </div>
 
@@ -772,7 +774,7 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
 
 <!-- ===== 遊び方ガイド ===== -->
 <div class="guide" id="guide" hidden role="dialog" aria-label="遊び方ガイド">
-  <div class="gbox">
+  <div class="gbox" id="gBox">
     <button class="gskip" id="gSkip">スキップ</button>
     <button class="gclose" id="gClose" aria-label="閉じる">×</button>
     <div class="gpage" id="gPage"></div>
@@ -950,7 +952,6 @@ const CPU_LEVEL = {
 const VOICE_EXTRA = 1600; // 音声認識の遅延ぶん猶予を足す
 let SEAT_POS = [];
 const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d', '#c0506e', '#5b6b2f', '#1f1f1f', '#c9a227', '#3a8fa0', '#9b2d20'];
-const HAIRS = ['mage', 'bozu', 'long', 'hachi']; // ちょんまげ・坊主・長髪・はちまき
 const SEAT_DEFAULTS = [['mage', 0], ['mage', 1], ['long', 2], ['hachi', 3], ['long', 4], ['bozu', 5]];
 /** 席ごとの見た目と名前（空なら自動の名前） */
 /** アバターのパーツ：[値, 名前] */
@@ -966,7 +967,6 @@ const AV_LABEL = { hair: '髪型', hat: '被り物', eyes: '目', brows: 'まゆ
 const SKINS = ['#f3d2b0', '#fbe3cc', '#e6b48a', '#c68a5c', '#8e5a3a'];
 /** 声（VOICES の p0〜p5）の名前 */
 const VOICE_NAMES = ['男・ふつう', '男・高め', '女・ふつう', '男・こわめ', '女・てれ', '男・低め'];
-const LOOK_KEYS = ['hair', 'hat', 'eyes', 'brows', 'mouth', 'acc', 'skin', 'color'];
 /** 席ごとの既定のキャラ */
 const defaultProfile = (i) => ({ name: '', hair: SEAT_DEFAULTS[i][0], color: SEAT_DEFAULTS[i][1], bonus: 0, voice: i,
   skin: 0, hat: 'none', eyes: 'dot', brows: 'angry', mouth: `m${i}`, acc: 'none' });
@@ -996,7 +996,11 @@ const PATCH_NOTES = [
    "対戦の円を、本物の筆で描いたような円相に（入りは太く、終わりがかすれる）",
    "遊び方ガイドに、どのページからでも押せる「スキップ」を追加",
    "兜をかぶったとき、おでこのあたりが透けて見えるのを修正",
-   "情報タブのクレジットを、パッチノートと同じようにたためるように（最初は閉じている）"
+   "情報タブのクレジットを、パッチノートと同じようにたためるように（最初は閉じている）",
+   "「遊び方を見る」で、まずメニュー（スライド・動きを見る・練習・オススメ設定）が出るように。スライドの最後やスキップからメニューに戻れる",
+   "「動きを見る」のCPUをゆっくりにして、解説を読めるように",
+   "対戦中の「やめる」ボタンを目立つように",
+   "使っていないデータを削除（定型文の声の重複など）"
   ]
  ],
  [
@@ -1587,7 +1591,8 @@ function updateHint() {
 
 /* ================= タイマー ================= */
 function currentLimit() {
-  if (S.train) return (DIFF.easy.limit + 400) * 1.6; // 練習・見本はとてもゆっくり、速くもならない
+  if (S.train === 'demo') return 9000; // 見本：CPUがゆっくり動いても時間切れにならないように
+  if (S.train) return (DIFF.easy.limit + 400) * 1.6; // 練習はとてもゆっくり、速くもならない
   const base = DIFF[S.diff].limit + (S.mode === 'voice' ? VOICE_EXTRA : 0) + (online() ? ONLINE_EXTRA : 0);
   return Math.max(base * 0.55, base * (1 - S.combo * 0.02));
 }
@@ -2260,6 +2265,7 @@ const cpuMisses = () => !S.cpuSafe && Math.random() < CPU_LEVEL[S.cpu].miss(S.co
 /** たまにギリギリ（制限時間の82〜92%）で答えて、焦った高い声を出す。強いCPUはめったにしない */
 const CPU_LATE_RATE = { weak: 0.15, normal: 0.12, strong: 0.05 };
 const cpuDelay = (allowLate = true) => {
+  if (S.train === 'demo') return rand(2600, 3400); // 見本：解説を読めるように、ゆっくり
   if (allowLate && Math.random() < CPU_LATE_RATE[S.cpu]) return rand(S.limitMs * 0.82, S.limitMs * 0.92);
   const [a, b] = CPU_LEVEL[S.cpu].speed;
   return rand(S.limitMs * a, S.limitMs * b);
@@ -2911,16 +2917,21 @@ const GUIDE_PAGES = [
     <div class="gpad"><span>ちんちん</span><span>おちんちん</span><span>侍</span><span>ちんちん侍</span><span class="r">びろーん</span><span class="r">シャキーン</span></div>
     <p>親のときは<b>言葉のボタン</b>を押して、指す人の<b>顔をタップ</b>（どっちが先でもOK）。自分の顔から相手の方へ<b>サッと払って</b>指すこともできる。</p>
     <p>指されたら、返事のボタンを押すだけ。</p>`,
-  () => `<h3>さっそく、やってみよう</h3>
-    <div class="gacts">
-      ${online() || (typeof Online !== 'undefined' && Online.code) ? '' : `<button data-a="demo">動きを見る<small>CPUだけで遊ぶのを、解説つきで見る</small></button>
-      <button data-a="practice">練習する<small>切腹なし・時間ゆっくり。間違えたら正解を教えてくれる</small></button>`}
-      <button data-a="beginner">初心者オススメ設定にする<small>案内あり・ゆっくり・CPU弱い・4人・一発勝負</small></button>
-      <button class="primary" data-a="close">閉じる</button>
-    </div><p class="gmsg" id="gMsg"></p>`,
 ];
-let guideAt = 0;
-function openGuide(page = 0) {
+/** ガイドのメニュー（遊び方を見る、で最初に出る画面） */
+function guideMenu() {
+  const inRoom = online() || (typeof Online !== 'undefined' && Online.code); // 待合室では部屋を抜ける遊び方は出さない
+  return `<h3>遊び方</h3><p class="gsub">どれから見る？</p>
+    <div class="gacts">
+      <button data-a="slides"><b>📜 スライドで覚える</b><small>ルールと操作を絵で（7枚）</small></button>
+      ${inRoom ? '' : `<button data-a="demo"><b>👀 動きを見る</b><small>CPUだけで遊ぶのを、ゆっくり解説つきで</small></button>
+      <button data-a="practice"><b>🗡 練習する</b><small>切腹なし・時間ゆっくり。間違えたら正解を教えてくれる</small></button>`}
+      <button data-a="beginner"><b>🔰 初心者オススメ設定にする</b><small>案内あり・ゆっくり・CPU弱い・4人・一発勝負</small></button>
+      <button class="primary" data-a="close">閉じる</button>
+    </div><p class="gmsg" id="gMsg"></p>`;
+}
+let guideAt = -1; // -1：メニュー、0〜：スライド
+function openGuide(page = -1) {
   guideAt = page;
   $('guide').hidden = false;
   renderGuide();
@@ -2930,26 +2941,28 @@ function closeGuide() {
   try { localStorage.setItem(GUIDE_KEY, '1'); } catch (e) { /* noop */ }
 }
 function renderGuide() {
-  const last = GUIDE_PAGES.length - 1;
-  $('gPage').innerHTML = GUIDE_PAGES[guideAt]();
+  const menu = guideAt < 0, last = GUIDE_PAGES.length - 1;
+  $('gPage').innerHTML = menu ? guideMenu() : GUIDE_PAGES[guideAt]();
+  $('guide').classList.toggle('menu', menu);
   $('gDots').innerHTML = GUIDE_PAGES.map((_, i) => `<i class="${i === guideAt ? 'on' : ''}"></i>`).join('');
-  $('gPrev').disabled = guideAt === 0;
-  $('gNext').hidden = guideAt === last;
-  $('gSkip').hidden = guideAt === last; // 最後のページは「閉じる」があるので出さない
+  $('gPrev').textContent = guideAt === 0 ? 'メニュー' : 'もどる';
+  $('gNext').textContent = guideAt === last ? 'メニューへ' : '次へ';
   $('gPage').querySelectorAll('.gacts button').forEach((b) => b.addEventListener('click', () => {
     const a = b.dataset.a;
     if (a === 'close') closeGuide();
+    else if (a === 'slides') { guideAt = 0; renderGuide(); }
     else if (a === 'beginner') { applyBeginner(); $('gMsg').textContent = '初心者オススメ設定にしました'; }
     else { closeGuide(); startTraining(a); }
   }));
+  $('gBox').scrollTop = 0;
 }
-$('gPrev').addEventListener('click', () => { if (guideAt > 0) { guideAt--; renderGuide(); } });
-$('gNext').addEventListener('click', () => { if (guideAt < GUIDE_PAGES.length - 1) { guideAt++; renderGuide(); } });
+$('gPrev').addEventListener('click', () => { guideAt--; renderGuide(); }); // 1枚目からはメニューへ
+$('gNext').addEventListener('click', () => { guideAt = guideAt >= GUIDE_PAGES.length - 1 ? -1 : guideAt + 1; renderGuide(); });
 $('gClose').addEventListener('click', closeGuide);
-$('gSkip').addEventListener('click', closeGuide);
+$('gSkip').addEventListener('click', () => { guideAt = -1; renderGuide(); }); // スライドを飛ばしてメニューへ
 $('guide').addEventListener('click', (e) => { if (e.target === $('guide')) closeGuide(); });
-$('guideBtn').addEventListener('click', () => openGuide(0));
-$('onGuide').addEventListener('click', () => openGuide(0));
+$('guideBtn').addEventListener('click', () => openGuide());
+$('onGuide').addEventListener('click', () => openGuide());
 // 左右にスワイプでページをめくる
 {
   let sx = null;
@@ -2980,7 +2993,7 @@ $('beginnerBtn').addEventListener('click', () => {
 });
 
 /** 見本（demo：CPUだけ・解説つき）と練習（practice：切腹なし） */
-const DEMO_CALLS = 12; // 見本はこれだけ回したら終わる
+const DEMO_CALLS = 10; // 見本はこれだけ回したら終わる
 function startTraining(kind) {
   closeSheets();
   S.train = kind;
@@ -3024,7 +3037,7 @@ function trainCall(p, word, target) {
   const ans = word === W.CS ? '→ 全員で「ちんちん侍」' : `→ ${nameOf(target)}${ANSWER[word]}`;
   coach(`${nameOf(p)}が「${word}」で${nameOf(target)}を指した\n${ans}`);
   if (S.train === 'demo' && S.combo >= DEMO_CALLS) {
-    setTimeout(() => { if (S.train === 'demo') { toMenu(); openGuide(GUIDE_PAGES.length - 1); } }, 2600);
+    setTimeout(() => { if (S.train === 'demo') { toMenu(); openGuide(); } }, 3500);
   }
 }
 /** 練習：あなたの番が来たときの声かけ */
@@ -3168,7 +3181,7 @@ restoreSettings();
 updateRuleSummary();
 // 初めて開いた人には遊び方ガイドを出す
 const guideSeen = () => { try { return !!localStorage.getItem(GUIDE_KEY); } catch (e) { return true; } };
-if (!guideSeen()) setTimeout(() => { if (!guideSeen() && $('title').classList.contains('active')) openGuide(0); }, 300);
+if (!guideSeen()) setTimeout(() => { if (!guideSeen() && $('title').classList.contains('active')) openGuide(); }, 300);
 document.body.classList.add('newui'); // 対戦画面の見た目（1.9.0 のお試しから正式に）
 renderPlist();
 renderSlots();
