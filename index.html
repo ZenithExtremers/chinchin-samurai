@@ -85,7 +85,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .toggles { display: flex; flex-direction: column; gap: 10px; }
 .row label small { display: block; font-size: 12px; color: var(--muted); }
 .plist { display: flex; flex-direction: column; gap: 8px; }
-.prow { display: grid; grid-template-columns: 48px minmax(0, 1fr) 30px 54px 36px; gap: 6px; align-items: center; }
+.prow { display: grid; grid-template-columns: 48px minmax(0, 1fr) 54px 36px; gap: 6px; align-items: center; }
 .prow .hc { height: 34px; border-radius: 8px; border: 2px solid var(--line); background: var(--seat); cursor: pointer; font-size: 12px; padding: 0; font-variant-numeric: tabular-nums; }
 .prow .hc.on { border-color: var(--gold); font-weight: bold; }
 .prow .hc:disabled { visibility: hidden; }
@@ -142,6 +142,27 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .members .tag-host { font-size: 11px; color: var(--accent-ink); background: var(--gold); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
 .members .tag-cpu { color: var(--muted); }
 .topbtns { display: flex; gap: 6px; }
+.overlay .avbox { max-height: calc(100vh - 32px); display: flex; flex-direction: column; text-align: left; padding: 16px; }
+.avhead { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.avpreview { width: 110px; height: 110px; flex: none; border-radius: 50%; background: var(--seat); border: 3px solid var(--line); }
+.avpreview svg { width: 100%; height: 100%; }
+.avtitle { font-size: 17px; font-weight: bold; }
+.avparts { overflow-y: auto; flex: 1 1 auto; min-height: 0; padding-right: 4px; margin-bottom: 12px; }
+.avparts h3 { font-size: 14px; margin: 12px 0 6px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 7px 10px; border-radius: 999px; border: 2px solid var(--line); background: var(--seat); font-size: 13px; cursor: pointer; }
+.chips button.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: bold; }
+.chips.swatches button { width: 34px; height: 34px; padding: 0; border: 3px solid var(--seat); box-shadow: 0 0 0 1px var(--line); }
+.chips.swatches button.on { box-shadow: 0 0 0 3px var(--accent); background-clip: padding-box; }
+.slots { display: flex; flex-direction: column; gap: 8px; }
+.slot { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto auto 34px; gap: 6px; align-items: center; }
+.slot .face { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--line); background: var(--seat); }
+.slot .face svg { width: 100%; height: 100%; display: block; }
+.slot .nm { display: flex; flex-direction: column; min-width: 0; font-size: 14px; }
+.slot .nm small { font-size: 11px; color: var(--muted); }
+.slot .nm .empty { color: var(--muted); }
+.slot button { height: 34px; padding: 0 9px; border-radius: 8px; border: 2px solid var(--line); background: var(--seat); font-size: 12px; cursor: pointer; }
+.slot button:disabled { opacity: .4; }
 .sharerow { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 8px; }
 .qrbox { border-color: var(--accent); }
 .qr-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
@@ -392,8 +413,13 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   <div class="tabpanel" id="tab-chara" hidden>
   <div class="card">
     <h2>プレイヤー</h2>
-    <p class="note" style="margin:-4px 0 10px">顔をタップで髪型、色の丸で服の色が変わります。「ハンデ」を押すと、その人だけ制限時間が +0.5／+1／+2 秒長くなります（人間だけ）。▶を押すたびに全セリフを順に試し聞き（数字はパターン）。</p>
+    <p class="note" style="margin:-4px 0 10px">顔をタップすると、見た目のパーツと声を変えられます。「ハンデ」を押すと、その人だけ制限時間が +0.5／+1／+2 秒長くなります（人間だけ）。▶を押すたびに全セリフを順に試し聞き（数字はパターン）。</p>
     <div class="plist" id="plist"></div>
+  </div>
+  <div class="card">
+    <h2>保存したキャラ</h2>
+    <p class="note" style="margin:-4px 0 10px">席1（あなた）の名前・見た目・声・ハンデを保存して、あとで呼び出せます。オンライン対戦でも呼び出したキャラで参加します。</p>
+    <div class="slots" id="slots"></div>
   </div>
   </div>
 
@@ -594,6 +620,21 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
+<!-- ===== キャラの編集 ===== -->
+<div class="overlay" id="avEditor">
+  <div class="box avbox">
+    <div class="avhead">
+      <div class="avpreview" id="avPreview"></div>
+      <div class="avtitle" id="avTitle"></div>
+    </div>
+    <div class="avparts" id="avParts"></div>
+    <div class="btns">
+      <button id="avReset">元に戻す</button>
+      <button class="primary" id="avDone">完了</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== QRコード ===== -->
 <div class="overlay" id="qrModal">
   <div class="box qrbox">
@@ -634,9 +675,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.4.3"></script>
-<script src="voices.js?v=1.4.3"></script>
-<script src="qrcode.js?v=1.4.3"></script>
+<script src="firebase-config.js?v=1.5.0"></script>
+<script src="voices.js?v=1.5.0"></script>
+<script src="qrcode.js?v=1.5.0"></script>
 <script>
 'use strict';
 
@@ -663,13 +704,52 @@ const COLORS = ['#2f6f4f', '#3b5ba5', '#8a3f8f', '#b5651d', '#c0506e', '#5b6b2f'
 const HAIRS = ['mage', 'bozu', 'long', 'hachi']; // ちょんまげ・坊主・長髪・はちまき
 const SEAT_DEFAULTS = [['mage', 0], ['mage', 1], ['long', 2], ['hachi', 3], ['long', 4], ['bozu', 5]];
 /** 席ごとの見た目と名前（空なら自動の名前） */
-let PROFILES = SEAT_DEFAULTS.map(([hair, color]) => ({ name: '', hair, color, bonus: 0 }));
+/** アバターのパーツ：[値, 名前] */
+const AV = {
+  hair: [['mage', 'ちょんまげ'], ['bozu', '坊主'], ['long', '長髪'], ['hachi', 'はちまき']],
+  hat: [['none', 'なし'], ['kabuto', '兜'], ['kasa', '笠'], ['eboshi', '烏帽子'], ['crown', '王冠']],
+  eyes: [['dot', 'ふつう'], ['big', 'くりくり'], ['sharp', 'つり目'], ['droopy', 'たれ目'], ['line', '細目'], ['smile', 'にっこり']],
+  brows: [['angry', 'いかり'], ['worried', 'こまり'], ['thick', '太まゆ'], ['thin', '細まゆ'], ['none', 'なし']],
+  mouth: [['m0', 'にやり'], ['m1', '真一文字'], ['m2', 'への字'], ['m3', 'にっこり'], ['m4', 'ちょい笑い'], ['m5', 'とがり'], ['o', 'おちょぼ'], ['open', '大口']],
+  acc: [['none', 'なし'], ['glasses', 'メガネ'], ['shades', 'サングラス'], ['mustache', 'ひげ'], ['beard', 'あごひげ'], ['blush', 'ほお紅'], ['scar', '傷あと']],
+};
+const AV_LABEL = { hair: '髪型', hat: '被り物', eyes: '目', brows: 'まゆ', mouth: '口', acc: 'アクセサリー' };
+const SKINS = ['#f3d2b0', '#fbe3cc', '#e6b48a', '#c68a5c', '#8e5a3a'];
+/** 声（VOICES の p0〜p5）の名前 */
+const VOICE_NAMES = ['男・ふつう', '男・高め', '女・ふつう', '男・こわめ', '女・てれ', '男・低め'];
+const LOOK_KEYS = ['hair', 'hat', 'eyes', 'brows', 'mouth', 'acc', 'skin', 'color'];
+/** 席ごとの既定のキャラ */
+const defaultProfile = (i) => ({ name: '', hair: SEAT_DEFAULTS[i][0], color: SEAT_DEFAULTS[i][1], bonus: 0, voice: i,
+  skin: 0, hat: 'none', eyes: 'dot', brows: 'angry', mouth: `m${i}`, acc: 'none' });
+/** 保存データや相手から届いたデータを、正しい値だけにそろえる */
+function cleanLook(p, d) {
+  p = p || {};
+  const out = {};
+  for (const k of Object.keys(AV)) out[k] = AV[k].some(([v]) => v === p[k]) ? p[k] : d[k];
+  out.skin = Number.isInteger(p.skin) && p.skin >= 0 && p.skin < SKINS.length ? p.skin : d.skin;
+  out.color = Number.isInteger(p.color) && p.color >= 0 && p.color < COLORS.length ? p.color : d.color;
+  out.voice = Number.isInteger(p.voice) && p.voice >= 0 && p.voice < VOICE_NAMES.length ? p.voice : d.voice;
+  return out;
+}
+let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.4.3";
+const APP_VERSION = "1.5.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.5.0",
+  "2026-11-15",
+  "アバターと声を選べる",
+  [
+   "「キャラ」タブで顔をタップすると編集画面。大きな顔を見ながらパーツと声を選べる",
+   "パーツ：髪型・被り物（兜・笠・烏帽子・王冠）・目・まゆ・口・アクセサリー（メガネ・サングラス・ひげ・あごひげ・ほお紅・傷あと）・肌の色・服の色",
+   "声：6種類から席ごとに選べる（CPUも）。選ぶと試しに鳴る",
+   "キャラを5つまで保存して、ワンタップで席1（あなた）に呼び出せる",
+   "オンライン対戦でも、選んだ見た目と声で相手に見え、聞こえる"
+  ]
+ ],
  [
   "1.4.3",
   "2026-11-15",
@@ -950,31 +1030,72 @@ function setupPlayers() {
 }
 
 /* ================= 画面構築 ================= */
-function avatarSvg(color, i, hair = 'mage') {
-  const mouth = ['M38 66 Q50 74 62 66', 'M40 68 L60 68', 'M38 70 Q50 62 62 70', 'M40 66 Q50 76 60 66', 'M42 66 Q50 72 58 66', 'M38 68 Q50 66 62 70'][i % 6];
-  const knot = '<rect x="44" y="4" width="12" height="22" rx="5" fill="#222"></rect><rect x="38" y="20" width="24" height="7" rx="3" fill="#222"></rect>';
+/** アバターを描く（lk：見た目のパーツ、i：席。足りないパーツは席の既定） */
+function avatarSvg(lk, i = 0) {
+  const L = { ...defaultProfile(i % 6), ...(lk || {}) };
+  const color = COLORS[L.color] || COLORS[0], skin = SKINS[L.skin] || SKINS[0];
+  const hat = L.hat !== 'none';
+  const knot = hat ? '' : '<rect x="44" y="4" width="12" height="22" rx="5" fill="#222"></rect><rect x="38" y="20" width="24" height="7" rx="3" fill="#222"></rect>';
   const top = '<path d="M20 46 Q50 22 80 46 L80 40 Q50 14 20 40 z" fill="#222"></path>';
-  const back = hair === 'long' ? '<path d="M14 92 Q10 30 50 22 Q90 30 86 92 L74 92 L74 50 L26 50 L26 92 z" fill="#222"></path>' : '';
-  let front = '';
-  if (hair === 'mage') front = knot + top;
-  if (hair === 'hachi') front = knot + top + '<rect x="19" y="38" width="62" height="9" rx="3" fill="#fafafa" stroke="#999" stroke-width="1"></rect><circle cx="50" cy="42.5" r="3.5" fill="#c62828"></circle>';
-  if (hair === 'long') front = '<path d="M18 50 Q22 18 50 18 Q78 18 82 50 Q66 34 50 40 Q34 34 18 50 z" fill="#222"></path>';
-  if (hair === 'bozu') front = '<path d="M19 50 Q22 24 50 24 Q78 24 81 50 Q50 36 19 50 z" fill="#6b6f78" opacity=".55"></path>';
+  const back = L.hair === 'long' ? '<path d="M14 92 Q10 30 50 22 Q90 30 86 92 L74 92 L74 50 L26 50 L26 92 z" fill="#222"></path>' : '';
+  const front = {
+    mage: knot + top,
+    hachi: knot + top + '<rect x="19" y="38" width="62" height="9" rx="3" fill="#fafafa" stroke="#999" stroke-width="1"></rect><circle cx="50" cy="42.5" r="3.5" fill="#c62828"></circle>',
+    long: '<path d="M18 50 Q22 18 50 18 Q78 18 82 50 Q66 34 50 40 Q34 34 18 50 z" fill="#222"></path>',
+    bozu: '<path d="M19 50 Q22 24 50 24 Q78 24 81 50 Q50 36 19 50 z" fill="#6b6f78" opacity=".55"></path>',
+  }[L.hair] || '';
+  const mirror = (d) => `<path d="${d}" transform="translate(100 0) scale(-1 1)"`;
+  const pair = (d, attr) => `<path d="${d}" ${attr}></path>${mirror(d)} ${attr}></path>`;
+  const eyes = {
+    dot: '<circle cx="38" cy="56" r="4" fill="#222"></circle><circle cx="62" cy="56" r="4" fill="#222"></circle>',
+    big: '<circle cx="38" cy="56" r="6" fill="#fff" stroke="#222" stroke-width="1.5"></circle><circle cx="62" cy="56" r="6" fill="#fff" stroke="#222" stroke-width="1.5"></circle><circle cx="39" cy="57" r="3.4" fill="#222"></circle><circle cx="61" cy="57" r="3.4" fill="#222"></circle>',
+    sharp: pair('M31 59 L45 53 L44 59 Z', 'fill="#222"'),
+    droopy: pair('M32 54 L45 58 L42 60 L33 59 Z', 'fill="#222"'),
+    line: pair('M32 56 L44 56', 'stroke="#222" stroke-width="3" stroke-linecap="round" fill="none"'),
+    smile: pair('M32 58 Q38 51 44 58', 'stroke="#222" stroke-width="3" stroke-linecap="round" fill="none"'),
+  }[L.eyes] || '';
+  const brows = {
+    angry: pair('M30 47 L44 50', 'stroke="#222" stroke-width="3" stroke-linecap="round" fill="none"'),
+    worried: pair('M30 50 L44 46', 'stroke="#222" stroke-width="3" stroke-linecap="round" fill="none"'),
+    thick: pair('M30 47 L44 47', 'stroke="#222" stroke-width="5.5" stroke-linecap="round" fill="none"'),
+    thin: pair('M31 47 Q37 44.5 44 47', 'stroke="#222" stroke-width="1.6" stroke-linecap="round" fill="none"'),
+    none: '',
+  }[L.brows] || '';
+  const MOUTHS = { m0: 'M38 66 Q50 74 62 66', m1: 'M40 68 L60 68', m2: 'M38 70 Q50 62 62 70', m3: 'M40 66 Q50 76 60 66', m4: 'M42 66 Q50 72 58 66', m5: 'M38 68 Q50 66 62 70' };
+  const mouth = MOUTHS[L.mouth] ? `<path d="${MOUTHS[L.mouth]}" stroke="#7a2a1a" stroke-width="3" fill="none" stroke-linecap="round" transform="translate(0 2)"></path>`
+    : L.mouth === 'o' ? '<circle cx="50" cy="70" r="3.2" fill="#7a2a1a"></circle>'
+    : '<path d="M40 67 Q50 81 60 67 Z" fill="#7a2a1a"></path>';
+  const accBack = L.acc === 'beard' ? '<path d="M27 68 Q50 100 73 68 Q66 86 50 88 Q34 86 27 68 Z" fill="#2a2a2a" opacity=".9"></path>' : '';
+  const accFront = {
+    glasses: '<circle cx="38" cy="56" r="7.5" fill="none" stroke="#333" stroke-width="2"></circle><circle cx="62" cy="56" r="7.5" fill="none" stroke="#333" stroke-width="2"></circle><path d="M45.5 56 L54.5 56" stroke="#333" stroke-width="2"></path>',
+    shades: '<rect x="29" y="51" width="18" height="11" rx="4" fill="#111"></rect><rect x="53" y="51" width="18" height="11" rx="4" fill="#111"></rect><path d="M47 55 L53 55" stroke="#111" stroke-width="2.5"></path>',
+    mustache: '<path d="M37 66 Q43 60 50 64 Q57 60 63 66 Q56 63.5 50 66.5 Q44 63.5 37 66 Z" fill="#222"></path>',
+    blush: '<ellipse cx="31" cy="65" rx="5" ry="3" fill="#f08a8a" opacity=".75"></ellipse><ellipse cx="69" cy="65" rx="5" ry="3" fill="#f08a8a" opacity=".75"></ellipse>',
+    scar: '<path d="M60 60 L71 71 M63 67 L68 62" stroke="#9b3b2b" stroke-width="1.8" stroke-linecap="round"></path>',
+  }[L.acc] || '';
+  const hatSvg = {
+    kabuto: '<path d="M15 50 Q15 17 50 15 Q85 17 85 50 L77 50 Q73 29 50 27 Q27 29 23 50 Z" fill="#2b3a55"></path><path d="M9 53 Q50 40 91 53 L87 59 Q50 48 13 59 Z" fill="#1d2a40"></path><path d="M50 27 L35 3 L43 5 L50 19 L57 5 L65 3 Z" fill="#d4a017"></path>',
+    kasa: '<path d="M2 45 L50 8 L98 45 Q50 54 2 45 Z" fill="#d9b26a" stroke="#8a6a2a" stroke-width="1.5"></path><path d="M26 27 L50 45 M74 27 L50 45" stroke="#a88442" stroke-width="1"></path>',
+    eboshi: '<path d="M33 31 Q29 3 57 0 Q67 13 67 33 Z" fill="#1b1b1b"></path><rect x="31" y="29" width="38" height="6" rx="2" fill="#333"></rect>',
+    crown: '<path d="M28 31 L28 13 L39 22 L50 7 L61 22 L72 13 L72 31 Z" fill="#e8b923" stroke="#a07800" stroke-width="1.5"></path><circle cx="50" cy="24" r="3" fill="#c62828"></circle><circle cx="37" cy="27" r="2" fill="#1e88e5"></circle><circle cx="63" cy="27" r="2" fill="#1e88e5"></circle>',
+  }[L.hat] || '';
   return `<svg viewBox="0 0 100 100" aria-hidden="true">
     ${back}
-    <circle cx="50" cy="58" r="32" fill="#f3d2b0" stroke="#5a3a20" stroke-width="2"></circle>
-    ${front}
-    <circle cx="38" cy="56" r="4" fill="#222"></circle><circle cx="62" cy="56" r="4" fill="#222"></circle>
-    <path d="M30 47 L44 50 M70 47 L56 50" stroke="#222" stroke-width="3" stroke-linecap="round" fill="none"></path>
-    <path d="${mouth}" stroke="#7a2a1a" stroke-width="3" fill="none" stroke-linecap="round" transform="translate(0 2)"></path>
+    <circle cx="50" cy="58" r="32" fill="${skin}" stroke="#5a3a20" stroke-width="2"></circle>
+    ${front}${eyes}${brows}${accBack}${mouth}${accFront}
     <path d="M22 92 Q50 78 78 92 L80 100 L20 100 z" fill="${color}"></path>
+    ${hatSvg}
   </svg>`;
 }
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 /** 席の見た目：オンライン対戦中はホストから届いた見た目、それ以外はこの端末の設定 */
 const seatLook = (i) => (online() && S.players[i] && S.players[i].look) || PROFILES[i];
-const seatAvatar = (i) => avatarSvg(COLORS[seatLook(i).color] || COLORS[0], i, seatLook(i).hair);
-const profileAvatar = (i) => avatarSvg(COLORS[PROFILES[i].color], i, PROFILES[i].hair);
+const seatAvatar = (i) => avatarSvg(seatLook(i), i);
+/** 席の声（VOICES の番号）：オンライン対戦中はホストから届いた声、それ以外はこの端末の設定 */
+const seatVoice = (i) => {
+  const v = online() && S.players[i] ? S.players[i].voice : PROFILES[i] && PROFILES[i].voice;
+  return Number.isInteger(v) ? v : i;
+};
 
 function buildSeats() {
   $('seats').innerHTML = S.players.map((p, i) => `
@@ -1142,7 +1263,7 @@ function initAudio(seats) {
   } catch (e) { actx = null; return; }
   if (typeof VOICES === 'undefined' || !seats) return;
   // 使う席の分だけ展開する
-  Object.entries(VOICES).filter(([v]) => +v.slice(1) < seats).forEach(([v, lines]) => {
+  Object.entries(VOICES).forEach(([v, lines]) => { // 声は席に関係なく選べるので全部展開する
     buffers[v] = buffers[v] || {};
     Object.entries(lines).forEach(([word, takes]) => {
       if (buffers[v][word]) return;
@@ -1178,7 +1299,7 @@ function shouldPlay(p) {
 const seppukuVoice = (p) => !online() || isMine(p) || !isHuman(p) || shouldPlay(p);
 function playLine(p, word, hurried) {
   if (!S.tts || typeof VOICES === 'undefined') return;
-  const v = 'p' + p;
+  const v = 'p' + seatVoice(p);
   const takes = VOICES[v] && VOICES[v][word];
   if (!takes) return;
   // 残り時間が制限時間の20%を切ってから言ったときだけ、声が高いほう（焦って上ずった声）
@@ -1201,10 +1322,10 @@ function playLine(p, word, hurried) {
   if (!isMine(p)) ttsBusyUntil = Math.max(ttsBusyUntil, performance.now() + dur * 1000 + 350);
 }
 /** 定型文の声（その席のキャラのふつうの声）。「セリフの音声を出す」がオフなら鳴らさない */
-function playStamp(p, label) {
+function playStamp(p, label, voiceId) {
   const st = STAMPS.find(([l]) => l === label);
   if (!st || !$('ttsChk').checked || typeof VOICES === 'undefined') return;
-  const v = 'p' + p, key = st[1];
+  const v = 'p' + (Number.isInteger(voiceId) ? voiceId : seatVoice(p)), key = st[1];
   const takes = VOICES[v] && VOICES[v][key];
   if (!takes) return;
   const n = Math.min(1 - HIGH_TAKE[v], takes.length - 1);
@@ -1591,7 +1712,7 @@ function netBegin({ roster, set, me, role }) {
   S.rule = set.rule; S.cpu = set.cpu; S.diff = set.diff; S.cpuSafe = !!set.safe; S.feint = !!set.feint;
   S.humans = roster.filter((r) => !r.cpu).length;
   S.players = roster.map((r) => ({
-    name: r.name, cpu: !!r.cpu, sep: 0, look: { hair: r.hair, color: r.color }, bonus: r.bonus || 0, cs: r.cs !== false,
+    name: r.name, cpu: !!r.cpu, sep: 0, look: cleanLook(r, defaultProfile(0)), voice: cleanLook(r, defaultProfile(0)).voice, bonus: r.bonus || 0, cs: r.cs !== false,
   }));
   S.tts = $('ttsChk').checked; S.movie = $('movieChk').checked; S.guide = $('guideChk').checked;
   S.alive = new Set(S.players.map((_, i) => i));
@@ -2144,7 +2265,7 @@ $('micBtn').addEventListener('click', startVoice);
 const testTake = {};
 /** 押すたびに全セリフを順に、各セリフ 1 → 2 パターン目の順で鳴らす。ボタンにパターン番号を出す */
 function previewVoice(i, btn) {
-  const v = 'p' + i;
+  const v = 'p' + seatVoice(i);
   if (typeof VOICES === 'undefined' || !VOICES[v]) return;
   const words = Object.keys(VOICES[v]);
   const n = (testTake[v] = ((testTake[v] ?? -1) + 1) % (words.length * 2));
@@ -2156,29 +2277,18 @@ const hcLabel = (b) => (b ? `+${b}秒` : 'ハンデ');
 function renderPlist() {
   $('plist').innerHTML = PROFILES.slice(0, S.total).map((pr, i) => `
     <div class="prow" data-i="${i}">
-      <button class="face" aria-label="髪型を変える">${seatAvatar(i)}</button>
+      <button class="face" aria-label="席${i + 1}の見た目と声を変える">${seatAvatar(i)}</button>
       <div class="nm">
-        <small>${i < S.humans ? '人間' : 'CPU'}・席${i + 1}</small>
+        <small>${i < S.humans ? '人間' : 'CPU'}・席${i + 1}・声：${VOICE_NAMES[seatVoice(i)]}</small>
         <input id="pname${i}" maxlength="8" value="${esc(pr.name)}" placeholder="${esc(defaultName(i))}" aria-label="席${i + 1}の名前">
       </div>
-      <button class="dot" style="background:${COLORS[pr.color]}" aria-label="服の色を変える"></button>
       <button class="hc ${pr.bonus ? 'on' : ''}" ${i < S.humans ? '' : 'disabled'} aria-label="ハンデ（制限時間を長くする）">${hcLabel(pr.bonus)}</button>
       <button class="play" aria-label="声を試し聞き">▶</button>
     </div>`).join('');
   $('plist').querySelectorAll('.prow').forEach((row) => {
     const i = +row.dataset.i;
-    row.querySelector('.face').addEventListener('click', () => {
-      PROFILES[i].hair = HAIRS[(HAIRS.indexOf(PROFILES[i].hair) + 1) % HAIRS.length];
-      row.querySelector('.face').innerHTML = seatAvatar(i);
-      saveSettings();
-    });
-    row.querySelector('.dot').addEventListener('click', (e) => {
-      PROFILES[i].color = (PROFILES[i].color + 1) % COLORS.length;
-      e.currentTarget.style.background = COLORS[PROFILES[i].color];
-      row.querySelector('.face').innerHTML = seatAvatar(i);
-      saveSettings();
-    });
-    row.querySelector('input').addEventListener('input', (e) => { PROFILES[i].name = e.target.value; saveSettings(); });
+    row.querySelector('.face').addEventListener('click', () => openEditor(i));
+    row.querySelector('input').addEventListener('input', (e) => { PROFILES[i].name = e.target.value; saveSettings(); renderSlots(); });
     row.querySelector('.play').addEventListener('click', (e) => previewVoice(i, e.currentTarget));
     row.querySelector('.hc').addEventListener('click', (e) => {
       const k = (BONUS_STEPS.indexOf(PROFILES[i].bonus) + 1) % BONUS_STEPS.length;
@@ -2187,6 +2297,83 @@ function renderPlist() {
       e.currentTarget.classList.toggle('on', !!PROFILES[i].bonus);
       saveSettings();
     });
+  });
+}
+
+/* ---------- キャラの編集画面（見た目のパーツと声） ---------- */
+let editSeat = 0;
+function chips(key, list, cur, fmt) {
+  return `<div class="chips" data-k="${key}">${list.map(([v, label]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}"${fmt ? fmt(v) : ''}>${esc(label)}</button>`).join('')}</div>`;
+}
+function renderEditor() {
+  const pr = PROFILES[editSeat];
+  $('avTitle').textContent = `席${editSeat + 1}（${pr.name.trim() || defaultName(editSeat)}）`;
+  $('avPreview').innerHTML = avatarSvg(pr, editSeat);
+  const swatch = (list, key) => `<div class="chips swatches" data-k="${key}">${list.map((c, n) => `<button data-v="${n}" class="${pr[key] === n ? 'on' : ''}" style="background:${c}" aria-label="${key === 'skin' ? '肌の色' : '服の色'}${n + 1}"></button>`).join('')}</div>`;
+  $('avParts').innerHTML =
+    `<h3>声</h3>${chips('voice', VOICE_NAMES.map((n, k) => [k, n]), pr.voice)}` +
+    Object.keys(AV).map((k) => `<h3>${AV_LABEL[k]}</h3>${chips(k, AV[k], pr[k])}`).join('') +
+    `<h3>肌の色</h3>${swatch(SKINS, 'skin')}<h3>服の色</h3>${swatch(COLORS, 'color')}`;
+  $('avParts').querySelectorAll('.chips').forEach((box) => box.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    const k = box.dataset.k;
+    const num = ['voice', 'skin', 'color'].includes(k);
+    PROFILES[editSeat][k] = num ? +b.dataset.v : b.dataset.v;
+    if (k === 'voice') playStamp(editSeat, 'ちんちん侍！', PROFILES[editSeat].voice); // 選んだ声を試し聞き
+    saveSettings();
+    renderEditor();
+  })));
+}
+function openEditor(i) {
+  editSeat = i;
+  initAudio(); // 声の試し聞きのため
+  renderEditor();
+  $('avEditor').classList.add('show');
+}
+function closeEditor() {
+  $('avEditor').classList.remove('show');
+  renderPlist();
+  renderSlots();
+}
+$('avDone').addEventListener('click', closeEditor);
+$('avReset').addEventListener('click', () => {
+  const keep = { name: PROFILES[editSeat].name, bonus: PROFILES[editSeat].bonus };
+  PROFILES[editSeat] = { ...defaultProfile(editSeat), ...keep };
+  saveSettings();
+  renderEditor();
+});
+$('avEditor').addEventListener('click', (e) => { if (e.target === $('avEditor')) closeEditor(); });
+
+/* ---------- 保存したキャラ（5つまで） ---------- */
+const SLOT_KEY = 'chinchin-samurai-slots-v1';
+const SLOT_MAX = 5;
+function loadSlots() {
+  const v = loadJSON(SLOT_KEY);
+  return Array.from({ length: SLOT_MAX }, (_, k) => {
+    const p = Array.isArray(v) ? v[k] : null;
+    if (!p) return null;
+    return { ...cleanLook(p, defaultProfile(0)), name: typeof p.name === 'string' ? p.name.slice(0, 8) : '', bonus: BONUS_STEPS.includes(p.bonus) ? p.bonus : 0 };
+  });
+}
+function renderSlots() {
+  const slots = loadSlots();
+  $('slots').innerHTML = slots.map((p, k) => `
+    <div class="slot" data-k="${k}">
+      <div class="face">${p ? avatarSvg(p, 0) : ''}</div>
+      <div class="nm">${p ? `<b>${esc(p.name || 'あなた')}</b><small>声：${VOICE_NAMES[p.voice]}${p.bonus ? `・+${p.bonus}秒` : ''}</small>` : '<span class="empty">空き</span>'}</div>
+      <button data-a="save">${p ? '上書き' : '保存'}</button>
+      <button data-a="load" ${p ? '' : 'disabled'}>呼び出す</button>
+      <button data-a="del" ${p ? '' : 'disabled'} aria-label="消す">✕</button>
+    </div>`).join('');
+  $('slots').querySelectorAll('.slot').forEach((row) => {
+    const k = +row.dataset.k;
+    row.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+      const list = loadSlots();
+      if (b.dataset.a === 'save') list[k] = { ...PROFILES[0] };
+      if (b.dataset.a === 'del') list[k] = null;
+      if (b.dataset.a === 'load' && list[k]) { PROFILES[0] = { ...defaultProfile(0), ...list[k] }; saveSettings(); renderPlist(); }
+      saveJSON(SLOT_KEY, list);
+      renderSlots();
+    }));
   });
 }
 
@@ -2275,9 +2462,8 @@ function restoreSettings() {
     PROFILES = PROFILES.map((d, i) => {
       const p = v.profiles[i] || {};
       return {
+        ...cleanLook(p, d),
         name: typeof p.name === 'string' ? p.name.slice(0, 8) : '',
-        hair: HAIRS.includes(p.hair) ? p.hair : d.hair,
-        color: Number.isInteger(p.color) && p.color >= 0 && p.color < COLORS.length ? p.color : d.color,
         bonus: BONUS_STEPS.includes(p.bonus) ? p.bonus : 0,
       };
     });
@@ -2293,6 +2479,7 @@ CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
 
 restoreSettings();
 renderPlist();
+renderSlots();
 // 版とパッチノート
 $('verLabel').textContent = `ver ${APP_VERSION}`;
 $('notesInline').innerHTML = PATCH_NOTES.map(([v, d, head, items]) => `
@@ -2350,6 +2537,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.4.3"></script>
+<script src="online.js?v=1.5.0"></script>
 </body>
 </html>

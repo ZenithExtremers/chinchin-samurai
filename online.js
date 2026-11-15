@@ -140,7 +140,7 @@ const Online = {
     if (!fresh || mine) return; // 自分の分は送ったときに鳴らしている
     if (m.stamp) {
       const sender = this.members[m.uid];
-      if (seat >= 0 && $('netCharRecvChk').checked && (!sender || sender.cs !== false)) playStamp(seat, m.stamp);
+      if (seat >= 0 && $('netCharRecvChk').checked && (!sender || sender.cs !== false)) playStamp(seat, m.stamp, sender && Number.isInteger(sender.voice) ? sender.voice : undefined);
     } else beep(880, 0.06, 'sine', 0.05);
   },
   /** 参加者を席順に（ホストが先、あとは入った順） */
@@ -157,9 +157,9 @@ const Online = {
     const total = Math.min(MAX_MEMBERS, Math.max(S.total, ms.length));
     const roster = Array.from({ length: total }, (_, i) => {
       const m = ms[i];
-      if (m) return { uid: m.uid, name: m.name, cpu: 0, hair: m.hair, color: m.color, bonus: m.bonus || 0, cs: m.cs !== false };
+      if (m) return { ...cleanLook(m, defaultProfile(i)), uid: m.uid, name: m.name, cpu: 0, bonus: m.bonus || 0, cs: m.cs !== false };
       const pr = PROFILES[i];
-      return { uid: '', name: pr.name.trim() || CPU_NAMES[(i - 1 + CPU_NAMES.length) % CPU_NAMES.length], cpu: 1, hair: pr.hair, color: pr.color, bonus: 0, cs: true };
+      return { ...cleanLook(pr, defaultProfile(i)), uid: '', name: pr.name.trim() || CPU_NAMES[(i - 1 + CPU_NAMES.length) % CPU_NAMES.length], cpu: 1, bonus: 0, cs: true };
     });
     const set = { code: this.code, rule: S.rule, cpu: S.cpu, diff: S.diff, safe: $('safeChk').checked, feint: $('feintChk').checked };
     await D.remove(this.r('ev'));
@@ -252,7 +252,7 @@ function myMember() {
   PROFILES[0].name = name;
   saveSettings();
   const pr = PROFILES[0];
-  return { name, hair: pr.hair, color: pr.color, bonus: pr.bonus || 0, cs: $('netCharSendChk').checked };
+  return { ...cleanLook(pr, defaultProfile(0)), name, bonus: pr.bonus || 0, cs: $('netCharSendChk').checked };
 }
 function showOnlineEntry() {
   $('onEntry').hidden = false;
@@ -309,7 +309,7 @@ function renderChat() {
 function sendStamp(label) {
   if (!Online.sendChat({ stamp: label })) return;
   const seat = Online.seatOf(Online.ctx.uid);
-  if (seat >= 0) playStamp(seat, label);
+  if (seat >= 0) playStamp(seat, label, PROFILES[0].voice);
   if (Online.begun && seat >= 0) showBubble(seat, label);
 }
 function sendText(input) {
