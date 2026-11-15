@@ -360,9 +360,10 @@ $('onJoin').addEventListener('click', (e) => withBusy(e.currentTarget, async () 
   renderLobby();
 }));
 $('onLeave').addEventListener('click', () => Online.leave());
+$('onQr').addEventListener('click', () => showQR(`部屋 ${Online.code} に招待`, `${appUrl()}?room=${Online.code}`));
 $('onStart').addEventListener('click', (e) => withBusy(e.currentTarget, () => Online.startGame()));
 $('onShare').addEventListener('click', () => {
-  const url = `${location.origin}${location.pathname}?room=${Online.code}`;
+  const url = `${appUrl()}?room=${Online.code}`;
   const done = () => onMsg('招待リンクをコピーしました。LINEなどで送ってください。');
   if (navigator.share) navigator.share({ title: 'ちんちん侍', text: `部屋番号 ${Online.code} で待ってる！`, url }).catch(() => {});
   else if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => onMsg(url));
