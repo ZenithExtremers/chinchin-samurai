@@ -341,6 +341,30 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 .pad button.call { border-color: var(--accent); }
 .pad button.react { border-color: var(--gold); }
 .pad button.picked { background: var(--accent); color: var(--accent-ink); }
+/* ===== 新しい対戦画面（お試し） ===== */
+/* 7. 押した手ごたえ：押した瞬間に色が付いて、ふわっと戻る */
+.newui .pad button { transition: transform .08s; }
+.newui .pad button:active { transform: scale(.93); }
+.newui .pad button.hit { animation: hit .35s ease-out; }
+@keyframes hit { 0% { background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 6px rgba(179,38,30,.25); } 100% { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); } }
+.newui .pad button.react.hit { animation-name: hitgold; }
+@keyframes hitgold { 0% { background: var(--gold); color: #fff; box-shadow: 0 0 0 6px rgba(201,154,46,.3); } 100% { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); } }
+.newui .pad button.picked { animation: none; }
+.newui .seat.tapped .avatar { animation: tapped .25s ease-out; }
+@keyframes tapped { 40% { transform: scale(.92); } }
+/* 8. 残り時間：太く、少なくなったら赤く点滅 */
+.newui .timer { height: 10px; border-radius: 5px; }
+.newui .timer > div { background: linear-gradient(90deg, var(--gold), #e2b54a); border-radius: 5px; transition: background .2s; }
+.newui .timer.low > div { background: var(--accent); animation: lowblink .35s steps(2) infinite; }
+@keyframes lowblink { 50% { opacity: .35; } }
+/* 9. 自分の席：光る輪と「あなた」の帯 */
+.newui .seat.bottom .avatar::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 3px solid var(--you); opacity: .55; pointer-events: none; }
+.newui .seat.bottom .name::before { content: "あなた"; display: inline-block; margin-right: 4px; padding: 0 6px; border-radius: 6px; background: var(--you); color: #fff; font-size: 11px; vertical-align: 2px; }
+.newui .seat.bottom.anata .name::before { display: none; } /* 名前が「あなた」なら帯は出さない */
+@media (prefers-reduced-motion: reduce) {
+  .newui .pad button.hit, .newui .seat.tapped .avatar { animation: none; }
+  .newui .timer.low > div { animation: none; }
+}
 .voicebox { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; text-align: center; box-shadow: var(--shadow); }
 .mic { font-size: 15px; font-weight: bold; }
 .mic .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
@@ -461,6 +485,10 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
     <div class="card">
     <h2>演出</h2>
     <div class="toggles">
+      <div class="row">
+        <label for="newuiChk">新しい対戦画面（お試し）<small>ボタンを押した手ごたえ（光る・振動）、残り時間が少ないと赤く点滅、自分の席に「あなた」</small></label>
+        <input type="checkbox" id="newuiChk" checked>
+      </div>
       <div class="row">
         <label for="ttsChk">セリフの音声を出す</label>
         <input type="checkbox" id="ttsChk" checked>
@@ -712,9 +740,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.8.1"></script>
-<script src="voices.js?v=1.8.1"></script>
-<script src="qrcode.js?v=1.8.1"></script>
+<script src="firebase-config.js?v=1.9.0"></script>
+<script src="voices.js?v=1.9.0"></script>
+<script src="qrcode.js?v=1.9.0"></script>
 <script>
 'use strict';
 
@@ -772,9 +800,20 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.8.1";
+const APP_VERSION = "1.9.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.9.0",
+  "2026-11-15",
+  "対戦画面の見た目（お試し）",
+  [
+   "新しい対戦画面（お試し）：設定の「新しい対戦画面（お試し）」でオンオフできる（最初はオン）",
+   "言葉ボタンを押した瞬間に光って、対応している端末は少し振動する。席をタップしたときも軽く反応",
+   "残り時間のバーを太くして、残りが少なくなったら赤く点滅",
+   "自分の席に光る輪と「あなた」の帯"
+  ]
+ ],
  [
   "1.8.1",
   "2026-11-15",
@@ -1178,7 +1217,7 @@ const seatVoice = (i) => {
 
 function buildSeats() {
   $('seats').innerHTML = S.players.map((p, i) => `
-    <div class="seat ${p.cpu ? '' : 'human'} ${i === (online() ? NET.me : 0) ? 'bottom' : ''}" data-i="${i}" style="left:${SEAT_POS[i][0]}%;top:${SEAT_POS[i][1]}%">
+    <div class="seat ${p.cpu ? '' : 'human'} ${i === (online() ? NET.me : 0) ? 'bottom' : ''} ${p.name === 'あなた' ? 'anata' : ''}" data-i="${i}" style="left:${SEAT_POS[i][0]}%;top:${SEAT_POS[i][1]}%">
       <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
@@ -1189,6 +1228,7 @@ function buildSeats() {
     el.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       const i = +el.dataset.i;
+      feel(el, 'tapped');
       // 親（人間）が自分のアイコンに触れたら、フリックで指す
       if (S.phase === 'call' && isMine(S.oya) && i === S.oya && S.pendingTarget == null) return startFlick(e);
       seatAction(i);
@@ -1322,7 +1362,8 @@ function tickTimer() {
   if (S.phase === 'call' || S.phase === 'respond') {
     const left = Math.max(0, S.deadline - performance.now());
     bar.style.width = (left / S.barMs * 100) + '%';
-  } else bar.style.width = '0';
+    bar.parentNode.classList.toggle('low', left < S.barMs * 0.2);
+  } else { bar.style.width = '0'; bar.parentNode.classList.remove('low'); }
   requestAnimationFrame(tickTimer);
 }
 
@@ -2130,8 +2171,19 @@ function applySwipeMode() {
 }
 
 /* ================= 入力：ボタン ================= */
+/** 押した手ごたえ（新しい対戦画面のときだけ）：光らせて、対応している端末は少し振動 */
+function feel(el, cls = 'hit') {
+  if (!document.body.classList.contains('newui')) return;
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  clearTimeout(el._feel); el._feel = setTimeout(() => el.classList.remove(cls), 400);
+  try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* noop */ }
+}
 document.querySelectorAll('#pad button').forEach((b) => {
-  b.addEventListener('pointerdown', (e) => { e.preventDefault(); humanSay(b.dataset.w, 'button'); });
+  b.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    feel(b);
+    humanSay(b.dataset.w, 'button');
+  });
 });
 
 /* ================= 入力：音声 ================= */
@@ -2579,7 +2631,7 @@ segInit('ruleSeg', (v) => {
 
 /** 設定を覚えておく（次に開いたときも同じ設定） */
 const SEGS = { modeSeg: 'mode', totalSeg: 'total', ruleSeg: 'rule', cpuSeg: 'cpu', diffSeg: 'diff' };
-const CHECKS = ['safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'swipeChk', 'netCharSendChk', 'netCharRecvChk', 'netLiveSendChk', 'netLiveRecvChk'];
+const CHECKS = ['newuiChk', 'safeChk', 'ttsChk', 'movieChk', 'feintChk', 'guideChk', 'bgmChk', 'swipeChk', 'netCharSendChk', 'netCharRecvChk', 'netLiveSendChk', 'netLiveRecvChk'];
 function saveSettings() {
   const v = { profiles: PROFILES };
   Object.entries(SEGS).forEach(([id, key]) => { v[key] = String(S[key]); });
@@ -2609,6 +2661,10 @@ document.querySelectorAll('#title .seg button').forEach((b) => b.addEventListene
 CHECKS.forEach((id) => $(id).addEventListener('change', saveSettings));
 
 restoreSettings();
+// 新しい対戦画面（お試し）
+const applyNewUi = () => document.body.classList.toggle('newui', $('newuiChk').checked);
+$('newuiChk').addEventListener('change', applyNewUi);
+applyNewUi();
 renderPlist();
 renderSlots();
 // 版とパッチノート
@@ -2668,6 +2724,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.8.1"></script>
+<script src="online.js?v=1.9.0"></script>
 </body>
 </html>
