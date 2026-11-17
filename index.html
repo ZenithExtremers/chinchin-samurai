@@ -220,7 +220,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   background: var(--panel); border-top: 2px solid var(--accent); box-shadow: 0 -6px 18px rgba(0,0,0,.18); }
 .stampsheet .stamps { gap: 8px; }
 .stampsheet .stamps button { padding: 12px 10px; font-size: 15px; }
-.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 0 0 14px;
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 0 0 14px;
   padding: 6px 0; background: var(--bg); }
 .tabs button { padding: 10px 0; border: none; border-bottom: 3px solid var(--line); background: none; font-size: 15px; font-weight: bold; color: var(--muted); cursor: pointer; }
 .tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
@@ -535,6 +535,39 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
 .coach { background: var(--panel); background-image: var(--washi); border: 2px solid var(--you); border-radius: 8px; padding: 8px 10px; margin: 4px 0 6px; font-size: 15px; font-weight: 800; line-height: 1.5; text-align: center; white-space: pre-line; }
 .coach.warn { border-color: var(--accent); color: var(--accent); }
 .coach[hidden] { display: none; }
+/* ================= 1.14.0：称号 ================= */
+.ttl { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 4px; font-size: 12px; font-weight: 800; line-height: 1.6; vertical-align: 2px;
+  color: #fff; background: var(--gold); box-shadow: 0 0 0 1px rgba(255,255,255,.4) inset; white-space: nowrap; }
+.mytitle { text-align: center; font-size: 13px; color: var(--muted); margin: 4px 0 0; min-height: 1em; }
+.seatttl { font-size: 10px; font-weight: 800; color: var(--gold); white-space: nowrap; line-height: 1.2; }
+.titleeq { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.titleeq .ttl { font-size: 16px; padding: 2px 12px; margin: 0; }
+.titleeq .ghost-btn { width: auto; margin: 0; padding: 6px 14px; }
+.tgroup { font-size: 15px; font-weight: 800; color: var(--sumi); margin: 14px 0 6px; }
+.tgroup:first-child { margin-top: 0; }
+.tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tcard { position: relative; text-align: left; border: 2px solid var(--line); border-radius: 6px; background: var(--seat); padding: 8px 8px 6px; font-family: inherit; color: var(--muted); cursor: default; }
+.tcard b { display: block; font-size: 15px; font-weight: 800; margin-top: 2px; }
+.tcard small { display: block; font-size: 10.5px; line-height: 1.4; margin-top: 2px; }
+.tcard i { position: absolute; right: 6px; top: 6px; font-style: normal; font-size: 10px; color: var(--muted); }
+.tcard .tr { font-size: 10px; font-weight: 800; padding: 0 5px; border-radius: 3px; color: #fff; background: #aaa; }
+.tcard:disabled { opacity: .55; }
+.tcard.got { color: var(--ink); cursor: pointer; }
+.tcard.eq { box-shadow: 0 0 0 3px var(--accent); }
+.r-b .tr, .ttl.r-b { background: #a8683a; } .tcard.got.r-b { border-color: #a8683a; }
+.r-s .tr, .ttl.r-s { background: #8b98a6; } .tcard.got.r-s { border-color: #8b98a6; }
+.r-g .tr, .ttl.r-g { background: #c39a32; } .tcard.got.r-g { border-color: #c39a32; }
+.r-r .tr, .ttl.r-r { background: linear-gradient(90deg, #e0483d, #e2b54a, #57b386, #4a7bd0, #9a5ad0); } .tcard.got.r-r { border-color: #9a5ad0; }
+.r-m .tr, .ttl.r-m { background: linear-gradient(135deg, #1e1813, #5a3d7a 50%, #c39a32); } .tcard.got.r-m { border-color: #5a3d7a; box-shadow: 0 0 10px rgba(90,61,122,.45); }
+.titletoast { position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 60; transform: translate(-50%, -140%); transition: transform .3s cubic-bezier(.2,1.4,.4,1);
+  background: var(--panel); background-image: var(--washi); border: 3px solid var(--gold); border-radius: 8px; padding: 6px 18px; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,.3); pointer-events: none; }
+.titletoast.show { transform: translate(-50%, 0); }
+.titletoast small { display: block; font-size: 11px; color: var(--muted); font-weight: 800; }
+.titletoast b { font-size: 20px; color: var(--sumi); display: block; max-width: 80vw; line-height: 1.35; }
+.titletoast.r-b { border-color: #a8683a; } .titletoast.r-s { border-color: #8b98a6; } .titletoast.r-r { border-color: #9a5ad0; } .titletoast.r-m { border-color: #5a3d7a; }
+.ovgot { margin: 0 0 10px; }
+.ovgot small { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+.ovgot .ttl { margin: 2px 3px; }
 body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { display: none; }
 </style>
 </head>
@@ -544,11 +577,13 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
 <section class="screen active" id="title">
   <h1>ちんちん侍</h1>
   <p class="sub">言い間違えたら、切腹。</p>
+  <p class="mytitle" id="myTitle"></p>
 
   <nav class="tabs" role="tablist" aria-label="メニュー">
     <button role="tab" data-tab="play" class="on">遊ぶ</button>
     <button role="tab" data-tab="chara">キャラ</button>
     <button role="tab" data-tab="config">設定</button>
+    <button role="tab" data-tab="titles">称号</button>
     <button role="tab" data-tab="info">情報</button>
   </nav>
 
@@ -641,6 +676,15 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
       </div>
     </div>
   </div>
+  </div>
+
+  <div class="tabpanel" id="tab-titles" hidden>
+  <div class="card">
+    <h2>称号 <small id="titleCount"></small></h2>
+    <div class="titleeq" id="titleEq"></div>
+    <p class="note" style="margin:8px 0 0">勝負の中の出来事で称号がとれます（練習・動きを見るは数えません）。装備した称号は、名前と一緒に表示されます。</p>
+  </div>
+  <div class="card" id="titleList"></div>
   </div>
 
   <div class="tabpanel" id="tab-info" hidden>
@@ -771,6 +815,8 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
 
 <!-- ===== スワイプの跡 ===== -->
 <svg class="swipe-trail" id="swipeTrail" aria-hidden="true"><polyline id="swipeLine" points=""></polyline></svg>
+
+<div class="titletoast" id="titleToast" aria-live="polite"></div>
 
 <!-- ===== 遊び方ガイド ===== -->
 <div class="guide" id="guide" hidden role="dialog" aria-label="遊び方ガイド">
@@ -910,6 +956,7 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
       <p class="why" id="ovWhy"></p>
       <div class="cnt" id="ovCnt"><span class="n" id="ovN">0</span><span class="u">回つづいた</span></div>
       <div class="ribbon" id="ovNew" hidden></div>
+      <div class="ovgot" id="ovGot" hidden></div>
       <div class="stats" id="ovStats" hidden></div>
       <div id="ovRank" hidden></div>
     </div>
@@ -926,9 +973,9 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.13.1"></script>
-<script src="voices.js?v=1.13.1"></script>
-<script src="qrcode.js?v=1.13.1"></script>
+<script src="firebase-config.js?v=1.14.0"></script>
+<script src="voices.js?v=1.14.0"></script>
+<script src="qrcode.js?v=1.14.0"></script>
 <script>
 'use strict';
 
@@ -984,9 +1031,21 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.13.1";
+const APP_VERSION = "1.14.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.14.0",
+  "2026-11-17",
+  "称号",
+  [
+   "称号を追加（44個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
+   "新しく「称号」タブ：とった称号と、とり方の一覧。タップで1つ装備できる",
+   "装備した称号は、タイトル画面・対戦中の名前の下・オンラインの参加者一覧・結果画面に出る（オンラインでは相手にも見える）",
+   "称号をとったら画面の上にお知らせ。結果画面にも、その勝負でとった称号が並ぶ",
+   "1人で遊ぶときもオンラインでも数える（練習・動きを見るでは数えない）"
+  ]
+ ],
  [
   "1.13.1",
   "2026-11-15",
@@ -1401,7 +1460,7 @@ function setupPlayers() {
     const human = i < S.humans;
     const name = PROFILES[i].name.trim() || defaultName(i);
     const old = prev[i];
-    return { name, cpu: !human, sep: old && old.name === name ? old.sep : 0 };
+    return { name, cpu: !human, sep: old && old.name === name ? old.sep : 0, title: human ? myTitle() : '' };
   });
 }
 
@@ -1479,7 +1538,7 @@ function buildSeats() {
       <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
-      <div class="name">${esc(p.name)}</div>
+      <div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl">${esc(p.title)}</div>` : ''}
       <div class="score" id="sc${i}"></div>
     </div>`).join('');
   document.querySelectorAll('.seat').forEach((el) => {
@@ -1833,7 +1892,7 @@ function resetBoard(text, revive) {
   dropChinHold();
   $('overlay').classList.remove('show');
   $('cut').classList.remove('show', 'fade');
-  if (revive) S.players.forEach((_, i) => seatEl(i).classList.remove('dead'));
+  if (revive) { S.players.forEach((_, i) => seatEl(i).classList.remove('dead')); titleStart(); }
   $('centerWord').textContent = text;
   drawArrow(null, null, true);
   lastArrow = null;
@@ -1871,6 +1930,7 @@ function makeCall(p, word, target) {
   S.call = { from: p, word, target };
   S.combo++;
   if (S.train) trainCall(p, word, target);
+  titleCall(p, target);
   setCenter(word);
   drawArrow(p, target);
   beep(word === W.CS ? 660 : 520, 0.08);
@@ -1907,6 +1967,7 @@ function say(p, word, target, byVoice = false) {
   const hurried = isHurried();
   if (shouldPlay(p)) playLine(p, word, hurried);
   emitFx({ t: 'say', p, w: word, h: hurried });
+  titleSay(p, word);
 
   if (S.phase === 'call') {
     if (p !== S.oya) return seppuku(p, `親じゃないのに「${word}」と言ってしまった（お手つき）`);
@@ -1965,6 +2026,7 @@ function seppuku(p, why) {
     const left = aliveList();
     if (left.length <= 1 || (S.cpuSafe && !left.some(isHuman))) {
       info.title = '決着';
+      info.wn = left.length === 1 ? left[0] : -1; // 勝った人の席
       info.win = left.length === 1 ? `${nameOf(left[0])} の勝ち！` : 'CPUの勝ち';
     } else {
       info.final = false;
@@ -1981,6 +2043,7 @@ function seppuku(p, why) {
 }
 /** 切腹の演出（ホストもゲストも同じ）：止まる → 間 → 斬られる → 結果 */
 function seppukuFx(info) {
+  titleSep(info);
   const p = info.p;
   setHint('');
   flash(p, 'caught');
@@ -2004,7 +2067,9 @@ function renderResult(info) {
   $('ovWin').hidden = !info.win;
   $('ovWin').textContent = info.win || '';
   $('ovAv').innerHTML = S.players[p] ? seatAvatar(p) : '';
-  $('ovWho').textContent = info.who;
+  $('ovWho').innerHTML = esc(info.who) + titleChip(S.players[p] && S.players[p].title);
+  $('ovGot').hidden = !gameGot.length;
+  $('ovGot').innerHTML = gameGot.length ? `<small>新しい称号</small>${gameGot.map((id) => `<span class="ttl r-${TITLE_BY[id].r}">${esc(TITLE_BY[id].name)}</span>`).join('')}` : '';
   $('ovSep').textContent = info.final ? `切腹 ${info.sep || 1}回目` : '脱落';
   $('ovWhy').textContent = info.why;
   $('ovCnt').hidden = !info.final;
@@ -2088,6 +2153,7 @@ function netApplyEvent(e) {
   switch (e.t) {
     case 'say':
       if (e.p !== NET.me) { showBubble(e.p, e.w); if (shouldPlay(e.p)) playLine(e.p, e.w, e.h); }
+      titleSay(e.p, e.w);
       break;
     case 'bub':
       showBubble(e.p, e.s);
@@ -2095,7 +2161,7 @@ function netApplyEvent(e) {
       break;
     case 'fl': flash(e.p, e.c); break;
     case 'ar':
-      if (e.f < 0) { lastArrow = null; $('arrowLine').setAttribute('opacity', 0); } else drawArrow(e.f, e.to);
+      if (e.f < 0) { lastArrow = null; $('arrowLine').setAttribute('opacity', 0); } else { drawArrow(e.f, e.to); titleCall(e.f, e.to); }
       break;
     case 'cw': $('centerWord').textContent = e.s; break;
     case 'reset': resetBoard(e.s, e.rv); break;
@@ -2148,7 +2214,7 @@ function netBegin({ roster, set, me, role }) {
   S.rule = set.rule; S.cpu = set.cpu; S.diff = set.diff; S.cpuSafe = !!set.safe; S.feint = !!set.feint;
   S.humans = roster.filter((r) => !r.cpu).length;
   S.players = roster.map((r) => ({
-    name: r.name, cpu: !!r.cpu, bot: !!r.cpu, sep: 0, look: cleanLook(r, defaultProfile(0)), voice: cleanLook(r, defaultProfile(0)).voice, bonus: r.bonus || 0, cs: r.cs !== false,
+    name: r.name, title: r.title || '', cpu: !!r.cpu, bot: !!r.cpu, sep: 0, look: cleanLook(r, defaultProfile(0)), voice: cleanLook(r, defaultProfile(0)).voice, bonus: r.bonus || 0, cs: r.cs !== false,
   }));
   S.tts = $('ttsChk').checked; S.movie = $('movieChk').checked; S.guide = $('guideChk').checked;
   S.alive = new Set(S.players.map((_, i) => i));
@@ -3075,6 +3141,254 @@ function trainMiss(p, why) {
   coach(`✕ ${why}\n${fix}`, true);
 }
 
+/* ================= 称号（1.14.0） ================= */
+// レア度：銅・銀・金・虹・神話。hidden は取るまで名前も条件も「？？？」
+const RARITY = { b: '銅', s: '銀', g: '金', r: '虹', m: '神話' };
+const TITLE_GROUPS = ['継続・連続成功', '実力・テクニック', '失敗・不運', '珍プレー', '激レア・伝説', '隠し称号'];
+const TITLES = [
+  ['c5', '五連撃', 'b', 0, '自分の番を5回つづけて成功'],
+  ['c10', '十人十色', 'b', 0, '自分の番を10回つづけて成功'],
+  ['c20', '二十面相', 's', 0, '自分の番を20回つづけて成功'],
+  ['c30', '三十六計', 's', 0, '自分の番を30回つづけて成功'],
+  ['c50', '不撓不屈', 'g', 0, '自分の番を50回つづけて成功'],
+  ['c100', '百戦錬磨', 'g', 0, '自分の番を100回つづけて成功'],
+  ['c200', '剣豪', 'r', 0, '自分の番を200回つづけて成功'],
+  ['c500', '剣聖', 'r', 0, '自分の番を500回つづけて成功'],
+  ['c1000', '神話の侍', 'm', 0, '自分の番を1000回つづけて成功'],
+  ['first', '初陣', 'b', 1, '初めて成功する'],
+  ['win10', '十勝無敗', 's', 1, '勝負に10回勝つ（自分が切腹しないで終わる）'],
+  ['fast3', '神速', 's', 1, '「ちんちん侍」で3回つづけて一番に返す'],
+  ['fast5', '韋駄天', 'g', 1, '「ちんちん侍」で5回つづけて一番に返す'],
+  ['last1', '天下無双', 'g', 1, 'デスマッチで最後の一人まで生き残る'],
+  ['comeback', '起死回生', 's', 1, '切腹した次の勝負で勝つ'],
+  ['clean', '明鏡止水', 'g', 1, '一度も間違えず、1回の勝負で10回以上成功して勝つ'],
+  ['schemer', '策士', 's', 1, '自分が指した相手が切腹して勝つ'],
+  ['allwords', '心眼', 'g', 1, '1回の勝負で6つの言葉（ちんちん・おちんちん・侍・ちんちん侍・びろーん・シャキーン）を全部成功させる'],
+  ['miss1', '初心者侍', 'b', 2, '初めて切腹する'],
+  ['opening', '開幕介錯', 's', 2, '勝負が始まってすぐ（0回目）に切腹'],
+  ['lose3', '三日天下', 's', 2, '3回つづけて勝負に負ける'],
+  ['lose5', '迷将', 'g', 2, '5回つづけて勝負に負ける'],
+  ['alone', '孤独な敗者', 'b', 2, '「ちんちん侍」で自分だけ間に合わない'],
+  ['breaker', '空気破壊神', 's', 2, '20回以上つづいていたのに切腹して終わらせる'],
+  ['glory', '一瞬の栄光', 's', 2, '30回以上つづけていた成功を、1回のミスで失う'],
+  ['flying', 'フライング侍', 'b', 3, '自分の番じゃないのに言ってしまう（お手つき）'],
+  ['forgot', '記憶喪失', 'b', 3, '指されたのに、返事を言えずに時間切れ'],
+  ['statue', '石像', 'b', 3, '親なのに、言葉が出ずに時間切れ'],
+  ['gonosen', '後の先', 's', 3, '「ちんちん侍」で一番最後に返して間に合う（3人以上）'],
+  ['heretic', '異端児', 's', 3, '「ちんちん侍」で一人だけ違う言葉を言う'],
+  ['farmer', '帰農', 's', 3, '一度も言葉を言わないまま勝負が終わる'],
+  ['nolearn', '学習能力ゼロ', 's', 3, '同じ種類のミス（お手つき・時間切れ・言い間違い）を3回つづける'],
+  ['ws10', '天下人', 'g', 4, '10連勝'],
+  ['ws20', '征夷大将軍', 'r', 4, '20連勝'],
+  ['ws50', '伝説の剣豪', 'r', 4, '50連勝'],
+  ['ws100', '生ける伝説', 'm', 4, '100連勝'],
+  ['oneeye', '独眼竜', 'r', 4, 'デスマッチで、ほかの全員を自分が指して脱落させて勝つ'],
+  ['collector', '称号コレクター', 'g', 4, '1日に称号を10個とる'],
+  ['regular', '常連浪人', 's', 4, '1日に5回以上切腹する'],
+  ['kiwami', 'ちんちん侍・極', 'm', 4, 'ほかの称号を全部とる'],
+  ['voice10', '声帯の剣豪', 'g', 5, '親で「侍」を10回つづけて言う', 1],
+  ['wanted', '指名手配', 's', 5, '1回の勝負で、ほかの全員から指される', 1],
+  ['timestop', '時を止めし者', 'g', 5, '親になって5秒以上たってから言葉を言う', 1],
+  ['fallen', '栄光の終焉', 's', 5, '称号をとった、その勝負の中で切腹する', 1],
+].map(([id, name, r, g, cond, hidden]) => ({ id, name, r, g, cond, hidden: !!hidden }));
+const TITLE_BY = Object.fromEntries(TITLES.map((t) => [t.id, t]));
+const TITLE_KEY = 'chinchin-samurai-titles-v1';
+const TT = (() => {
+  const v = loadJSON(TITLE_KEY) || {};
+  return { got: v.got || {}, eq: v.eq || '', st: v.st || {}, day: v.day || {} };
+})();
+const saveTitles = () => saveJSON(TITLE_KEY, { got: TT.got, eq: TT.eq, st: TT.st, day: TT.day });
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+function dayStat() { if (TT.day.d !== today()) TT.day = { d: today(), gets: 0, miss: 0 }; return TT.day; }
+/** 装備している称号の名前（なければ空） */
+const myTitle = () => (TT.eq && TT.got[TT.eq] && TITLE_BY[TT.eq] ? TITLE_BY[TT.eq].name : '');
+const titleChip = (name) => (name ? `<span class="ttl">${esc(name)}</span>` : '');
+
+/** 称号をとる */
+const gameGot = []; // この勝負でとった称号（結果画面に出す）
+function award(id) {
+  if (TT.got[id] || !TITLE_BY[id]) return;
+  TT.got[id] = today();
+  gameGot.push(id);
+  G.gotAt = G.gotAt || Date.now();
+  const d = dayStat(); d.gets++;
+  saveTitles();
+  titleToast(TITLE_BY[id]);
+  if (d.gets >= 10) award('collector');
+  if (TITLES.every((t) => t.id === 'kiwami' || TT.got[t.id])) award('kiwami');
+  renderTitles();
+}
+let toastList = [], toastTimer = null;
+/** 称号獲得のお知らせ。同時にとった称号は1枚にまとめる */
+function titleToast(t) {
+  toastList.push(t);
+  const el = $('titleToast');
+  const top = toastList.reduce((a, x) => ('bsgrm'.indexOf(x.r) > 'bsgrm'.indexOf(a.r) ? x : a)); // いちばんレアな色
+  el.className = `titletoast r-${top.r} show`;
+  el.innerHTML = toastList.length === 1
+    ? `<small>称号獲得！ ${RARITY[t.r]}</small><b>${esc(t.name)}</b>`
+    : `<small>称号を${toastList.length}つ獲得！</small><b>${toastList.map((x) => esc(x.name)).join('・')}</b>`;
+  if (toastList.length === 1) { beep(990, 0.08, 'triangle', 0.05); setTimeout(() => beep(1320, 0.1, 'triangle', 0.05), 90); }
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.remove('show'); toastList = []; }, 2600);
+}
+
+/* --- 判定：ゲームの出来事（1人・オンラインのホスト・ゲスト共通）から --- */
+const meSeat = () => (online() ? NET.me : 0);
+const counting = () => !S.train && S.players && S.players[meSeat()] && !S.players[meSeat()].bot;
+let G = {}; // 1回の勝負の中の記録
+let round = null; // 「ちんちん侍」の返事の順番
+let pending = null; // 自分の発言が成功だったかの確定待ち
+let lastAt = 0; // 最後に何か起きた時刻（時を止めし者）
+/** 勝負が始まった */
+function titleStart() {
+  if (!counting()) return;
+  G = { says: 0, ok: 0, miss: false, words: new Set(), pointedBy: new Set(), lastCall: null, causes: [], gotAt: 0 };
+  gameGot.length = 0;
+  round = null; pending = null; lastAt = Date.now();
+}
+/** 誰かが言った */
+function titleSay(p, w) {
+  if (!counting()) return;
+  const now = Date.now(), gap = now - lastAt;
+  lastAt = now;
+  const alive = S.alive ? S.alive.size : S.players.length;
+  if (w === W.CS) {
+    if (!round) round = { from: p, resp: [], n: alive };
+    else if (!round.resp.includes(p)) {
+      round.resp.push(p);
+      if (round.resp.length >= round.n) { csDone(round); round = null; }
+    }
+  } else round = null;
+  if (p !== meSeat()) return;
+  G.says++;
+  const isCall = CALLS.includes(w) && !(w === W.CS && round && round.from !== p);
+  if (pending) commit();
+  pending = { w, isCall, gap, t: setTimeout(commit, 700) };
+}
+/** 自分の発言が切腹にならなかった＝成功 */
+function commit() {
+  if (!pending) return;
+  const { w, isCall, gap } = pending;
+  clearTimeout(pending.t); pending = null;
+  const st = TT.st;
+  st.streak = (st.streak || 0) + 1;
+  G.ok++; G.words.add(w);
+  award('first');
+  [[5, 'c5'], [10, 'c10'], [20, 'c20'], [30, 'c30'], [50, 'c50'], [100, 'c100'], [200, 'c200'], [500, 'c500'], [1000, 'c1000']]
+    .forEach(([n, id]) => { if (st.streak >= n) award(id); });
+  if (G.words.size >= 6) award('allwords');
+  if (isCall) {
+    st.samu = w === W.SAMU ? (st.samu || 0) + 1 : 0;
+    if (st.samu >= 10) award('voice10');
+    if (gap >= 5000) award('timestop');
+  }
+  saveTitles();
+}
+/** 「ちんちん侍」が全員そろった */
+function csDone(r) {
+  const me = meSeat(), st = TT.st;
+  if (!r.resp.includes(me)) return;
+  if (r.resp[0] === me) { st.fast = (st.fast || 0) + 1; if (st.fast >= 3) award('fast3'); if (st.fast >= 5) award('fast5'); } else st.fast = 0;
+  if (r.n >= 3 && r.resp[r.resp.length - 1] === me) award('gonosen');
+  saveTitles();
+}
+/** 親が誰かを指した */
+function titleCall(p, target) {
+  if (!counting() || target == null) return;
+  lastAt = Date.now();
+  G.lastCall = { p, target };
+  if (target === meSeat() && p !== meSeat()) {
+    G.pointedBy.add(p);
+    if (G.pointedBy.size >= S.players.length - 1 && S.players.length >= 3) award('wanted');
+  }
+}
+/** 切腹（info.final＝勝負がついた） */
+function titleSep(info) {
+  if (!counting()) return;
+  const me = meSeat(), st = TT.st, p = info.p, why = info.why || '';
+  // 誰のせいで切腹したか（自分が指した相手が失敗したか）
+  const byMe = G.lastCall && G.lastCall.p === me && G.lastCall.target === p;
+  G.causes.push({ p, byMe });
+  if (p === me) {
+    if (pending) { clearTimeout(pending.t); pending = null; }
+    const lost = st.streak || 0;
+    st.streak = 0; st.samu = 0; st.fast = 0;
+    G.miss = true; G.lost = true;
+    const d = dayStat(); d.miss++;
+    award('miss1');
+    if (lost >= 30) award('glory');
+    if ((info.combo || 0) === 0) award('opening');
+    if ((info.combo || 0) >= 20) award('breaker');
+    if (/お手つき/.test(why)) award('flying');
+    if (/言えなかった（時間切れ）/.test(why)) award('forgot');
+    if (/親なのに言葉が出なかった/.test(why)) award('statue');
+    if (/「ちんちん侍」のところを/.test(why)) award('heretic');
+    if (round && /時間切れ/.test(why) && round.resp.length >= round.n - 1 && !round.resp.includes(me)) award('alone');
+    const kind = /お手つき/.test(why) ? 'f' : /時間切れ/.test(why) ? 't' : 'w';
+    st.kinds = [...(st.kinds || []), kind].slice(-3);
+    if (st.kinds.length === 3 && st.kinds.every((k) => k === kind)) award('nolearn');
+    if (d.miss >= 5) award('regular');
+    if (G.gotAt) award('fallen');
+  } else if (pending) commit();
+  round = null;
+  if (info.final) gameEnd(info);
+  saveTitles();
+}
+function gameEnd(info) {
+  const me = meSeat(), st = TT.st;
+  const win = !G.lost && (info.wn == null || info.wn < 0 || info.wn === me);
+  if (G.says === 0) award('farmer');
+  if (win) {
+    st.wins = (st.wins || 0) + 1;
+    st.ws = (st.ws || 0) + 1;
+    if (st.lostLast) award('comeback');
+    st.lostLast = false; st.ls = 0;
+    if (st.wins >= 10) award('win10');
+    [[10, 'ws10'], [20, 'ws20'], [50, 'ws50'], [100, 'ws100']].forEach(([n, id]) => { if (st.ws >= n) award(id); });
+    if (!G.miss && G.ok >= 10) award('clean');
+    if (G.causes.some((c) => c.byMe)) award('schemer');
+    if (death() && info.wn === me) {
+      award('last1');
+      if (G.causes.length >= 2 && G.causes.every((c) => c.byMe)) award('oneeye');
+    }
+  } else {
+    st.ws = 0; st.lostLast = true;
+    st.ls = (st.ls || 0) + 1;
+    if (st.ls >= 3) award('lose3');
+    if (st.ls >= 5) award('lose5');
+  }
+}
+
+/* --- 称号タブ --- */
+function renderTitles() {
+  if (!$('titleList')) return;
+  const n = TITLES.filter((t) => TT.got[t.id]).length;
+  $('titleCount').textContent = `${n} / ${TITLES.length}`;
+  $('titleEq').innerHTML = myTitle() ? `${titleChip(myTitle())}<button class="ghost-btn" id="titleOff">外す</button>` : '<span class="note">まだ装備していません。とった称号をタップすると装備できます</span>';
+  if ($('titleOff')) $('titleOff').addEventListener('click', () => equipTitle(''));
+  $('titleList').innerHTML = TITLE_GROUPS.map((g, gi) => `<h3 class="tgroup">${g}</h3><div class="tgrid">${TITLES.filter((t) => t.g === gi).map((t) => {
+    const got = !!TT.got[t.id];
+    const secret = t.hidden && !got;
+    return `<button class="tcard r-${t.r} ${got ? 'got' : ''} ${TT.eq === t.id ? 'eq' : ''}" data-id="${t.id}" ${got ? '' : 'disabled'}>
+      <span class="tr">${RARITY[t.r]}</span><b>${secret ? '？？？' : esc(t.name)}</b><small>${secret ? '隠し称号' : esc(t.cond)}</small>
+      ${got ? `<i>${TT.eq === t.id ? '装備中' : TT.got[t.id]}</i>` : ''}</button>`;
+  }).join('')}</div>`).join('');
+  $('titleList').querySelectorAll('.tcard.got').forEach((b) => b.addEventListener('click', () => equipTitle(TT.eq === b.dataset.id ? '' : b.dataset.id)));
+  $('myTitle').innerHTML = myTitle() ? `称号 ${titleChip(myTitle())}` : '';
+}
+function equipTitle(id) {
+  TT.eq = id;
+  saveTitles();
+  renderTitles();
+  // 待合室にいるなら、みんなにも見えるように
+  if (typeof Online !== 'undefined' && Online.code && Online.me && !Online.begun) {
+    Online.me.title = myTitle();
+    Online.ctx.D.update(Online.r(`members/${Online.ctx.uid}`), { title: myTitle() }).catch(() => {});
+  }
+}
+renderTitles();
+
 /* ================= 画面遷移 ================= */
 function segInit(id, apply) {
   $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
@@ -3249,6 +3563,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.13.1"></script>
+<script src="online.js?v=1.14.0"></script>
 </body>
 </html>
