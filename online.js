@@ -489,6 +489,7 @@ document.addEventListener('pointerdown', (e) => {
 function sendStamp(label) {
   if (stampBlocked(label)) return;
   if (!Online.sendChat({ stamp: label })) return;
+  if (Online.begun) titleStamp();
   const seat = Online.seatOf(Online.ctx.uid);
   if (seat >= 0 && !outOfPlay(seat)) playStamp(seat, label, PROFILES[0].voice);
   if (Online.begun && seat >= 0) showBubble(seat, label);

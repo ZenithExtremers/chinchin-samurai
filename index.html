@@ -1048,12 +1048,13 @@ const PATCH_NOTES = [
   "2026-11-17",
   "称号",
   [
-   "称号を追加（46個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
+   "称号を追加（61個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
    "新しく「称号」タブ：とった称号と、とり方の一覧。タップで1つ装備できる",
    "装備した称号は、タイトル画面・対戦中の名前の下・オンラインの参加者一覧・結果画面に出る（オンラインでは相手にも見える）",
    "称号をとったら画面の上にお知らせ。結果画面にも、その勝負でとった称号が並ぶ",
    "1人で遊ぶときもオンラインでも数える（練習・動きを見るでは数えない）",
-   "隠し称号「ゲーミング侍」だけは、札がゲーミングPCみたいに虹色に光る"
+   "隠し称号「ゲーミング侍」だけは、札がゲーミングPCみたいに虹色に光る",
+   "親のとき、言葉を言う前なら、指す人を選び直せるように"
   ]
  ],
  [
@@ -2430,6 +2431,7 @@ function humanSay(word, source) {
 }
 /** 席をタップ（またはフリック）したとき：ゲストはホストに送る */
 function seatAction(i) {
+  titleRepoint(i);
   if (isGuest()) { NET.send({ k: 'tap', i }); return; }
   onSeatTap(i, online() ? NET.me : undefined);
 }
@@ -2444,7 +2446,7 @@ function onSeatTap(i, actor) {
   }
   const ctl = actor === undefined ? isHuman(S.oya) : S.oya === actor;
   if (S.phase !== 'call' || !ctl || i === S.oya || !isAlive(i)) return;
-  if (S.pendingTarget != null) return;
+  if (S.pendingTarget != null && (S.pendingWord || S.pendingTarget === i)) return; // 言葉を言う前なら、指す人を選び直せる
   S.pendingTarget = i;
   if (S.pendingWord) return makeCall(S.oya, S.pendingWord, i);
   refreshSeats();
@@ -2874,6 +2876,7 @@ function renderEditor() {
     const k = box.dataset.k;
     const num = ['voice', 'skin', 'color'].includes(k);
     PROFILES[editSeat][k] = num ? +b.dataset.v : b.dataset.v;
+    if (k !== 'voice') award('koromogae');
     if (k === 'voice') playStamp(editSeat, 'ちんちん侍！', PROFILES[editSeat].voice); // 選んだ声を試し聞き
     saveSettings();
     renderEditor();
@@ -3174,6 +3177,10 @@ const TITLES = [
   ['clean', '明鏡止水', 'g', 1, '一度も間違えず、1回の勝負で10回以上成功して勝つ'],
   ['schemer', '策士', 's', 1, '自分が指した相手が切腹して勝つ'],
   ['ittou', '一足一刀', 'b', 1, '勝負の一番最初に「侍」で指して、その相手を切腹させる'],
+  ['iai', '居合の達人', 's', 1, '指されてから0.5秒以内に返す'],
+  ['kaeshi', '返し刀', 'b', 1, '指してきた人を、そのまま指し返す'],
+  ['kaeriuchi', '返り討ち', 'g', 1, '自分を指してきた人を、次の番で指して切腹させる'],
+  ['kagemusha', '影武者', 's', 1, '1回の勝負で、一度も指されずに勝つ'],
   ['allwords', '心眼', 'g', 1, '1回の勝負で6つの言葉（ちんちん・おちんちん・侍・ちんちん侍・びろーん・シャキーン）を全部成功させる'],
   ['miss1', '初心者侍', 'b', 2, '初めて切腹する'],
   ['opening', '開幕介錯', 's', 2, '勝負が始まってすぐ（0回目）に切腹'],
@@ -3186,6 +3193,8 @@ const TITLES = [
   ['forgot', '記憶喪失', 'b', 3, '指されたのに、返事を言えずに時間切れ'],
   ['statue', '石像', 'b', 3, '親なのに、言葉が出ずに時間切れ'],
   ['gonosen', '後の先', 's', 3, '「ちんちん侍」で一番最後に返して間に合う（3人以上）'],
+  ['chinhell', 'ちんちん地獄', 's', 3, '親で「ちんちん」を5回つづけて言う'],
+  ['koromogae', '衣替え', 'b', 3, 'キャラの見た目を変える'],
   ['heretic', '異端児', 's', 3, '「ちんちん侍」で一人だけ違う言葉を言う'],
   ['farmer', '帰農', 's', 3, '一度も言葉を言わないまま勝負が終わる'],
   ['nolearn', '学習能力ゼロ', 's', 3, '同じ種類のミス（お手つき・時間切れ・言い間違い）を3回つづける'],
@@ -3193,6 +3202,11 @@ const TITLES = [
   ['ws20', '征夷大将軍', 'r', 4, '20連勝'],
   ['ws50', '伝説の剣豪', 'r', 4, '50連勝'],
   ['ws100', '生ける伝説', 'm', 4, '100連勝'],
+  ['hitori', '一人上手', 's', 4, 'デスマッチ6人で、CPU5人を相手に勝つ'],
+  ['kaikin', '皆勤賞', 'g', 4, '7日つづけて遊ぶ'],
+  ['senkyaku', '千客万来', 's', 4, 'オンラインで6人そろって遊ぶ'],
+  ['enkai', '宴会部長', 's', 4, '1回の勝負の間に定型文を10回送る'],
+  ['hostmyouri', 'ホスト冥利', 'b', 4, '自分が作った部屋で10回勝負する'],
   ['oneeye', '独眼竜', 'r', 4, 'デスマッチで、ほかの全員を自分が指して脱落させて勝つ'],
   ['collector', '称号コレクター', 'g', 4, '1日に称号を10個とる'],
   ['regular', '常連浪人', 's', 4, '1日に5回以上切腹する'],
@@ -3202,6 +3216,10 @@ const TITLES = [
   ['timestop', '時を止めし者', 'g', 5, '親になって5秒以上たってから言葉を言う', 1],
   ['fallen', '栄光の終焉', 's', 5, '称号をとった、その勝負の中で切腹する', 1],
   ['gaming', 'ゲーミング侍', 'r', 5, '設定画面に2分いる', 1],
+  ['yofukashi', '夜更かし侍', 's', 5, '夜中の2時〜4時に勝負する', 1],
+  ['hayaoki', '早起きは三文の徳', 's', 5, '朝5時〜7時に勝つ', 1],
+  ['kyosei', '去勢', 's', 5, '「おちんちん」で指されたのに「シャキーン」と言う', 1],
+  ['senju', '千手観音', 'g', 5, '親のとき、言葉を言わずに10回人を指し直す（1回の番で）', 1],
 ].map(([id, name, r, g, cond, hidden]) => ({ id, name, r, g, cond, hidden: !!hidden }));
 const TITLE_BY = Object.fromEntries(TITLES.map((t) => [t.id, t]));
 const TITLE_KEY = 'chinchin-samurai-titles-v1';
@@ -3256,7 +3274,20 @@ let lastAt = 0; // 最後に何か起きた時刻（時を止めし者）
 /** 勝負が始まった */
 function titleStart() {
   if (!counting()) return;
-  G = { says: 0, ok: 0, miss: false, words: new Set(), pointedBy: new Set(), lastCall: null, causes: [], gotAt: 0, lastWord: {}, calls: 0, firstCall: null };
+  G = { says: 0, ok: 0, miss: false, words: new Set(), pointedBy: new Set(), lastCall: null, causes: [], gotAt: 0, lastWord: {}, calls: 0, firstCall: null,
+    pointedN: 0, pointer: -1, pointedAt: 0, revenge: -1, stamps: 0, rp: 0, rpTurn: -1, rpLast: -1 };
+  const st = TT.st, h = new Date().getHours(), d = today();
+  if (h >= 2 && h < 4) award('yofukashi');
+  // 皆勤賞：毎日つづけて遊んだ日数
+  if (st.lastDay !== d) {
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    const yd = `${y.getFullYear()}-${y.getMonth() + 1}-${y.getDate()}`;
+    st.dayRun = st.lastDay === yd ? (st.dayRun || 1) + 1 : 1;
+    st.lastDay = d;
+    if (st.dayRun >= 7) award('kaikin');
+  }
+  if (online() && S.players.length === 6 && S.players.every((x) => !x.bot)) award('senkyaku');
+  saveTitles();
   gameGot.length = 0;
   round = null; pending = null; lastAt = Date.now();
 }
@@ -3278,12 +3309,13 @@ function titleSay(p, w) {
   G.says++;
   const isCall = CALLS.includes(w) && !(w === W.CS && round && round.from !== p);
   if (pending) commit();
-  pending = { w, isCall, gap, t: setTimeout(commit, 700) };
+  const quick = !isCall && G.pointedAt && now - G.pointedAt < 500; // 指されてすぐ返した
+  pending = { w, isCall, gap, quick, t: setTimeout(commit, 700) };
 }
 /** 自分の発言が切腹にならなかった＝成功 */
 function commit() {
   if (!pending) return;
-  const { w, isCall, gap } = pending;
+  const { w, isCall, gap, quick } = pending;
   clearTimeout(pending.t); pending = null;
   const st = TT.st;
   st.streak = (st.streak || 0) + 1;
@@ -3292,9 +3324,12 @@ function commit() {
   [[5, 'c5'], [10, 'c10'], [20, 'c20'], [30, 'c30'], [50, 'c50'], [100, 'c100'], [200, 'c200'], [500, 'c500'], [1000, 'c1000']]
     .forEach(([n, id]) => { if (st.streak >= n) award(id); });
   if (G.words.size >= 6) award('allwords');
+  if (quick) award('iai');
   if (isCall) {
     st.samu = w === W.SAMU ? (st.samu || 0) + 1 : 0;
     if (st.samu >= 10) award('voice10');
+    st.chin = w === W.CHIN ? (st.chin || 0) + 1 : 0;
+    if (st.chin >= 5) award('chinhell');
     if (gap >= 5000) award('timestop');
   }
   saveTitles();
@@ -3314,7 +3349,11 @@ function titleCall(p, target) {
   G.lastCall = { p, target };
   G.calls++;
   if (!G.firstCall) G.firstCall = { p, target, word: G.lastWord[p] };
+  if (p === meSeat() && target === G.pointer) { award('kaeshi'); G.revenge = target; } // 指してきた人を指し返した
+  else if (p === meSeat()) G.revenge = -1;
+  if (p === meSeat()) G.pointer = -1; // 指し返せるのは、指された直後の番だけ
   if (target === meSeat() && p !== meSeat()) {
+    G.pointedN++; G.pointer = p; G.pointedAt = Date.now();
     G.pointedBy.add(p);
     if (G.pointedBy.size >= S.players.length - 1 && S.players.length >= 3) award('wanted');
   }
@@ -3328,6 +3367,7 @@ function titleSep(info) {
   G.causes.push({ p, byMe });
   const fc = G.firstCall;
   if (fc && G.calls === 1 && fc.p === me && fc.word === W.SAMU && fc.target === p) award('ittou');
+  if (byMe && G.revenge === p) award('kaeriuchi');
   if (p === me) {
     if (pending) { clearTimeout(pending.t); pending = null; }
     const lost = st.streak || 0;
@@ -3342,6 +3382,7 @@ function titleSep(info) {
     if (/言えなかった（時間切れ）/.test(why)) award('forgot');
     if (/親なのに言葉が出なかった/.test(why)) award('statue');
     if (/「ちんちん侍」のところを/.test(why)) award('heretic');
+    if (/「びろーん」のところを「シャキーン」/.test(why)) award('kyosei');
     if (round && /時間切れ/.test(why) && round.resp.length >= round.n - 1 && !round.resp.includes(me)) award('alone');
     const kind = /お手つき/.test(why) ? 'f' : /時間切れ/.test(why) ? 't' : 'w';
     st.kinds = [...(st.kinds || []), kind].slice(-3);
@@ -3355,6 +3396,7 @@ function titleSep(info) {
 }
 function gameEnd(info) {
   const me = meSeat(), st = TT.st;
+  if (isHost()) { st.hostGames = (st.hostGames || 0) + 1; if (st.hostGames >= 10) award('hostmyouri'); }
   const win = !G.lost && (info.wn == null || info.wn < 0 || info.wn === me);
   if (G.says === 0) award('farmer');
   if (win) {
@@ -3365,6 +3407,10 @@ function gameEnd(info) {
     if (st.wins >= 10) award('win10');
     [[10, 'ws10'], [20, 'ws20'], [50, 'ws50'], [100, 'ws100']].forEach(([n, id]) => { if (st.ws >= n) award(id); });
     if (!G.miss && G.ok >= 10) award('clean');
+    if (G.pointedN === 0) award('kagemusha');
+    const hr = new Date().getHours();
+    if (hr >= 5 && hr < 7) award('hayaoki');
+    if (death() && info.wn === me && S.players.length === 6 && S.players.every((x, i) => i === me || x.cpu)) award('hitori');
     if (G.causes.some((c) => c.byMe)) award('schemer');
     if (death() && info.wn === me) {
       award('last1');
@@ -3376,6 +3422,21 @@ function gameEnd(info) {
     if (st.ls >= 3) award('lose3');
     if (st.ls >= 5) award('lose5');
   }
+}
+
+/** 定型文を送った（オンライン） */
+function titleStamp() {
+  if (!counting() || !G.words) return;
+  G.stamps++;
+  if (G.stamps >= 10) award('enkai');
+}
+/** 親のとき、言葉を言う前に指す人を選んだ（千手観音） */
+function titleRepoint(i) {
+  if (!counting() || !G.words || S.phase !== 'call' || S.oya !== meSeat() || S.pendingWord || i === S.oya) return;
+  if (G.rpTurn !== S.combo) { G.rpTurn = S.combo; G.rp = 0; G.rpLast = -1; }
+  if (i === G.rpLast) return;
+  G.rpLast = i; G.rp++;
+  if (G.rp >= 11) award('senju'); // 最初の1回＋指し直し10回
 }
 
 /* --- 称号タブ --- */
