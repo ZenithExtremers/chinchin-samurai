@@ -576,6 +576,29 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
   linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) border-box; background-size: 100% 100%, 300% 100%; animation: rgb 2.4s linear infinite, rgbglow 2.4s linear infinite; }
 .titletoast.gaming { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) border-box; background-size: 100% 100%, 300% 100%; }
 @media (prefers-reduced-motion: reduce) { .ttl.gaming, .seatttl.gaming, .tcard.gaming, .titletoast.gaming { animation: none; } }
+/* 称号「ちんちん侍」：黒漆に金箔、金の文字に光が走る、朱の印 */
+@keyframes goldsweep { 0% { background-position: 200% 0; } 60%, 100% { background-position: -100% 0; } }
+@keyframes goldglow { 50% { box-shadow: 0 0 14px rgba(232,190,90,.75), 0 0 0 1px #f3d88a inset; } }
+.ttl.shinuchi { position: relative; padding: 1px 12px 1px 10px; border-radius: 3px; letter-spacing: .12em; font-weight: 800;
+  background: radial-gradient(circle at 20% 30%, rgba(243,216,138,.35) 0 .8px, transparent 1.5px) 0 0/19px 13px, radial-gradient(circle at 70% 75%, rgba(243,216,138,.25) 0 .7px, transparent 1.4px) 0 0/29px 17px, linear-gradient(160deg, #2a1f14, #0d0a07 60%, #2a1f14);
+  color: #f3d88a; border: 1px solid #c39a32; box-shadow: 0 0 8px rgba(195,154,50,.55), 0 0 0 1px #f3d88a inset; animation: goldglow 2.6s ease-in-out infinite;
+  text-shadow: 0 0 6px rgba(243,216,138,.6); }
+.ttl.shinuchi::after { content: ""; position: absolute; right: -5px; top: -5px; width: 11px; height: 11px; border-radius: 2px; background: #b3261e; transform: rotate(10deg); box-shadow: 0 0 0 1px #f3d88a; }
+.seatttl.shinuchi { font-size: 11px; letter-spacing: .1em; background: linear-gradient(100deg, #8a6a16 0%, #f3d88a 30%, #fff6d5 45%, #c39a32 60%, #8a6a16 100%) 0 0/200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: goldsweep 3s ease-in-out infinite; filter: drop-shadow(0 0 2px rgba(195,154,50,.6)); }
+.tcard.got.shinuchi { border: 2px solid #c39a32; color: #f1e6d2; overflow: hidden;
+  background: radial-gradient(circle at 12% 30%, rgba(243,216,138,.45) 0 1.2px, transparent 2px) 0 0/37px 29px, radial-gradient(circle at 63% 71%, rgba(243,216,138,.3) 0 .9px, transparent 1.6px) 0 0/23px 31px, radial-gradient(ellipse at 85% 15%, rgba(243,216,138,.18) 0 3px, transparent 6px) 0 0/53px 41px, linear-gradient(160deg, #2a1f14, #0d0a07 60%, #2a1f14);
+  box-shadow: 0 0 12px rgba(195,154,50,.55), 0 0 0 1px #f3d88a inset; animation: goldglow 2.6s ease-in-out infinite; }
+.tcard.got.shinuchi b { font-size: 18px; letter-spacing: .14em; background: linear-gradient(100deg, #8a6a16 0%, #f3d88a 30%, #fff6d5 45%, #c39a32 60%, #8a6a16 100%) 0 0/200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: goldsweep 3s ease-in-out infinite; }
+.tcard.got.shinuchi small, .tcard.got.shinuchi i { color: #c9b48a; }
+.tcard.got.shinuchi small { padding-right: 28px; }
+.tcard.got.shinuchi::after { content: "侍"; position: absolute; right: 8px; bottom: 8px; width: 22px; height: 22px; border-radius: 3px; background: #b3261e; color: #fff; font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; transform: rotate(8deg); box-shadow: 0 0 0 1px #f3d88a; }
+.titletoast.shinuchi { border-color: #c39a32; background: linear-gradient(160deg, #2a1f14, #0d0a07 60%, #2a1f14); box-shadow: 0 0 22px rgba(195,154,50,.7), 0 0 0 1px #f3d88a inset; }
+.titletoast.shinuchi small { color: #c9b48a; }
+.titletoast.shinuchi b { background: linear-gradient(100deg, #8a6a16 0%, #f3d88a 30%, #fff6d5 45%, #c39a32 60%, #8a6a16 100%) 0 0/200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: goldsweep 3s ease-in-out infinite; letter-spacing: .14em; }
+@media (prefers-reduced-motion: reduce) { .ttl.shinuchi, .seatttl.shinuchi, .tcard.got.shinuchi, .tcard.got.shinuchi b, .titletoast.shinuchi b { animation: none; } }
 .ovgot { margin: 0 0 10px; }
 .ovgot small { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
 .ovgot .ttl { margin: 2px 3px; }
@@ -1050,12 +1073,13 @@ const PATCH_NOTES = [
   "2026-11-17",
   "称号",
   [
-   "称号を追加（63個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
+   "称号を追加（46個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
    "新しく「称号」タブ：とった称号と、とり方の一覧。タップで1つ装備できる",
    "装備した称号は、タイトル画面・対戦中の名前の下・オンラインの参加者一覧・結果画面に出る（オンラインでは相手にも見える）",
    "称号をとったら画面の上にお知らせ。結果画面にも、その勝負でとった称号が並ぶ",
    "1人で遊ぶときもオンラインでも数える（練習・動きを見るでは数えない）",
    "隠し称号「ゲーミング侍」だけは、札がゲーミングPCみたいに虹色に光る",
+   "隠し称号「ちんちん侍」だけは、黒漆に金の札で特別な見た目",
    "親のとき、言葉を言う前なら、指す人を選び直せるように",
    "対戦中の名前の下に白い札を敷いて、円相と重なっても読めるように"
   ]
@@ -1552,7 +1576,7 @@ function buildSeats() {
       <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
-      <div class="plate"><div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl${isGaming(p.title) ? ' gaming' : ''}">${esc(p.title)}</div>` : ''}
+      <div class="plate"><div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl${specialOf(p.title)}">${esc(p.title)}</div>` : ''}
       <div class="score" id="sc${i}"></div></div>
     </div>`).join('');
   document.querySelectorAll('.seat').forEach((el) => {
@@ -2083,7 +2107,7 @@ function renderResult(info) {
   $('ovAv').innerHTML = S.players[p] ? seatAvatar(p) : '';
   $('ovWho').innerHTML = esc(info.who) + titleChip(S.players[p] && S.players[p].title);
   $('ovGot').hidden = !gameGot.length;
-  $('ovGot').innerHTML = gameGot.length ? `<small>新しい称号</small>${gameGot.map((id) => `<span class="ttl r-${TITLE_BY[id].r}${id === 'gaming' ? ' gaming' : ''}">${esc(TITLE_BY[id].name)}</span>`).join('')}` : '';
+  $('ovGot').innerHTML = gameGot.length ? `<small>新しい称号</small>${gameGot.map((id) => `<span class="ttl r-${TITLE_BY[id].r}${SPECIAL[id] ? ' ' + SPECIAL[id] : ''}">${esc(TITLE_BY[id].name)}</span>`).join('')}` : '';
   $('ovSep').textContent = info.final ? `切腹 ${info.sep || 1}回目` : '脱落';
   $('ovWhy').textContent = info.why;
   $('ovCnt').hidden = !info.final;
@@ -3162,45 +3186,31 @@ function trainMiss(p, why) {
 const RARITY = { b: '銅', s: '銀', g: '金', r: '虹', m: '神話' };
 const TITLE_GROUPS = ['継続・連続成功', '実力・テクニック', '失敗・不運', '珍プレー', '激レア・伝説', '隠し称号'];
 const TITLES = [
-  ['c5', '五連撃', 'b', 0, '自分の番を5回つづけて成功'],
-  ['c10', '十人十色', 'b', 0, '自分の番を10回つづけて成功'],
-  ['c20', '二十面相', 's', 0, '自分の番を20回つづけて成功'],
-  ['c30', '三十六計', 's', 0, '自分の番を30回つづけて成功'],
-  ['c50', '不撓不屈', 'g', 0, '自分の番を50回つづけて成功'],
   ['c100', '百戦錬磨', 'g', 0, '自分の番を100回つづけて成功'],
-  ['c200', '剣豪', 'r', 0, '自分の番を200回つづけて成功'],
   ['c500', '剣聖', 'r', 0, '自分の番を500回つづけて成功'],
   ['c1000', '神話の侍', 'm', 0, '自分の番を1000回つづけて成功'],
   ['first', '初陣', 'b', 1, '初めて成功する'],
   ['win10', '十勝無敗', 's', 1, '勝負に10回勝つ（自分が切腹しないで終わる）'],
-  ['fast3', '神速', 's', 1, '「ちんちん侍」で3回つづけて一番に返す'],
-  ['fast5', '韋駄天', 'g', 1, '「ちんちん侍」で5回つづけて一番に返す'],
+  ['fast3', '神速', 'g', 1, '「ちんちん侍」で10回つづけて一番に返す'],
   ['last1', '天下無双', 'g', 1, 'デスマッチで最後の一人まで生き残る'],
   ['comeback', '起死回生', 's', 1, '切腹した次の勝負で勝つ'],
   ['clean', '明鏡止水', 'g', 1, '一度も間違えず、1回の勝負で10回以上成功して勝つ'],
-  ['schemer', '策士', 's', 1, '自分が指した相手が切腹して勝つ'],
   ['ittou', '一足一刀', 'b', 1, '勝負の一番最初に「侍」で指して、その相手を切腹させる'],
-  ['iai', '居合の達人', 's', 1, '指されてから0.5秒以内に返す'],
   ['kaeshi', '返し刀', 'b', 1, '指してきた人を、そのまま指し返す'],
   ['kaeriuchi', '返り討ち', 'g', 1, '自分を指してきた人を、次の番で指して切腹させる'],
   ['kagemusha', '影武者', 's', 1, '1回の勝負で、一度も指されずに勝つ'],
   ['allwords', '心眼', 'g', 1, '1回の勝負で6つの言葉（ちんちん・おちんちん・侍・ちんちん侍・びろーん・シャキーン）を全部成功させる'],
   ['miss1', '初心者侍', 'b', 2, '初めて切腹する'],
   ['opening', '開幕介錯', 's', 2, '勝負が始まってすぐ（0回目）に切腹'],
-  ['lose3', '三日天下', 's', 2, '3回つづけて勝負に負ける'],
-  ['lose5', '迷将', 'g', 2, '5回つづけて勝負に負ける'],
+  ['lose3', '不屈', 's', 2, '10回つづけて勝負に負ける'],
   ['alone', '孤独な敗者', 'b', 2, '「ちんちん侍」で自分だけ間に合わない'],
-  ['breaker', '空気破壊神', 's', 2, '20回以上つづいていたのに切腹して終わらせる'],
   ['glory', '一瞬の栄光', 's', 2, '30回以上つづけていた成功を、1回のミスで失う'],
   ['flying', 'フライング侍', 'b', 3, '自分の番じゃないのに言ってしまう（お手つき）'],
-  ['forgot', '記憶喪失', 'b', 3, '指されたのに、返事を言えずに時間切れ'],
-  ['statue', '石像', 'b', 3, '親なのに、言葉が出ずに時間切れ'],
   ['gonosen', '後の先', 's', 3, '「ちんちん侍」で一番最後に返して間に合う（3人以上）'],
   ['chinhell', 'ちんちん地獄', 's', 3, '親で「ちんちん」を5回つづけて言う'],
   ['koromogae', '衣替え', 'b', 3, 'キャラの見た目を変える'],
   ['heretic', '異端児', 's', 3, '「ちんちん侍」で一人だけ違う言葉を言う'],
   ['farmer', '帰農', 's', 3, '一度も言葉を言わないまま勝負が終わる'],
-  ['nolearn', '学習能力ゼロ', 's', 3, '同じ種類のミス（お手つき・時間切れ・言い間違い）を3回つづける'],
   ['ws10', '天下人', 'g', 4, '10連勝'],
   ['ws20', '征夷大将軍', 'r', 4, '20連勝'],
   ['ws50', '伝説の剣豪', 'r', 4, '50連勝'],
@@ -3211,13 +3221,9 @@ const TITLES = [
   ['enkai', '宴会部長', 's', 4, '1回の勝負の間に定型文を10回送る'],
   ['hostmyouri', 'ホスト冥利', 'b', 4, '自分が作った部屋で10回勝負する'],
   ['oneeye', '独眼竜', 'r', 4, 'デスマッチで、ほかの全員を自分が指して脱落させて勝つ'],
-  ['collector', '称号コレクター', 'g', 4, '1日に称号を10個とる'],
-  ['regular', '常連浪人', 's', 4, '1日に5回以上切腹する'],
   ['kiwami', 'ちんちん侍・極', 'm', 4, 'ほかの称号を全部とる'],
   ['voice10', '声帯の剣豪', 'g', 5, '親で「侍」を10回つづけて言う', 1],
   ['wanted', '指名手配', 's', 5, '1回の勝負で、ほかの全員から指される', 1],
-  ['timestop', '時を止めし者', 'g', 5, '親になって5秒以上たってから言葉を言う', 1],
-  ['fallen', '栄光の終焉', 's', 5, '称号をとった、その勝負の中で切腹する', 1],
   ['gaming', 'ゲーミング侍', 'r', 5, '設定画面に2分いる', 1],
   ['yofukashi', '夜更かし侍', 's', 5, '夜中の2時〜4時に勝負する', 1],
   ['hayaoki', '早起きは三文の徳', 's', 5, '朝5時〜7時に勝つ', 1],
@@ -3225,6 +3231,7 @@ const TITLES = [
   ['senju', '千手観音', 'g', 5, '親のとき、言葉を言わずに10回人を指し直す（1回の番で）', 1],
   ['reisho', '冷笑', 'b', 5, '定型文「うおw」を合計100回送る', 1],
   ['daimyojin', 'ちんちん大明神', 'm', 5, '親で「ちんちん」を50回つづけて言う（ほかの言葉を言うか、切腹したら0から）', 1],
+  ['shinuchi', 'ちんちん侍', 'm', 5, '親で「ちんちん侍」を50回つづけて言う（ほかの言葉を言うか、切腹したら0から）', 1],
 ].map(([id, name, r, g, cond, hidden]) => ({ id, name, r, g, cond, hidden: !!hidden }));
 const TITLE_BY = Object.fromEntries(TITLES.map((t) => [t.id, t]));
 const TITLE_KEY = 'chinchin-samurai-titles-v1';
@@ -3237,8 +3244,9 @@ const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMo
 function dayStat() { if (TT.day.d !== today()) TT.day = { d: today(), gets: 0, miss: 0 }; return TT.day; }
 /** 装備している称号の名前（なければ空） */
 const myTitle = () => (TT.eq && TT.got[TT.eq] && TITLE_BY[TT.eq] ? TITLE_BY[TT.eq].name : '');
-const isGaming = (name) => name === TITLE_BY.gaming.name;
-const titleChip = (name) => (name ? `<span class="ttl${isGaming(name) ? ' gaming' : ''}">${esc(name)}</span>` : '');
+const SPECIAL = { gaming: 'gaming', shinuchi: 'shinuchi' }; // 見た目が特別な称号
+const specialOf = (name) => { const t = TITLES.find((x) => x.name === name && SPECIAL[x.id]); return t ? ' ' + SPECIAL[t.id] : ''; };
+const titleChip = (name) => (name ? `<span class="ttl${specialOf(name)}">${esc(name)}</span>` : '');
 
 /** 称号をとる */
 const gameGot = []; // この勝負でとった称号（結果画面に出す）
@@ -3250,7 +3258,6 @@ function award(id) {
   const d = dayStat(); d.gets++;
   saveTitles();
   titleToast(TITLE_BY[id]);
-  if (d.gets >= 10) award('collector');
   if (TITLES.every((t) => t.id === 'kiwami' || TT.got[t.id])) award('kiwami');
   renderTitles();
 }
@@ -3260,7 +3267,8 @@ function titleToast(t) {
   toastList.push(t);
   const el = $('titleToast');
   const top = toastList.reduce((a, x) => ('bsgrm'.indexOf(x.r) > 'bsgrm'.indexOf(a.r) ? x : a)); // いちばんレアな色
-  el.className = `titletoast r-${top.r} show${toastList.some((x) => x.id === 'gaming') ? ' gaming' : ''}`;
+  const sp = toastList.find((x) => SPECIAL[x.id]);
+  el.className = `titletoast r-${top.r} show${sp ? ' ' + SPECIAL[sp.id] : ''}`;
   el.innerHTML = toastList.length === 1
     ? `<small>称号獲得！ ${RARITY[t.r]}</small><b>${esc(t.name)}</b>`
     : `<small>称号を${toastList.length}つ獲得！</small><b>${toastList.map((x) => esc(x.name)).join('・')}</b>`;
@@ -3314,29 +3322,28 @@ function titleSay(p, w) {
   G.says++;
   const isCall = CALLS.includes(w) && !(w === W.CS && round && round.from !== p);
   if (pending) commit();
-  const quick = !isCall && G.pointedAt && now - G.pointedAt < 500; // 指されてすぐ返した
-  pending = { w, isCall, gap, quick, t: setTimeout(commit, 700) };
+  pending = { w, isCall, gap, t: setTimeout(commit, 700) };
 }
 /** 自分の発言が切腹にならなかった＝成功 */
 function commit() {
   if (!pending) return;
-  const { w, isCall, gap, quick } = pending;
+  const { w, isCall } = pending;
   clearTimeout(pending.t); pending = null;
   const st = TT.st;
   st.streak = (st.streak || 0) + 1;
   G.ok++; G.words.add(w);
   award('first');
-  [[5, 'c5'], [10, 'c10'], [20, 'c20'], [30, 'c30'], [50, 'c50'], [100, 'c100'], [200, 'c200'], [500, 'c500'], [1000, 'c1000']]
+  [[100, 'c100'], [500, 'c500'], [1000, 'c1000']]
     .forEach(([n, id]) => { if (st.streak >= n) award(id); });
   if (G.words.size >= 6) award('allwords');
-  if (quick) award('iai');
   if (isCall) {
     st.samu = w === W.SAMU ? (st.samu || 0) + 1 : 0;
     if (st.samu >= 10) award('voice10');
     st.chin = w === W.CHIN ? (st.chin || 0) + 1 : 0;
     if (st.chin >= 5) award('chinhell');
     if (st.chin >= 50) award('daimyojin');
-    if (gap >= 5000) award('timestop');
+    st.cs = w === W.CS ? (st.cs || 0) + 1 : 0;
+    if (st.cs >= 50) award('shinuchi');
   }
   saveTitles();
 }
@@ -3344,7 +3351,7 @@ function commit() {
 function csDone(r) {
   const me = meSeat(), st = TT.st;
   if (!r.resp.includes(me)) return;
-  if (r.resp[0] === me) { st.fast = (st.fast || 0) + 1; if (st.fast >= 3) award('fast3'); if (st.fast >= 5) award('fast5'); } else st.fast = 0;
+  if (r.resp[0] === me) { st.fast = (st.fast || 0) + 1; if (st.fast >= 10) award('fast3'); } else st.fast = 0;
   if (r.n >= 3 && r.resp[r.resp.length - 1] === me) award('gonosen');
   saveTitles();
 }
@@ -3377,24 +3384,15 @@ function titleSep(info) {
   if (p === me) {
     if (pending) { clearTimeout(pending.t); pending = null; }
     const lost = st.streak || 0;
-    st.streak = 0; st.samu = 0; st.fast = 0; st.chin = 0;
+    st.streak = 0; st.samu = 0; st.fast = 0; st.chin = 0; st.cs = 0;
     G.miss = true; G.lost = true;
-    const d = dayStat(); d.miss++;
     award('miss1');
     if (lost >= 30) award('glory');
     if ((info.combo || 0) === 0) award('opening');
-    if ((info.combo || 0) >= 20) award('breaker');
     if (/お手つき/.test(why)) award('flying');
-    if (/言えなかった（時間切れ）/.test(why)) award('forgot');
-    if (/親なのに言葉が出なかった/.test(why)) award('statue');
     if (/「ちんちん侍」のところを/.test(why)) award('heretic');
     if (/「びろーん」のところを「シャキーン」/.test(why)) award('kyosei');
     if (round && /時間切れ/.test(why) && round.resp.length >= round.n - 1 && !round.resp.includes(me)) award('alone');
-    const kind = /お手つき/.test(why) ? 'f' : /時間切れ/.test(why) ? 't' : 'w';
-    st.kinds = [...(st.kinds || []), kind].slice(-3);
-    if (st.kinds.length === 3 && st.kinds.every((k) => k === kind)) award('nolearn');
-    if (d.miss >= 5) award('regular');
-    if (G.gotAt) award('fallen');
   } else if (pending) commit();
   round = null;
   if (info.final) gameEnd(info);
@@ -3417,7 +3415,6 @@ function gameEnd(info) {
     const hr = new Date().getHours();
     if (hr >= 5 && hr < 7) award('hayaoki');
     if (death() && info.wn === me && S.players.length === 6 && S.players.every((x, i) => i === me || x.cpu)) award('hitori');
-    if (G.causes.some((c) => c.byMe)) award('schemer');
     if (death() && info.wn === me) {
       award('last1');
       if (G.causes.length >= 2 && G.causes.every((c) => c.byMe)) award('oneeye');
@@ -3425,8 +3422,7 @@ function gameEnd(info) {
   } else {
     st.ws = 0; st.lostLast = true;
     st.ls = (st.ls || 0) + 1;
-    if (st.ls >= 3) award('lose3');
-    if (st.ls >= 5) award('lose5');
+    if (st.ls >= 10) award('lose3');
   }
 }
 
@@ -3457,7 +3453,7 @@ function renderTitles() {
   $('titleList').innerHTML = TITLE_GROUPS.map((g, gi) => `<h3 class="tgroup">${g}</h3><div class="tgrid">${TITLES.filter((t) => t.g === gi).map((t) => {
     const got = !!TT.got[t.id];
     const secret = t.hidden && !got;
-    return `<button class="tcard r-${t.r} ${got ? 'got' : ''} ${got && t.id === 'gaming' ? 'gaming' : ''} ${TT.eq === t.id ? 'eq' : ''}" data-id="${t.id}" ${got ? '' : 'disabled'}>
+    return `<button class="tcard r-${t.r} ${got ? 'got' : ''} ${got && SPECIAL[t.id] ? SPECIAL[t.id] : ''} ${TT.eq === t.id ? 'eq' : ''}" data-id="${t.id}" ${got ? '' : 'disabled'}>
       <span class="tr">${RARITY[t.r]}</span><b>${secret ? '？？？' : esc(t.name)}</b><small>${secret ? '隠し称号' : esc(t.cond)}</small>
       ${got ? `<i>${TT.eq === t.id ? '装備中' : TT.got[t.id]}</i>` : ''}</button>`;
   }).join('')}</div>`).join('');
