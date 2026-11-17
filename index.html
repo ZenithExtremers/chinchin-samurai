@@ -276,7 +276,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   display: flex; align-items: center; justify-content: center; transition: border-color .15s, box-shadow .15s;
 }
 .avatar svg { width: 80%; height: 80%; }
-.seat .name { font-size: 14px; font-weight: bold; margin-top: 3px; white-space: nowrap; }
+.seat .plate { display: flex; flex-direction: column; align-items: center; margin-top: 3px; padding: 1px 8px 2px; border-radius: 8px;
+  background: var(--seat); box-shadow: 0 0 0 1px var(--line), 0 2px 6px rgba(60,40,20,.12); position: relative; z-index: 1; } /* 円相の上でも名前が読めるように */
+.seat .name { font-size: 14px; font-weight: bold; white-space: nowrap; }
 .seat .score { font-size: 11px; color: var(--muted); white-space: nowrap; }
 .seat.human .avatar { border-color: var(--you); }
 .seat.oya .avatar { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(201,154,46,.35), var(--shadow); }
@@ -1048,13 +1050,14 @@ const PATCH_NOTES = [
   "2026-11-17",
   "称号",
   [
-   "称号を追加（61個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
+   "称号を追加（63個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
    "新しく「称号」タブ：とった称号と、とり方の一覧。タップで1つ装備できる",
    "装備した称号は、タイトル画面・対戦中の名前の下・オンラインの参加者一覧・結果画面に出る（オンラインでは相手にも見える）",
    "称号をとったら画面の上にお知らせ。結果画面にも、その勝負でとった称号が並ぶ",
    "1人で遊ぶときもオンラインでも数える（練習・動きを見るでは数えない）",
    "隠し称号「ゲーミング侍」だけは、札がゲーミングPCみたいに虹色に光る",
-   "親のとき、言葉を言う前なら、指す人を選び直せるように"
+   "親のとき、言葉を言う前なら、指す人を選び直せるように",
+   "対戦中の名前の下に白い札を敷いて、円相と重なっても読めるように"
   ]
  ],
  [
@@ -1549,8 +1552,8 @@ function buildSeats() {
       <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
-      <div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl${isGaming(p.title) ? ' gaming' : ''}">${esc(p.title)}</div>` : ''}
-      <div class="score" id="sc${i}"></div>
+      <div class="plate"><div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl${isGaming(p.title) ? ' gaming' : ''}">${esc(p.title)}</div>` : ''}
+      <div class="score" id="sc${i}"></div></div>
     </div>`).join('');
   document.querySelectorAll('.seat').forEach((el) => {
     el.addEventListener('pointerdown', (e) => {
@@ -3220,6 +3223,8 @@ const TITLES = [
   ['hayaoki', '早起きは三文の徳', 's', 5, '朝5時〜7時に勝つ', 1],
   ['kyosei', '去勢', 's', 5, '「おちんちん」で指されたのに「シャキーン」と言う', 1],
   ['senju', '千手観音', 'g', 5, '親のとき、言葉を言わずに10回人を指し直す（1回の番で）', 1],
+  ['reisho', '冷笑', 'b', 5, '定型文「うおw」を合計100回送る', 1],
+  ['daimyojin', 'ちんちん大明神', 'm', 5, '親で「ちんちん」を50回つづけて言う（ほかの言葉を言うか、切腹したら0から）', 1],
 ].map(([id, name, r, g, cond, hidden]) => ({ id, name, r, g, cond, hidden: !!hidden }));
 const TITLE_BY = Object.fromEntries(TITLES.map((t) => [t.id, t]));
 const TITLE_KEY = 'chinchin-samurai-titles-v1';
@@ -3330,6 +3335,7 @@ function commit() {
     if (st.samu >= 10) award('voice10');
     st.chin = w === W.CHIN ? (st.chin || 0) + 1 : 0;
     if (st.chin >= 5) award('chinhell');
+    if (st.chin >= 50) award('daimyojin');
     if (gap >= 5000) award('timestop');
   }
   saveTitles();
@@ -3371,7 +3377,7 @@ function titleSep(info) {
   if (p === me) {
     if (pending) { clearTimeout(pending.t); pending = null; }
     const lost = st.streak || 0;
-    st.streak = 0; st.samu = 0; st.fast = 0;
+    st.streak = 0; st.samu = 0; st.fast = 0; st.chin = 0;
     G.miss = true; G.lost = true;
     const d = dayStat(); d.miss++;
     award('miss1');
@@ -3425,8 +3431,10 @@ function gameEnd(info) {
 }
 
 /** 定型文を送った（オンライン） */
-function titleStamp() {
-  if (!counting() || !G.words) return;
+function titleStamp(label) {
+  // 冷笑：「うおw」は待合室でも結果画面でも数える
+  if (label === 'うおw') { TT.st.uow = (TT.st.uow || 0) + 1; saveTitles(); if (TT.st.uow >= 100) award('reisho'); }
+  if (!Online.begun || !counting() || !G.words) return;
   G.stamps++;
   if (G.stamps >= 10) award('enkai');
 }
