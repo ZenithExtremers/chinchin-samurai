@@ -565,6 +565,15 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
 .titletoast small { display: block; font-size: 11px; color: var(--muted); font-weight: 800; }
 .titletoast b { font-size: 20px; color: var(--sumi); display: block; max-width: 80vw; line-height: 1.35; }
 .titletoast.r-b { border-color: #a8683a; } .titletoast.r-s { border-color: #8b98a6; } .titletoast.r-r { border-color: #9a5ad0; } .titletoast.r-m { border-color: #5a3d7a; }
+/* ゲーミング侍：ゲーミングPCみたいに虹色が流れて光る */
+@keyframes rgb { to { background-position: 300% 0; } }
+@keyframes rgbglow { 0% { box-shadow: 0 0 8px #ff2a6d; } 25% { box-shadow: 0 0 8px #ffd400; } 50% { box-shadow: 0 0 8px #05ffa1; } 75% { box-shadow: 0 0 8px #01c8ff; } 100% { box-shadow: 0 0 8px #ff2a6d; } }
+.ttl.gaming { background: linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) 0 0/300% 100%; animation: rgb 2.4s linear infinite, rgbglow 2.4s linear infinite; text-shadow: 0 1px 2px rgba(0,0,0,.45); }
+.seatttl.gaming { background: linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) 0 0/300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: rgb 2.4s linear infinite; }
+.tcard.got.gaming, .titletoast.gaming { border-color: transparent; background: linear-gradient(var(--seat), var(--seat)) padding-box,
+  linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) border-box; background-size: 100% 100%, 300% 100%; animation: rgb 2.4s linear infinite, rgbglow 2.4s linear infinite; }
+.titletoast.gaming { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) border-box; background-size: 100% 100%, 300% 100%; }
+@media (prefers-reduced-motion: reduce) { .ttl.gaming, .seatttl.gaming, .tcard.gaming, .titletoast.gaming { animation: none; } }
 .ovgot { margin: 0 0 10px; }
 .ovgot small { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
 .ovgot .ttl { margin: 2px 3px; }
@@ -1039,11 +1048,12 @@ const PATCH_NOTES = [
   "2026-11-17",
   "称号",
   [
-   "称号を追加（44個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
+   "称号を追加（46個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
    "新しく「称号」タブ：とった称号と、とり方の一覧。タップで1つ装備できる",
    "装備した称号は、タイトル画面・対戦中の名前の下・オンラインの参加者一覧・結果画面に出る（オンラインでは相手にも見える）",
    "称号をとったら画面の上にお知らせ。結果画面にも、その勝負でとった称号が並ぶ",
-   "1人で遊ぶときもオンラインでも数える（練習・動きを見るでは数えない）"
+   "1人で遊ぶときもオンラインでも数える（練習・動きを見るでは数えない）",
+   "隠し称号「ゲーミング侍」だけは、札がゲーミングPCみたいに虹色に光る"
   ]
  ],
  [
@@ -1538,7 +1548,7 @@ function buildSeats() {
       <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
-      <div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl">${esc(p.title)}</div>` : ''}
+      <div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl${isGaming(p.title) ? ' gaming' : ''}">${esc(p.title)}</div>` : ''}
       <div class="score" id="sc${i}"></div>
     </div>`).join('');
   document.querySelectorAll('.seat').forEach((el) => {
@@ -2069,7 +2079,7 @@ function renderResult(info) {
   $('ovAv').innerHTML = S.players[p] ? seatAvatar(p) : '';
   $('ovWho').innerHTML = esc(info.who) + titleChip(S.players[p] && S.players[p].title);
   $('ovGot').hidden = !gameGot.length;
-  $('ovGot').innerHTML = gameGot.length ? `<small>新しい称号</small>${gameGot.map((id) => `<span class="ttl r-${TITLE_BY[id].r}">${esc(TITLE_BY[id].name)}</span>`).join('')}` : '';
+  $('ovGot').innerHTML = gameGot.length ? `<small>新しい称号</small>${gameGot.map((id) => `<span class="ttl r-${TITLE_BY[id].r}${id === 'gaming' ? ' gaming' : ''}">${esc(TITLE_BY[id].name)}</span>`).join('')}` : '';
   $('ovSep').textContent = info.final ? `切腹 ${info.sep || 1}回目` : '脱落';
   $('ovWhy').textContent = info.why;
   $('ovCnt').hidden = !info.final;
@@ -3163,6 +3173,7 @@ const TITLES = [
   ['comeback', '起死回生', 's', 1, '切腹した次の勝負で勝つ'],
   ['clean', '明鏡止水', 'g', 1, '一度も間違えず、1回の勝負で10回以上成功して勝つ'],
   ['schemer', '策士', 's', 1, '自分が指した相手が切腹して勝つ'],
+  ['ittou', '一足一刀', 'b', 1, '勝負の一番最初に「侍」で指して、その相手を切腹させる'],
   ['allwords', '心眼', 'g', 1, '1回の勝負で6つの言葉（ちんちん・おちんちん・侍・ちんちん侍・びろーん・シャキーン）を全部成功させる'],
   ['miss1', '初心者侍', 'b', 2, '初めて切腹する'],
   ['opening', '開幕介錯', 's', 2, '勝負が始まってすぐ（0回目）に切腹'],
@@ -3190,6 +3201,7 @@ const TITLES = [
   ['wanted', '指名手配', 's', 5, '1回の勝負で、ほかの全員から指される', 1],
   ['timestop', '時を止めし者', 'g', 5, '親になって5秒以上たってから言葉を言う', 1],
   ['fallen', '栄光の終焉', 's', 5, '称号をとった、その勝負の中で切腹する', 1],
+  ['gaming', 'ゲーミング侍', 'r', 5, '設定画面に2分いる', 1],
 ].map(([id, name, r, g, cond, hidden]) => ({ id, name, r, g, cond, hidden: !!hidden }));
 const TITLE_BY = Object.fromEntries(TITLES.map((t) => [t.id, t]));
 const TITLE_KEY = 'chinchin-samurai-titles-v1';
@@ -3202,7 +3214,8 @@ const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMo
 function dayStat() { if (TT.day.d !== today()) TT.day = { d: today(), gets: 0, miss: 0 }; return TT.day; }
 /** 装備している称号の名前（なければ空） */
 const myTitle = () => (TT.eq && TT.got[TT.eq] && TITLE_BY[TT.eq] ? TITLE_BY[TT.eq].name : '');
-const titleChip = (name) => (name ? `<span class="ttl">${esc(name)}</span>` : '');
+const isGaming = (name) => name === TITLE_BY.gaming.name;
+const titleChip = (name) => (name ? `<span class="ttl${isGaming(name) ? ' gaming' : ''}">${esc(name)}</span>` : '');
 
 /** 称号をとる */
 const gameGot = []; // この勝負でとった称号（結果画面に出す）
@@ -3224,7 +3237,7 @@ function titleToast(t) {
   toastList.push(t);
   const el = $('titleToast');
   const top = toastList.reduce((a, x) => ('bsgrm'.indexOf(x.r) > 'bsgrm'.indexOf(a.r) ? x : a)); // いちばんレアな色
-  el.className = `titletoast r-${top.r} show`;
+  el.className = `titletoast r-${top.r} show${toastList.some((x) => x.id === 'gaming') ? ' gaming' : ''}`;
   el.innerHTML = toastList.length === 1
     ? `<small>称号獲得！ ${RARITY[t.r]}</small><b>${esc(t.name)}</b>`
     : `<small>称号を${toastList.length}つ獲得！</small><b>${toastList.map((x) => esc(x.name)).join('・')}</b>`;
@@ -3243,7 +3256,7 @@ let lastAt = 0; // 最後に何か起きた時刻（時を止めし者）
 /** 勝負が始まった */
 function titleStart() {
   if (!counting()) return;
-  G = { says: 0, ok: 0, miss: false, words: new Set(), pointedBy: new Set(), lastCall: null, causes: [], gotAt: 0 };
+  G = { says: 0, ok: 0, miss: false, words: new Set(), pointedBy: new Set(), lastCall: null, causes: [], gotAt: 0, lastWord: {}, calls: 0, firstCall: null };
   gameGot.length = 0;
   round = null; pending = null; lastAt = Date.now();
 }
@@ -3253,6 +3266,7 @@ function titleSay(p, w) {
   const now = Date.now(), gap = now - lastAt;
   lastAt = now;
   const alive = S.alive ? S.alive.size : S.players.length;
+  G.lastWord[p] = w;
   if (w === W.CS) {
     if (!round) round = { from: p, resp: [], n: alive };
     else if (!round.resp.includes(p)) {
@@ -3298,6 +3312,8 @@ function titleCall(p, target) {
   if (!counting() || target == null) return;
   lastAt = Date.now();
   G.lastCall = { p, target };
+  G.calls++;
+  if (!G.firstCall) G.firstCall = { p, target, word: G.lastWord[p] };
   if (target === meSeat() && p !== meSeat()) {
     G.pointedBy.add(p);
     if (G.pointedBy.size >= S.players.length - 1 && S.players.length >= 3) award('wanted');
@@ -3310,6 +3326,8 @@ function titleSep(info) {
   // 誰のせいで切腹したか（自分が指した相手が失敗したか）
   const byMe = G.lastCall && G.lastCall.p === me && G.lastCall.target === p;
   G.causes.push({ p, byMe });
+  const fc = G.firstCall;
+  if (fc && G.calls === 1 && fc.p === me && fc.word === W.SAMU && fc.target === p) award('ittou');
   if (p === me) {
     if (pending) { clearTimeout(pending.t); pending = null; }
     const lost = st.streak || 0;
@@ -3370,7 +3388,7 @@ function renderTitles() {
   $('titleList').innerHTML = TITLE_GROUPS.map((g, gi) => `<h3 class="tgroup">${g}</h3><div class="tgrid">${TITLES.filter((t) => t.g === gi).map((t) => {
     const got = !!TT.got[t.id];
     const secret = t.hidden && !got;
-    return `<button class="tcard r-${t.r} ${got ? 'got' : ''} ${TT.eq === t.id ? 'eq' : ''}" data-id="${t.id}" ${got ? '' : 'disabled'}>
+    return `<button class="tcard r-${t.r} ${got ? 'got' : ''} ${got && t.id === 'gaming' ? 'gaming' : ''} ${TT.eq === t.id ? 'eq' : ''}" data-id="${t.id}" ${got ? '' : 'disabled'}>
       <span class="tr">${RARITY[t.r]}</span><b>${secret ? '？？？' : esc(t.name)}</b><small>${secret ? '隠し称号' : esc(t.cond)}</small>
       ${got ? `<i>${TT.eq === t.id ? '装備中' : TT.got[t.id]}</i>` : ''}</button>`;
   }).join('')}</div>`).join('');
@@ -3513,6 +3531,12 @@ $('notesInline').innerHTML = PATCH_NOTES.map(([v, d, head, items]) => `
   <p class="notes-date">${d}</p>
   <ul class="notes-list">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`).join('');
 // タブ（遊ぶ／キャラ／設定／情報）。最後に開いていたタブを覚えておく
+let gamingSec = 0;
+setInterval(() => {
+  const on = !$('tab-config').hidden && $('title').classList.contains('active') && !document.hidden;
+  gamingSec = on ? gamingSec + 1 : 0;
+  if (gamingSec >= 120) award('gaming');
+}, 1000);
 function openTab(name) {
   document.querySelectorAll('.tabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === name); b.setAttribute('aria-selected', b.dataset.tab === name); });
   document.querySelectorAll('.tabpanel').forEach((el) => { el.hidden = el.id !== `tab-${name}`; });
