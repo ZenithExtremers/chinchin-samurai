@@ -217,7 +217,7 @@ const Online = {
     const total = this.seatCount(ms.length);
     const roster = Array.from({ length: total }, (_, i) => {
       const m = ms[i];
-      if (m) return { ...cleanLook(m, defaultProfile(i)), uid: m.uid, name: m.name, cpu: 0, bonus: m.bonus || 0, cs: m.cs !== false };
+      if (m) return { ...cleanLook(m, defaultProfile(i)), uid: m.uid, name: m.name, title: typeof m.title === 'string' ? m.title.slice(0, 12) : '', cpu: 0, bonus: m.bonus || 0, cs: m.cs !== false };
       const pr = PROFILES[i];
       return { ...cleanLook(pr, defaultProfile(i)), uid: '', name: pr.name.trim() || CPU_NAMES[(i - 1 + CPU_NAMES.length) % CPU_NAMES.length], cpu: 1, bonus: 0, cs: true };
     });
@@ -356,7 +356,7 @@ function myMember() {
   PROFILES[0].name = name;
   saveSettings();
   const pr = PROFILES[0];
-  return { ...cleanLook(pr, defaultProfile(0)), name, bonus: pr.bonus || 0, cs: $('netCharSendChk').checked };
+  return { ...cleanLook(pr, defaultProfile(0)), name, title: myTitle(), bonus: pr.bonus || 0, cs: $('netCharSendChk').checked };
 }
 function showOnlineEntry() {
   $('onEntry').hidden = false;
@@ -380,7 +380,7 @@ function renderLobby() {
   const total = Online.seatCount(ms.length);
   $('onCount').textContent = `${ms.length}人`;
   const away = Online.meta && Online.meta.away;
-  const rows = ms.map((m, i) => `<li>${esc(m.name)}${i === 0 ? '<span class="tag-host">ホスト</span>' : ''}${m.uid === Online.ctx.uid ? '（あなた）' : ''}${i === 0 && away ? '（接続待ち…）' : ''}</li>`);
+  const rows = ms.map((m, i) => `<li>${esc(m.name)}${titleChip(typeof m.title === 'string' ? m.title.slice(0, 12) : '')}${i === 0 ? '<span class="tag-host">ホスト</span>' : ''}${m.uid === Online.ctx.uid ? '（あなた）' : ''}${i === 0 && away ? '（接続待ち…）' : ''}</li>`);
   for (let i = ms.length; i < total; i++) rows.push('<li class="tag-cpu">CPU</li>');
   $('onMembers').innerHTML = rows.join('');
   const host = Online.role === 'host';
@@ -489,6 +489,7 @@ document.addEventListener('pointerdown', (e) => {
 function sendStamp(label) {
   if (stampBlocked(label)) return;
   if (!Online.sendChat({ stamp: label })) return;
+  titleStamp(label);
   const seat = Online.seatOf(Online.ctx.uid);
   if (seat >= 0 && !outOfPlay(seat)) playStamp(seat, label, PROFILES[0].voice);
   if (Online.begun && seat >= 0) showBubble(seat, label);

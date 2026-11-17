@@ -220,7 +220,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   background: var(--panel); border-top: 2px solid var(--accent); box-shadow: 0 -6px 18px rgba(0,0,0,.18); }
 .stampsheet .stamps { gap: 8px; }
 .stampsheet .stamps button { padding: 12px 10px; font-size: 15px; }
-.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 0 0 14px;
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 0 0 14px;
   padding: 6px 0; background: var(--bg); }
 .tabs button { padding: 10px 0; border: none; border-bottom: 3px solid var(--line); background: none; font-size: 15px; font-weight: bold; color: var(--muted); cursor: pointer; }
 .tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
@@ -276,7 +276,9 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
   display: flex; align-items: center; justify-content: center; transition: border-color .15s, box-shadow .15s;
 }
 .avatar svg { width: 80%; height: 80%; }
-.seat .name { font-size: 14px; font-weight: bold; margin-top: 3px; white-space: nowrap; }
+.seat .plate { display: flex; flex-direction: column; align-items: center; margin-top: 3px; padding: 1px 8px 2px; border-radius: 8px;
+  background: var(--seat); box-shadow: 0 0 0 1px var(--line), 0 2px 6px rgba(60,40,20,.12); position: relative; z-index: 1; } /* 円相の上でも名前が読めるように */
+.seat .name { font-size: 14px; font-weight: bold; white-space: nowrap; }
 .seat .score { font-size: 11px; color: var(--muted); white-space: nowrap; }
 .seat.human .avatar { border-color: var(--you); }
 .seat.oya .avatar { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(201,154,46,.35), var(--shadow); }
@@ -535,6 +537,71 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
 .coach { background: var(--panel); background-image: var(--washi); border: 2px solid var(--you); border-radius: 8px; padding: 8px 10px; margin: 4px 0 6px; font-size: 15px; font-weight: 800; line-height: 1.5; text-align: center; white-space: pre-line; }
 .coach.warn { border-color: var(--accent); color: var(--accent); }
 .coach[hidden] { display: none; }
+/* ================= 1.14.0：称号 ================= */
+.ttl { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 4px; font-size: 12px; font-weight: 800; line-height: 1.6; vertical-align: 2px;
+  color: #fff; background: var(--gold); box-shadow: 0 0 0 1px rgba(255,255,255,.4) inset; white-space: nowrap; }
+.mytitle { text-align: center; font-size: 13px; color: var(--muted); margin: 4px 0 0; min-height: 1em; }
+.seatttl { font-size: 10px; font-weight: 800; color: var(--gold); white-space: nowrap; line-height: 1.2; }
+.titleeq { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.titleeq .ttl { font-size: 16px; padding: 2px 12px; margin: 0; }
+.titleeq .ghost-btn { width: auto; margin: 0; padding: 6px 14px; }
+.tgroup { font-size: 15px; font-weight: 800; color: var(--sumi); margin: 14px 0 6px; }
+.tgroup:first-child { margin-top: 0; }
+.tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tcard { position: relative; text-align: left; border: 2px solid var(--line); border-radius: 6px; background: var(--seat); padding: 8px 8px 6px; font-family: inherit; color: var(--muted); cursor: default; }
+.tcard b { display: block; font-size: 15px; font-weight: 800; margin-top: 2px; }
+.tcard small { display: block; font-size: 10.5px; line-height: 1.4; margin-top: 2px; }
+.tcard i { position: absolute; right: 6px; top: 6px; font-style: normal; font-size: 10px; color: var(--muted); }
+.tcard .tr { font-size: 10px; font-weight: 800; padding: 0 5px; border-radius: 3px; color: #fff; background: #aaa; }
+.tcard:disabled { opacity: .55; }
+.tcard.got { color: var(--ink); cursor: pointer; }
+.tcard.eq { box-shadow: 0 0 0 3px var(--accent); }
+.r-b .tr, .ttl.r-b { background: #a8683a; } .tcard.got.r-b { border-color: #a8683a; }
+.r-s .tr, .ttl.r-s { background: #8b98a6; } .tcard.got.r-s { border-color: #8b98a6; }
+.r-g .tr, .ttl.r-g { background: #c39a32; } .tcard.got.r-g { border-color: #c39a32; }
+.r-r .tr, .ttl.r-r { background: linear-gradient(90deg, #e0483d, #e2b54a, #57b386, #4a7bd0, #9a5ad0); } .tcard.got.r-r { border-color: #9a5ad0; }
+.r-m .tr, .ttl.r-m { background: linear-gradient(135deg, #1e1813, #5a3d7a 50%, #c39a32); } .tcard.got.r-m { border-color: #5a3d7a; box-shadow: 0 0 10px rgba(90,61,122,.45); }
+.titletoast { position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 60; transform: translate(-50%, -140%); transition: transform .3s cubic-bezier(.2,1.4,.4,1);
+  background: var(--panel); background-image: var(--washi); border: 3px solid var(--gold); border-radius: 8px; padding: 6px 18px; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,.3); pointer-events: none; }
+.titletoast.show { transform: translate(-50%, 0); }
+.titletoast small { display: block; font-size: 11px; color: var(--muted); font-weight: 800; }
+.titletoast b { font-size: 20px; color: var(--sumi); display: block; max-width: 80vw; line-height: 1.35; }
+.titletoast.r-b { border-color: #a8683a; } .titletoast.r-s { border-color: #8b98a6; } .titletoast.r-r { border-color: #9a5ad0; } .titletoast.r-m { border-color: #5a3d7a; }
+/* ゲーミング侍：ゲーミングPCみたいに虹色が流れて光る */
+@keyframes rgb { to { background-position: 300% 0; } }
+@keyframes rgbglow { 0% { box-shadow: 0 0 8px #ff2a6d; } 25% { box-shadow: 0 0 8px #ffd400; } 50% { box-shadow: 0 0 8px #05ffa1; } 75% { box-shadow: 0 0 8px #01c8ff; } 100% { box-shadow: 0 0 8px #ff2a6d; } }
+.ttl.gaming { background: linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) 0 0/300% 100%; animation: rgb 2.4s linear infinite, rgbglow 2.4s linear infinite; text-shadow: 0 1px 2px rgba(0,0,0,.45); }
+.seatttl.gaming { background: linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) 0 0/300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: rgb 2.4s linear infinite; }
+.tcard.got.gaming, .titletoast.gaming { border-color: transparent; background: linear-gradient(var(--seat), var(--seat)) padding-box,
+  linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) border-box; background-size: 100% 100%, 300% 100%; animation: rgb 2.4s linear infinite, rgbglow 2.4s linear infinite; }
+.titletoast.gaming { background: linear-gradient(var(--panel), var(--panel)) padding-box, linear-gradient(90deg, #ff2a6d, #ff8a00, #ffd400, #05ffa1, #01c8ff, #9b5cff, #ff2a6d) border-box; background-size: 100% 100%, 300% 100%; }
+@media (prefers-reduced-motion: reduce) { .ttl.gaming, .seatttl.gaming, .tcard.gaming, .titletoast.gaming { animation: none; } }
+/* 称号「ちんちん侍」：黒漆に金箔、金の文字に光が走る、朱の印 */
+@keyframes goldsweep { 0% { background-position: 200% 0; } 60%, 100% { background-position: -100% 0; } }
+@keyframes goldglow { 50% { box-shadow: 0 0 14px rgba(232,190,90,.75), 0 0 0 1px #f3d88a inset; } }
+.ttl.shinuchi { position: relative; padding: 1px 12px 1px 10px; border-radius: 3px; letter-spacing: .12em; font-weight: 800;
+  background: radial-gradient(circle at 20% 30%, rgba(243,216,138,.35) 0 .8px, transparent 1.5px) 0 0/19px 13px, radial-gradient(circle at 70% 75%, rgba(243,216,138,.25) 0 .7px, transparent 1.4px) 0 0/29px 17px, linear-gradient(160deg, #2a1f14, #0d0a07 60%, #2a1f14);
+  color: #f3d88a; border: 1px solid #c39a32; box-shadow: 0 0 8px rgba(195,154,50,.55), 0 0 0 1px #f3d88a inset; animation: goldglow 2.6s ease-in-out infinite;
+  text-shadow: 0 0 6px rgba(243,216,138,.6); }
+.ttl.shinuchi::after { content: ""; position: absolute; right: -5px; top: -5px; width: 11px; height: 11px; border-radius: 2px; background: #b3261e; transform: rotate(10deg); box-shadow: 0 0 0 1px #f3d88a; }
+.seatttl.shinuchi { font-size: 11px; letter-spacing: .1em; background: linear-gradient(100deg, #8a6a16 0%, #f3d88a 30%, #fff6d5 45%, #c39a32 60%, #8a6a16 100%) 0 0/200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: goldsweep 3s ease-in-out infinite; filter: drop-shadow(0 0 2px rgba(195,154,50,.6)); }
+.tcard.got.shinuchi { border: 2px solid #c39a32; color: #f1e6d2; overflow: hidden;
+  background: radial-gradient(circle at 12% 30%, rgba(243,216,138,.45) 0 1.2px, transparent 2px) 0 0/37px 29px, radial-gradient(circle at 63% 71%, rgba(243,216,138,.3) 0 .9px, transparent 1.6px) 0 0/23px 31px, radial-gradient(ellipse at 85% 15%, rgba(243,216,138,.18) 0 3px, transparent 6px) 0 0/53px 41px, linear-gradient(160deg, #2a1f14, #0d0a07 60%, #2a1f14);
+  box-shadow: 0 0 12px rgba(195,154,50,.55), 0 0 0 1px #f3d88a inset; animation: goldglow 2.6s ease-in-out infinite; }
+.tcard.got.shinuchi b { font-size: 18px; letter-spacing: .14em; background: linear-gradient(100deg, #8a6a16 0%, #f3d88a 30%, #fff6d5 45%, #c39a32 60%, #8a6a16 100%) 0 0/200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: goldsweep 3s ease-in-out infinite; }
+.tcard.got.shinuchi small, .tcard.got.shinuchi i { color: #c9b48a; }
+.tcard.got.shinuchi small { padding-right: 28px; }
+.tcard.got.shinuchi::after { content: "侍"; position: absolute; right: 8px; bottom: 8px; width: 22px; height: 22px; border-radius: 3px; background: #b3261e; color: #fff; font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; transform: rotate(8deg); box-shadow: 0 0 0 1px #f3d88a; }
+.titletoast.shinuchi { border-color: #c39a32; background: linear-gradient(160deg, #2a1f14, #0d0a07 60%, #2a1f14); box-shadow: 0 0 22px rgba(195,154,50,.7), 0 0 0 1px #f3d88a inset; }
+.titletoast.shinuchi small { color: #c9b48a; }
+.titletoast.shinuchi b { background: linear-gradient(100deg, #8a6a16 0%, #f3d88a 30%, #fff6d5 45%, #c39a32 60%, #8a6a16 100%) 0 0/200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: goldsweep 3s ease-in-out infinite; letter-spacing: .14em; }
+@media (prefers-reduced-motion: reduce) { .ttl.shinuchi, .seatttl.shinuchi, .tcard.got.shinuchi, .tcard.got.shinuchi b, .titletoast.shinuchi b { animation: none; } }
+.ovgot { margin: 0 0 10px; }
+.ovgot small { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+.ovgot .ttl { margin: 2px 3px; }
 body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { display: none; }
 </style>
 </head>
@@ -544,11 +611,13 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
 <section class="screen active" id="title">
   <h1>ちんちん侍</h1>
   <p class="sub">言い間違えたら、切腹。</p>
+  <p class="mytitle" id="myTitle"></p>
 
   <nav class="tabs" role="tablist" aria-label="メニュー">
     <button role="tab" data-tab="play" class="on">遊ぶ</button>
     <button role="tab" data-tab="chara">キャラ</button>
     <button role="tab" data-tab="config">設定</button>
+    <button role="tab" data-tab="titles">称号</button>
     <button role="tab" data-tab="info">情報</button>
   </nav>
 
@@ -641,6 +710,15 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
       </div>
     </div>
   </div>
+  </div>
+
+  <div class="tabpanel" id="tab-titles" hidden>
+  <div class="card">
+    <h2>称号 <small id="titleCount"></small></h2>
+    <div class="titleeq" id="titleEq"></div>
+    <p class="note" style="margin:8px 0 0">勝負の中の出来事で称号がとれます（練習・動きを見るは数えません）。装備した称号は、名前と一緒に表示されます。</p>
+  </div>
+  <div class="card" id="titleList"></div>
   </div>
 
   <div class="tabpanel" id="tab-info" hidden>
@@ -771,6 +849,8 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
 
 <!-- ===== スワイプの跡 ===== -->
 <svg class="swipe-trail" id="swipeTrail" aria-hidden="true"><polyline id="swipeLine" points=""></polyline></svg>
+
+<div class="titletoast" id="titleToast" aria-live="polite"></div>
 
 <!-- ===== 遊び方ガイド ===== -->
 <div class="guide" id="guide" hidden role="dialog" aria-label="遊び方ガイド">
@@ -910,6 +990,7 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
       <p class="why" id="ovWhy"></p>
       <div class="cnt" id="ovCnt"><span class="n" id="ovN">0</span><span class="u">回つづいた</span></div>
       <div class="ribbon" id="ovNew" hidden></div>
+      <div class="ovgot" id="ovGot" hidden></div>
       <div class="stats" id="ovStats" hidden></div>
       <div id="ovRank" hidden></div>
     </div>
@@ -926,9 +1007,9 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.13.1"></script>
-<script src="voices.js?v=1.13.1"></script>
-<script src="qrcode.js?v=1.13.1"></script>
+<script src="firebase-config.js?v=1.14.0"></script>
+<script src="voices.js?v=1.14.0"></script>
+<script src="qrcode.js?v=1.14.0"></script>
 <script>
 'use strict';
 
@@ -984,9 +1065,25 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.13.1";
+const APP_VERSION = "1.14.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.14.0",
+  "2026-11-17",
+  "称号",
+  [
+   "称号を追加（46個）。勝負の中の出来事でとれる。レア度は銅・銀・金・虹・神話。取るまで名前も分からない隠し称号もある",
+   "新しく「称号」タブ：とった称号と、とり方の一覧。タップで1つ装備できる",
+   "装備した称号は、タイトル画面・対戦中の名前の下・オンラインの参加者一覧・結果画面に出る（オンラインでは相手にも見える）",
+   "称号をとったら画面の上にお知らせ。結果画面にも、その勝負でとった称号が並ぶ",
+   "1人で遊ぶときもオンラインでも数える（練習・動きを見るでは数えない）",
+   "隠し称号「ゲーミング侍」だけは、札がゲーミングPCみたいに虹色に光る",
+   "隠し称号「ちんちん侍」だけは、黒漆に金の札で特別な見た目",
+   "親のとき、言葉を言う前なら、指す人を選び直せるように",
+   "対戦中の名前の下に白い札を敷いて、円相と重なっても読めるように"
+  ]
+ ],
  [
   "1.13.1",
   "2026-11-15",
@@ -1401,7 +1498,7 @@ function setupPlayers() {
     const human = i < S.humans;
     const name = PROFILES[i].name.trim() || defaultName(i);
     const old = prev[i];
-    return { name, cpu: !human, sep: old && old.name === name ? old.sep : 0 };
+    return { name, cpu: !human, sep: old && old.name === name ? old.sep : 0, title: human ? myTitle() : '' };
   });
 }
 
@@ -1479,8 +1576,8 @@ function buildSeats() {
       <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
-      <div class="name">${esc(p.name)}</div>
-      <div class="score" id="sc${i}"></div>
+      <div class="plate"><div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl${specialOf(p.title)}">${esc(p.title)}</div>` : ''}
+      <div class="score" id="sc${i}"></div></div>
     </div>`).join('');
   document.querySelectorAll('.seat').forEach((el) => {
     el.addEventListener('pointerdown', (e) => {
@@ -1833,7 +1930,7 @@ function resetBoard(text, revive) {
   dropChinHold();
   $('overlay').classList.remove('show');
   $('cut').classList.remove('show', 'fade');
-  if (revive) S.players.forEach((_, i) => seatEl(i).classList.remove('dead'));
+  if (revive) { S.players.forEach((_, i) => seatEl(i).classList.remove('dead')); titleStart(); }
   $('centerWord').textContent = text;
   drawArrow(null, null, true);
   lastArrow = null;
@@ -1871,6 +1968,7 @@ function makeCall(p, word, target) {
   S.call = { from: p, word, target };
   S.combo++;
   if (S.train) trainCall(p, word, target);
+  titleCall(p, target);
   setCenter(word);
   drawArrow(p, target);
   beep(word === W.CS ? 660 : 520, 0.08);
@@ -1907,6 +2005,7 @@ function say(p, word, target, byVoice = false) {
   const hurried = isHurried();
   if (shouldPlay(p)) playLine(p, word, hurried);
   emitFx({ t: 'say', p, w: word, h: hurried });
+  titleSay(p, word);
 
   if (S.phase === 'call') {
     if (p !== S.oya) return seppuku(p, `親じゃないのに「${word}」と言ってしまった（お手つき）`);
@@ -1965,6 +2064,7 @@ function seppuku(p, why) {
     const left = aliveList();
     if (left.length <= 1 || (S.cpuSafe && !left.some(isHuman))) {
       info.title = '決着';
+      info.wn = left.length === 1 ? left[0] : -1; // 勝った人の席
       info.win = left.length === 1 ? `${nameOf(left[0])} の勝ち！` : 'CPUの勝ち';
     } else {
       info.final = false;
@@ -1981,6 +2081,7 @@ function seppuku(p, why) {
 }
 /** 切腹の演出（ホストもゲストも同じ）：止まる → 間 → 斬られる → 結果 */
 function seppukuFx(info) {
+  titleSep(info);
   const p = info.p;
   setHint('');
   flash(p, 'caught');
@@ -2004,7 +2105,9 @@ function renderResult(info) {
   $('ovWin').hidden = !info.win;
   $('ovWin').textContent = info.win || '';
   $('ovAv').innerHTML = S.players[p] ? seatAvatar(p) : '';
-  $('ovWho').textContent = info.who;
+  $('ovWho').innerHTML = esc(info.who) + titleChip(S.players[p] && S.players[p].title);
+  $('ovGot').hidden = !gameGot.length;
+  $('ovGot').innerHTML = gameGot.length ? `<small>新しい称号</small>${gameGot.map((id) => `<span class="ttl r-${TITLE_BY[id].r}${SPECIAL[id] ? ' ' + SPECIAL[id] : ''}">${esc(TITLE_BY[id].name)}</span>`).join('')}` : '';
   $('ovSep').textContent = info.final ? `切腹 ${info.sep || 1}回目` : '脱落';
   $('ovWhy').textContent = info.why;
   $('ovCnt').hidden = !info.final;
@@ -2088,6 +2191,7 @@ function netApplyEvent(e) {
   switch (e.t) {
     case 'say':
       if (e.p !== NET.me) { showBubble(e.p, e.w); if (shouldPlay(e.p)) playLine(e.p, e.w, e.h); }
+      titleSay(e.p, e.w);
       break;
     case 'bub':
       showBubble(e.p, e.s);
@@ -2095,7 +2199,7 @@ function netApplyEvent(e) {
       break;
     case 'fl': flash(e.p, e.c); break;
     case 'ar':
-      if (e.f < 0) { lastArrow = null; $('arrowLine').setAttribute('opacity', 0); } else drawArrow(e.f, e.to);
+      if (e.f < 0) { lastArrow = null; $('arrowLine').setAttribute('opacity', 0); } else { drawArrow(e.f, e.to); titleCall(e.f, e.to); }
       break;
     case 'cw': $('centerWord').textContent = e.s; break;
     case 'reset': resetBoard(e.s, e.rv); break;
@@ -2148,7 +2252,7 @@ function netBegin({ roster, set, me, role }) {
   S.rule = set.rule; S.cpu = set.cpu; S.diff = set.diff; S.cpuSafe = !!set.safe; S.feint = !!set.feint;
   S.humans = roster.filter((r) => !r.cpu).length;
   S.players = roster.map((r) => ({
-    name: r.name, cpu: !!r.cpu, bot: !!r.cpu, sep: 0, look: cleanLook(r, defaultProfile(0)), voice: cleanLook(r, defaultProfile(0)).voice, bonus: r.bonus || 0, cs: r.cs !== false,
+    name: r.name, title: r.title || '', cpu: !!r.cpu, bot: !!r.cpu, sep: 0, look: cleanLook(r, defaultProfile(0)), voice: cleanLook(r, defaultProfile(0)).voice, bonus: r.bonus || 0, cs: r.cs !== false,
   }));
   S.tts = $('ttsChk').checked; S.movie = $('movieChk').checked; S.guide = $('guideChk').checked;
   S.alive = new Set(S.players.map((_, i) => i));
@@ -2354,6 +2458,7 @@ function humanSay(word, source) {
 }
 /** 席をタップ（またはフリック）したとき：ゲストはホストに送る */
 function seatAction(i) {
+  titleRepoint(i);
   if (isGuest()) { NET.send({ k: 'tap', i }); return; }
   onSeatTap(i, online() ? NET.me : undefined);
 }
@@ -2368,7 +2473,7 @@ function onSeatTap(i, actor) {
   }
   const ctl = actor === undefined ? isHuman(S.oya) : S.oya === actor;
   if (S.phase !== 'call' || !ctl || i === S.oya || !isAlive(i)) return;
-  if (S.pendingTarget != null) return;
+  if (S.pendingTarget != null && (S.pendingWord || S.pendingTarget === i)) return; // 言葉を言う前なら、指す人を選び直せる
   S.pendingTarget = i;
   if (S.pendingWord) return makeCall(S.oya, S.pendingWord, i);
   refreshSeats();
@@ -2798,6 +2903,7 @@ function renderEditor() {
     const k = box.dataset.k;
     const num = ['voice', 'skin', 'color'].includes(k);
     PROFILES[editSeat][k] = num ? +b.dataset.v : b.dataset.v;
+    if (k !== 'voice') award('koromogae');
     if (k === 'voice') playStamp(editSeat, 'ちんちん侍！', PROFILES[editSeat].voice); // 選んだ声を試し聞き
     saveSettings();
     renderEditor();
@@ -3075,6 +3181,297 @@ function trainMiss(p, why) {
   coach(`✕ ${why}\n${fix}`, true);
 }
 
+/* ================= 称号（1.14.0） ================= */
+// レア度：銅・銀・金・虹・神話。hidden は取るまで名前も条件も「？？？」
+const RARITY = { b: '銅', s: '銀', g: '金', r: '虹', m: '神話' };
+const TITLE_GROUPS = ['継続・連続成功', '実力・テクニック', '失敗・不運', '珍プレー', '激レア・伝説', '隠し称号'];
+const TITLES = [
+  ['c100', '百戦錬磨', 'g', 0, '自分の番を100回つづけて成功'],
+  ['c500', '剣聖', 'r', 0, '自分の番を500回つづけて成功'],
+  ['c1000', '神話の侍', 'm', 0, '自分の番を1000回つづけて成功'],
+  ['first', '初陣', 'b', 1, '初めて成功する'],
+  ['win10', '十勝無敗', 's', 1, '勝負に10回勝つ（自分が切腹しないで終わる）'],
+  ['fast3', '神速', 'g', 1, '「ちんちん侍」で10回つづけて一番に返す'],
+  ['last1', '天下無双', 'g', 1, 'デスマッチで最後の一人まで生き残る'],
+  ['comeback', '起死回生', 's', 1, '切腹した次の勝負で勝つ'],
+  ['clean', '明鏡止水', 'g', 1, '一度も間違えず、1回の勝負で10回以上成功して勝つ'],
+  ['ittou', '一足一刀', 'b', 1, '勝負の一番最初に「侍」で指して、その相手を切腹させる'],
+  ['kaeshi', '返し刀', 'b', 1, '指してきた人を、そのまま指し返す'],
+  ['kaeriuchi', '返り討ち', 'g', 1, '自分を指してきた人を、次の番で指して切腹させる'],
+  ['kagemusha', '影武者', 's', 1, '1回の勝負で、一度も指されずに勝つ'],
+  ['allwords', '心眼', 'g', 1, '1回の勝負で6つの言葉（ちんちん・おちんちん・侍・ちんちん侍・びろーん・シャキーン）を全部成功させる'],
+  ['miss1', '初心者侍', 'b', 2, '初めて切腹する'],
+  ['opening', '開幕介錯', 's', 2, '勝負が始まってすぐ（0回目）に切腹'],
+  ['lose3', '不屈', 's', 2, '10回つづけて勝負に負ける'],
+  ['alone', '孤独な敗者', 'b', 2, '「ちんちん侍」で自分だけ間に合わない'],
+  ['glory', '一瞬の栄光', 's', 2, '30回以上つづけていた成功を、1回のミスで失う'],
+  ['flying', 'フライング侍', 'b', 3, '自分の番じゃないのに言ってしまう（お手つき）'],
+  ['gonosen', '後の先', 's', 3, '「ちんちん侍」で一番最後に返して間に合う（3人以上）'],
+  ['chinhell', 'ちんちん地獄', 's', 3, '親で「ちんちん」を5回つづけて言う'],
+  ['koromogae', '衣替え', 'b', 3, 'キャラの見た目を変える'],
+  ['heretic', '異端児', 's', 3, '「ちんちん侍」で一人だけ違う言葉を言う'],
+  ['farmer', '帰農', 's', 3, '一度も言葉を言わないまま勝負が終わる'],
+  ['ws10', '天下人', 'g', 4, '10連勝'],
+  ['ws20', '征夷大将軍', 'r', 4, '20連勝'],
+  ['ws50', '伝説の剣豪', 'r', 4, '50連勝'],
+  ['ws100', '生ける伝説', 'm', 4, '100連勝'],
+  ['hitori', '一人上手', 's', 4, 'デスマッチ6人で、CPU5人を相手に勝つ'],
+  ['kaikin', '皆勤賞', 'g', 4, '7日つづけて遊ぶ'],
+  ['senkyaku', '千客万来', 's', 4, 'オンラインで6人そろって遊ぶ'],
+  ['enkai', '宴会部長', 's', 4, '1回の勝負の間に定型文を10回送る'],
+  ['hostmyouri', 'ホスト冥利', 'b', 4, '自分が作った部屋で10回勝負する'],
+  ['oneeye', '独眼竜', 'r', 4, 'デスマッチで、ほかの全員を自分が指して脱落させて勝つ'],
+  ['kiwami', 'ちんちん侍・極', 'm', 4, 'ほかの称号を全部とる'],
+  ['voice10', '声帯の剣豪', 'g', 5, '親で「侍」を10回つづけて言う', 1],
+  ['wanted', '指名手配', 's', 5, '1回の勝負で、ほかの全員から指される', 1],
+  ['gaming', 'ゲーミング侍', 'r', 5, '設定画面に2分いる', 1],
+  ['yofukashi', '夜更かし侍', 's', 5, '夜中の2時〜4時に勝負する', 1],
+  ['hayaoki', '早起きは三文の徳', 's', 5, '朝5時〜7時に勝つ', 1],
+  ['kyosei', '去勢', 's', 5, '「おちんちん」で指されたのに「シャキーン」と言う', 1],
+  ['senju', '千手観音', 'g', 5, '親のとき、言葉を言わずに10回人を指し直す（1回の番で）', 1],
+  ['reisho', '冷笑', 'b', 5, '定型文「うおw」を合計100回送る', 1],
+  ['daimyojin', 'ちんちん大明神', 'm', 5, '親で「ちんちん」を50回つづけて言う（ほかの言葉を言うか、切腹したら0から）', 1],
+  ['shinuchi', 'ちんちん侍', 'm', 5, '親で「ちんちん侍」を50回つづけて言う（ほかの言葉を言うか、切腹したら0から）', 1],
+].map(([id, name, r, g, cond, hidden]) => ({ id, name, r, g, cond, hidden: !!hidden }));
+const TITLE_BY = Object.fromEntries(TITLES.map((t) => [t.id, t]));
+const TITLE_KEY = 'chinchin-samurai-titles-v1';
+const TT = (() => {
+  const v = loadJSON(TITLE_KEY) || {};
+  return { got: v.got || {}, eq: v.eq || '', st: v.st || {}, day: v.day || {} };
+})();
+const saveTitles = () => saveJSON(TITLE_KEY, { got: TT.got, eq: TT.eq, st: TT.st, day: TT.day });
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+function dayStat() { if (TT.day.d !== today()) TT.day = { d: today(), gets: 0, miss: 0 }; return TT.day; }
+/** 装備している称号の名前（なければ空） */
+const myTitle = () => (TT.eq && TT.got[TT.eq] && TITLE_BY[TT.eq] ? TITLE_BY[TT.eq].name : '');
+const SPECIAL = { gaming: 'gaming', shinuchi: 'shinuchi' }; // 見た目が特別な称号
+const specialOf = (name) => { const t = TITLES.find((x) => x.name === name && SPECIAL[x.id]); return t ? ' ' + SPECIAL[t.id] : ''; };
+const titleChip = (name) => (name ? `<span class="ttl${specialOf(name)}">${esc(name)}</span>` : '');
+
+/** 称号をとる */
+const gameGot = []; // この勝負でとった称号（結果画面に出す）
+function award(id) {
+  if (TT.got[id] || !TITLE_BY[id]) return;
+  TT.got[id] = today();
+  gameGot.push(id);
+  G.gotAt = G.gotAt || Date.now();
+  const d = dayStat(); d.gets++;
+  saveTitles();
+  titleToast(TITLE_BY[id]);
+  if (TITLES.every((t) => t.id === 'kiwami' || TT.got[t.id])) award('kiwami');
+  renderTitles();
+}
+let toastList = [], toastTimer = null;
+/** 称号獲得のお知らせ。同時にとった称号は1枚にまとめる */
+function titleToast(t) {
+  toastList.push(t);
+  const el = $('titleToast');
+  const top = toastList.reduce((a, x) => ('bsgrm'.indexOf(x.r) > 'bsgrm'.indexOf(a.r) ? x : a)); // いちばんレアな色
+  const sp = toastList.find((x) => SPECIAL[x.id]);
+  el.className = `titletoast r-${top.r} show${sp ? ' ' + SPECIAL[sp.id] : ''}`;
+  el.innerHTML = toastList.length === 1
+    ? `<small>称号獲得！ ${RARITY[t.r]}</small><b>${esc(t.name)}</b>`
+    : `<small>称号を${toastList.length}つ獲得！</small><b>${toastList.map((x) => esc(x.name)).join('・')}</b>`;
+  if (toastList.length === 1) { beep(990, 0.08, 'triangle', 0.05); setTimeout(() => beep(1320, 0.1, 'triangle', 0.05), 90); }
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.remove('show'); toastList = []; }, 2600);
+}
+
+/* --- 判定：ゲームの出来事（1人・オンラインのホスト・ゲスト共通）から --- */
+const meSeat = () => (online() ? NET.me : 0);
+const counting = () => !S.train && S.players && S.players[meSeat()] && !S.players[meSeat()].bot;
+let G = {}; // 1回の勝負の中の記録
+let round = null; // 「ちんちん侍」の返事の順番
+let pending = null; // 自分の発言が成功だったかの確定待ち
+let lastAt = 0; // 最後に何か起きた時刻（時を止めし者）
+/** 勝負が始まった */
+function titleStart() {
+  if (!counting()) return;
+  G = { says: 0, ok: 0, miss: false, words: new Set(), pointedBy: new Set(), lastCall: null, causes: [], gotAt: 0, lastWord: {}, calls: 0, firstCall: null,
+    pointedN: 0, pointer: -1, pointedAt: 0, revenge: -1, stamps: 0, rp: 0, rpTurn: -1, rpLast: -1 };
+  const st = TT.st, h = new Date().getHours(), d = today();
+  if (h >= 2 && h < 4) award('yofukashi');
+  // 皆勤賞：毎日つづけて遊んだ日数
+  if (st.lastDay !== d) {
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    const yd = `${y.getFullYear()}-${y.getMonth() + 1}-${y.getDate()}`;
+    st.dayRun = st.lastDay === yd ? (st.dayRun || 1) + 1 : 1;
+    st.lastDay = d;
+    if (st.dayRun >= 7) award('kaikin');
+  }
+  if (online() && S.players.length === 6 && S.players.every((x) => !x.bot)) award('senkyaku');
+  saveTitles();
+  gameGot.length = 0;
+  round = null; pending = null; lastAt = Date.now();
+}
+/** 誰かが言った */
+function titleSay(p, w) {
+  if (!counting()) return;
+  const now = Date.now(), gap = now - lastAt;
+  lastAt = now;
+  const alive = S.alive ? S.alive.size : S.players.length;
+  G.lastWord[p] = w;
+  if (w === W.CS) {
+    if (!round) round = { from: p, resp: [], n: alive };
+    else if (!round.resp.includes(p)) {
+      round.resp.push(p);
+      if (round.resp.length >= round.n) { csDone(round); round = null; }
+    }
+  } else round = null;
+  if (p !== meSeat()) return;
+  G.says++;
+  const isCall = CALLS.includes(w) && !(w === W.CS && round && round.from !== p);
+  if (pending) commit();
+  pending = { w, isCall, gap, t: setTimeout(commit, 700) };
+}
+/** 自分の発言が切腹にならなかった＝成功 */
+function commit() {
+  if (!pending) return;
+  const { w, isCall } = pending;
+  clearTimeout(pending.t); pending = null;
+  const st = TT.st;
+  st.streak = (st.streak || 0) + 1;
+  G.ok++; G.words.add(w);
+  award('first');
+  [[100, 'c100'], [500, 'c500'], [1000, 'c1000']]
+    .forEach(([n, id]) => { if (st.streak >= n) award(id); });
+  if (G.words.size >= 6) award('allwords');
+  if (isCall) {
+    st.samu = w === W.SAMU ? (st.samu || 0) + 1 : 0;
+    if (st.samu >= 10) award('voice10');
+    st.chin = w === W.CHIN ? (st.chin || 0) + 1 : 0;
+    if (st.chin >= 5) award('chinhell');
+    if (st.chin >= 50) award('daimyojin');
+    st.cs = w === W.CS ? (st.cs || 0) + 1 : 0;
+    if (st.cs >= 50) award('shinuchi');
+  }
+  saveTitles();
+}
+/** 「ちんちん侍」が全員そろった */
+function csDone(r) {
+  const me = meSeat(), st = TT.st;
+  if (!r.resp.includes(me)) return;
+  if (r.resp[0] === me) { st.fast = (st.fast || 0) + 1; if (st.fast >= 10) award('fast3'); } else st.fast = 0;
+  if (r.n >= 3 && r.resp[r.resp.length - 1] === me) award('gonosen');
+  saveTitles();
+}
+/** 親が誰かを指した */
+function titleCall(p, target) {
+  if (!counting() || target == null) return;
+  lastAt = Date.now();
+  G.lastCall = { p, target };
+  G.calls++;
+  if (!G.firstCall) G.firstCall = { p, target, word: G.lastWord[p] };
+  if (p === meSeat() && target === G.pointer) { award('kaeshi'); G.revenge = target; } // 指してきた人を指し返した
+  else if (p === meSeat()) G.revenge = -1;
+  if (p === meSeat()) G.pointer = -1; // 指し返せるのは、指された直後の番だけ
+  if (target === meSeat() && p !== meSeat()) {
+    G.pointedN++; G.pointer = p; G.pointedAt = Date.now();
+    G.pointedBy.add(p);
+    if (G.pointedBy.size >= S.players.length - 1 && S.players.length >= 3) award('wanted');
+  }
+}
+/** 切腹（info.final＝勝負がついた） */
+function titleSep(info) {
+  if (!counting()) return;
+  const me = meSeat(), st = TT.st, p = info.p, why = info.why || '';
+  // 誰のせいで切腹したか（自分が指した相手が失敗したか）
+  const byMe = G.lastCall && G.lastCall.p === me && G.lastCall.target === p;
+  G.causes.push({ p, byMe });
+  const fc = G.firstCall;
+  if (fc && G.calls === 1 && fc.p === me && fc.word === W.SAMU && fc.target === p) award('ittou');
+  if (byMe && G.revenge === p) award('kaeriuchi');
+  if (p === me) {
+    if (pending) { clearTimeout(pending.t); pending = null; }
+    const lost = st.streak || 0;
+    st.streak = 0; st.samu = 0; st.fast = 0; st.chin = 0; st.cs = 0;
+    G.miss = true; G.lost = true;
+    award('miss1');
+    if (lost >= 30) award('glory');
+    if ((info.combo || 0) === 0) award('opening');
+    if (/お手つき/.test(why)) award('flying');
+    if (/「ちんちん侍」のところを/.test(why)) award('heretic');
+    if (/「びろーん」のところを「シャキーン」/.test(why)) award('kyosei');
+    if (round && /時間切れ/.test(why) && round.resp.length >= round.n - 1 && !round.resp.includes(me)) award('alone');
+  } else if (pending) commit();
+  round = null;
+  if (info.final) gameEnd(info);
+  saveTitles();
+}
+function gameEnd(info) {
+  const me = meSeat(), st = TT.st;
+  if (isHost()) { st.hostGames = (st.hostGames || 0) + 1; if (st.hostGames >= 10) award('hostmyouri'); }
+  const win = !G.lost && (info.wn == null || info.wn < 0 || info.wn === me);
+  if (G.says === 0) award('farmer');
+  if (win) {
+    st.wins = (st.wins || 0) + 1;
+    st.ws = (st.ws || 0) + 1;
+    if (st.lostLast) award('comeback');
+    st.lostLast = false; st.ls = 0;
+    if (st.wins >= 10) award('win10');
+    [[10, 'ws10'], [20, 'ws20'], [50, 'ws50'], [100, 'ws100']].forEach(([n, id]) => { if (st.ws >= n) award(id); });
+    if (!G.miss && G.ok >= 10) award('clean');
+    if (G.pointedN === 0) award('kagemusha');
+    const hr = new Date().getHours();
+    if (hr >= 5 && hr < 7) award('hayaoki');
+    if (death() && info.wn === me && S.players.length === 6 && S.players.every((x, i) => i === me || x.cpu)) award('hitori');
+    if (death() && info.wn === me) {
+      award('last1');
+      if (G.causes.length >= 2 && G.causes.every((c) => c.byMe)) award('oneeye');
+    }
+  } else {
+    st.ws = 0; st.lostLast = true;
+    st.ls = (st.ls || 0) + 1;
+    if (st.ls >= 10) award('lose3');
+  }
+}
+
+/** 定型文を送った（オンライン） */
+function titleStamp(label) {
+  // 冷笑：「うおw」は待合室でも結果画面でも数える
+  if (label === 'うおw') { TT.st.uow = (TT.st.uow || 0) + 1; saveTitles(); if (TT.st.uow >= 100) award('reisho'); }
+  if (!Online.begun || !counting() || !G.words) return;
+  G.stamps++;
+  if (G.stamps >= 10) award('enkai');
+}
+/** 親のとき、言葉を言う前に指す人を選んだ（千手観音） */
+function titleRepoint(i) {
+  if (!counting() || !G.words || S.phase !== 'call' || S.oya !== meSeat() || S.pendingWord || i === S.oya) return;
+  if (G.rpTurn !== S.combo) { G.rpTurn = S.combo; G.rp = 0; G.rpLast = -1; }
+  if (i === G.rpLast) return;
+  G.rpLast = i; G.rp++;
+  if (G.rp >= 11) award('senju'); // 最初の1回＋指し直し10回
+}
+
+/* --- 称号タブ --- */
+function renderTitles() {
+  if (!$('titleList')) return;
+  const n = TITLES.filter((t) => TT.got[t.id]).length;
+  $('titleCount').textContent = `${n} / ${TITLES.length}`;
+  $('titleEq').innerHTML = myTitle() ? `${titleChip(myTitle())}<button class="ghost-btn" id="titleOff">外す</button>` : '<span class="note">まだ装備していません。とった称号をタップすると装備できます</span>';
+  if ($('titleOff')) $('titleOff').addEventListener('click', () => equipTitle(''));
+  $('titleList').innerHTML = TITLE_GROUPS.map((g, gi) => `<h3 class="tgroup">${g}</h3><div class="tgrid">${TITLES.filter((t) => t.g === gi).map((t) => {
+    const got = !!TT.got[t.id];
+    const secret = t.hidden && !got;
+    return `<button class="tcard r-${t.r} ${got ? 'got' : ''} ${got && SPECIAL[t.id] ? SPECIAL[t.id] : ''} ${TT.eq === t.id ? 'eq' : ''}" data-id="${t.id}" ${got ? '' : 'disabled'}>
+      <span class="tr">${RARITY[t.r]}</span><b>${secret ? '？？？' : esc(t.name)}</b><small>${secret ? '隠し称号' : esc(t.cond)}</small>
+      ${got ? `<i>${TT.eq === t.id ? '装備中' : TT.got[t.id]}</i>` : ''}</button>`;
+  }).join('')}</div>`).join('');
+  $('titleList').querySelectorAll('.tcard.got').forEach((b) => b.addEventListener('click', () => equipTitle(TT.eq === b.dataset.id ? '' : b.dataset.id)));
+  $('myTitle').innerHTML = myTitle() ? `称号 ${titleChip(myTitle())}` : '';
+}
+function equipTitle(id) {
+  TT.eq = id;
+  saveTitles();
+  renderTitles();
+  // 待合室にいるなら、みんなにも見えるように
+  if (typeof Online !== 'undefined' && Online.code && Online.me && !Online.begun) {
+    Online.me.title = myTitle();
+    Online.ctx.D.update(Online.r(`members/${Online.ctx.uid}`), { title: myTitle() }).catch(() => {});
+  }
+}
+renderTitles();
+
 /* ================= 画面遷移 ================= */
 function segInit(id, apply) {
   $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
@@ -3199,6 +3596,12 @@ $('notesInline').innerHTML = PATCH_NOTES.map(([v, d, head, items]) => `
   <p class="notes-date">${d}</p>
   <ul class="notes-list">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`).join('');
 // タブ（遊ぶ／キャラ／設定／情報）。最後に開いていたタブを覚えておく
+let gamingSec = 0;
+setInterval(() => {
+  const on = !$('tab-config').hidden && $('title').classList.contains('active') && !document.hidden;
+  gamingSec = on ? gamingSec + 1 : 0;
+  if (gamingSec >= 120) award('gaming');
+}, 1000);
 function openTab(name) {
   document.querySelectorAll('.tabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === name); b.setAttribute('aria-selected', b.dataset.tab === name); });
   document.querySelectorAll('.tabpanel').forEach((el) => { el.hidden = el.id !== `tab-${name}`; });
@@ -3249,6 +3652,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.13.1"></script>
+<script src="online.js?v=1.14.0"></script>
 </body>
 </html>
