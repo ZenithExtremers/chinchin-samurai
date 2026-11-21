@@ -542,6 +542,9 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
   color: #fff; background: var(--gold); box-shadow: 0 0 0 1px rgba(255,255,255,.4) inset; white-space: nowrap; }
 .mytitle { text-align: center; font-size: 13px; color: var(--muted); margin: 4px 0 0; min-height: 1em; }
 .seatttl { font-size: 10px; font-weight: 800; color: var(--gold); white-space: nowrap; line-height: 1.2; }
+.seatttl.r-b { color: #a8683a; } .seatttl.r-s { color: #8b98a6; } .seatttl.r-g { color: #c39a32; }
+.seatttl.r-r, .seatttl.r-m { background: linear-gradient(90deg, #e0483d, #e2b54a, #57b386, #4a7bd0, #9a5ad0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.seatttl.r-m { background: linear-gradient(90deg, #5a3d7a, #9a5ad0 40%, #c39a32 70%, #5a3d7a); -webkit-background-clip: text; background-clip: text; }
 .titleeq { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .titleeq .ttl { font-size: 16px; padding: 2px 12px; margin: 0; }
 .titleeq .ghost-btn { width: auto; margin: 0; padding: 6px 14px; }
@@ -1007,9 +1010,9 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.14.0"></script>
-<script src="voices.js?v=1.14.0"></script>
-<script src="qrcode.js?v=1.14.0"></script>
+<script src="firebase-config.js?v=1.14.1"></script>
+<script src="voices.js?v=1.14.1"></script>
+<script src="qrcode.js?v=1.14.1"></script>
 <script>
 'use strict';
 
@@ -1065,9 +1068,17 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.14.0";
+const APP_VERSION = "1.14.1";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.14.1",
+  "2026-11-21",
+  "称号の札の色",
+  [
+   "装備した称号の札が、レア度に関係なく金色になっていたのを修正（銅・銀・金・虹・神話の色で出る。対戦中の名前の下も）"
+  ]
+ ],
  [
   "1.14.0",
   "2026-11-17",
@@ -1576,7 +1587,7 @@ function buildSeats() {
       <div class="avatar">${seatAvatar(i)}<span class="tag oya-tag">親</span>
         ${p.cpu ? '<span class="tag cpu-tag">CPU</span>' : ''}
         <div class="bubble" id="bub${i}"></div></div>
-      <div class="plate"><div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl${specialOf(p.title)}">${esc(p.title)}</div>` : ''}
+      <div class="plate"><div class="name">${esc(p.name)}</div>${p.title ? `<div class="seatttl${rarityOf(p.title)}${specialOf(p.title)}">${esc(p.title)}</div>` : ''}
       <div class="score" id="sc${i}"></div></div>
     </div>`).join('');
   document.querySelectorAll('.seat').forEach((el) => {
@@ -3246,7 +3257,9 @@ function dayStat() { if (TT.day.d !== today()) TT.day = { d: today(), gets: 0, m
 const myTitle = () => (TT.eq && TT.got[TT.eq] && TITLE_BY[TT.eq] ? TITLE_BY[TT.eq].name : '');
 const SPECIAL = { gaming: 'gaming', shinuchi: 'shinuchi' }; // 見た目が特別な称号
 const specialOf = (name) => { const t = TITLES.find((x) => x.name === name && SPECIAL[x.id]); return t ? ' ' + SPECIAL[t.id] : ''; };
-const titleChip = (name) => (name ? `<span class="ttl${specialOf(name)}">${esc(name)}</span>` : '');
+/** 称号の札の色：レア度（銅・銀・金・虹・神話）＋特別な見た目 */
+const rarityOf = (name) => { const t = TITLES.find((x) => x.name === name); return t ? ' r-' + t.r : ''; };
+const titleChip = (name) => (name ? `<span class="ttl${rarityOf(name)}${specialOf(name)}">${esc(name)}</span>` : '');
 
 /** 称号をとる */
 const gameGot = []; // この勝負でとった称号（結果画面に出す）
@@ -3652,6 +3665,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.14.0"></script>
+<script src="online.js?v=1.14.1"></script>
 </body>
 </html>
