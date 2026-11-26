@@ -245,7 +245,7 @@ h1 { font-size: 44px; text-align: center; margin: 14px 0 4px; letter-spacing: .0
 /* ---------- ゲーム画面 ---------- */
 .topbar { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
 .topbar button { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
-.topbar button.quit { border: 2px solid var(--accent); color: var(--accent); background: var(--seat); font-size: 15px; font-weight: 800; padding: 7px 14px; border-radius: 999px; }
+.topbar button.quit { white-space: nowrap; flex: 0 0 auto; border: 2px solid var(--accent); color: var(--accent); background: var(--seat); font-size: 15px; font-weight: 800; padding: 7px 14px; border-radius: 999px; }
 .topbar button.quit:active { background: var(--accent); color: var(--accent-ink); }
 .stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 1 / 1; margin: 6px 0; touch-action: none; } /* フリック中に画面がスクロールしないように */
 .mat {
@@ -516,6 +516,8 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
 .gacts button.primary { text-align: center; }
 .gacts b { display: block; font-size: 17px; }
 .gacts small { display: block; font-size: 12px; font-weight: 500; opacity: .85; margin-top: 2px; }
+.subrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: -4px 0 14px; }
+.subrow .ghost-btn { margin: 0; padding-left: 4px; padding-right: 4px; }
 .gsub { text-align: center; color: var(--muted); margin: -4px 0 4px !important; font-size: 14px !important; }
 .guide.menu .gnav, .guide.menu .gskip { display: none; }
 .gmsg { text-align: center; color: var(--you); font-weight: 800; min-height: 1.4em; margin: 8px 0 0; font-size: 14px; }
@@ -631,7 +633,10 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
     <button class="big sub-btn" id="onlineBtn" hidden>オンライン対戦<small>友達と部屋で勝負</small></button>
   </div>
   <div class="rulechip"><span id="ruleSummary"></span><button id="ruleOpen">ルールを変える</button></div>
-  <button class="ghost-btn" id="guideBtn" style="margin:-4px 0 14px">遊び方を見る</button>
+  <div class="subrow">
+    <button class="ghost-btn" id="guideBtn">遊び方を見る</button>
+    <button class="ghost-btn" id="watchBtn">CPUだけの対戦を見る</button>
+  </div>
   <button class="big sub-btn" id="rejoinBtn" hidden></button>
   <p class="msg" id="titleMsg" style="margin:0 0 6px"></p>
   <div class="best" id="bestBox"></div>
@@ -1010,9 +1015,9 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.14.1"></script>
-<script src="voices.js?v=1.14.1"></script>
-<script src="qrcode.js?v=1.14.1"></script>
+<script src="firebase-config.js?v=1.15.0"></script>
+<script src="voices.js?v=1.15.0"></script>
+<script src="qrcode.js?v=1.15.0"></script>
 <script>
 'use strict';
 
@@ -1068,9 +1073,19 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.14.1";
+const APP_VERSION = "1.15.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.15.0",
+  "2026-11-26",
+  "CPUだけの対戦を観戦",
+  [
+   "「遊ぶ」タブに「CPUだけの対戦を見る」：全員CPUの対戦を観戦できる。人数・対戦形式（デスマッチも）・CPUの強さ・制限時間・フェイントは今のルールのまま",
+   "観戦ではCPUもふつうに切腹する。デスマッチなら最後の一人まで。称号と最高記録には数えない",
+   "対戦中の「やめる」ボタンが2行に折れないように"
+  ]
+ ],
  [
   "1.14.1",
   "2026-11-21",
@@ -1707,7 +1722,7 @@ function updateHint() {
 /* ================= タイマー ================= */
 function currentLimit() {
   if (S.train === 'demo') return 9000; // 見本：CPUがゆっくり動いても時間切れにならないように
-  if (S.train) return (DIFF.easy.limit + 400) * 1.6; // 練習はとてもゆっくり、速くもならない
+  if (S.train === 'practice') return (DIFF.easy.limit + 400) * 1.6; // 練習はとてもゆっくり、速くもならない
   const base = DIFF[S.diff].limit + (S.mode === 'voice' ? VOICE_EXTRA : 0) + (online() ? ONLINE_EXTRA : 0);
   return Math.max(base * 0.55, base * (1 - S.combo * 0.02));
 }
@@ -1978,7 +1993,7 @@ function makeCall(p, word, target) {
   S.firstOya = false;
   S.call = { from: p, word, target };
   S.combo++;
-  if (S.train) trainCall(p, word, target);
+  if (S.train && S.train !== 'watch') trainCall(p, word, target);
   titleCall(p, target);
   setCenter(word);
   drawArrow(p, target);
@@ -2059,7 +2074,7 @@ function say(p, word, target, byVoice = false) {
 const SEPPUKU_PAUSE = 800; // ミスしてから切腹が始まるまでの「間」
 const CUT_LEN = 2000;      // ムービー開始から、斬れた体が画面の外へ落ちきるまで
 function seppuku(p, why) {
-  if (S.train) return trainMiss(p, why); // 練習・見本では切腹しない
+  if (S.train && S.train !== 'watch') return trainMiss(p, why); // 練習・見本では切腹しない（観戦はふつうに切腹）
   // ミスした瞬間にゲームを止める（タイマー・CPUも止まる）
   newPhase();
   S.phase = 'over';
@@ -2128,7 +2143,7 @@ function renderResult(info) {
   if (online() && typeof Online !== 'undefined') Online.countGame(p, info.final);
   // 下の欄：1人なら自分の記録、オンラインなら部屋の戦績
   // 更新していないときは、自己ベストを小さく添える（1人で遊ぶときだけ）
-  $('ovStats').hidden = !info.final || online() || !!info.best || bestOf(S.cpu) <= 0;
+  $('ovStats').hidden = !info.final || online() || !!info.best || bestOf(S.cpu) <= 0 || !!S.train;
   $('ovStats').textContent = `自己ベスト（${CPU_LABEL[S.cpu]}）${bestOf(S.cpu)}回`;
   $('ovRank').hidden = !info.final || !online();
   if (online() && typeof Online !== 'undefined') $('ovRank').innerHTML = roomRanking(p);
@@ -3086,6 +3101,7 @@ $('gClose').addEventListener('click', closeGuide);
 $('gSkip').addEventListener('click', () => { guideAt = -1; renderGuide(); }); // スライドを飛ばしてメニューへ
 $('guide').addEventListener('click', (e) => { if (e.target === $('guide')) closeGuide(); });
 $('guideBtn').addEventListener('click', () => openGuide());
+$('watchBtn').addEventListener('click', () => { initAudio(6); startTraining('watch'); });
 $('onGuide').addEventListener('click', () => openGuide());
 // 左右にスワイプでページをめくる
 {
@@ -3122,17 +3138,24 @@ function startTraining(kind) {
   closeSheets();
   S.train = kind;
   S.trainBak = { total: S.total, humans: S.humans, cpuSafe: S.cpuSafe, feint: S.feint, guide: S.guide, mode: S.mode };
-  S.total = 4;
-  S.humans = kind === 'demo' ? 0 : 1;
-  S.cpuSafe = true; S.feint = false; S.guide = true; S.mode = 'button';
+  const watch = kind === 'watch';
+  if (watch) { // 観戦：人数・形式・強さ・時間・フェイントはルールのまま。CPUも切腹する
+    S.humans = 0; S.cpuSafe = false; S.feint = $('feintChk').checked; S.guide = $('guideChk').checked;
+  } else {
+    S.total = 4;
+    S.humans = kind === 'demo' ? 0 : 1;
+    S.cpuSafe = true; S.feint = false; S.guide = true;
+  }
+  S.mode = 'button';
   S.tts = $('ttsChk').checked; S.movie = $('movieChk').checked;
   setupPlayers();
-  if (kind === 'demo') S.players[0].name = 'さぶろう';
+  if (kind !== 'practice') S.players[0].name = 'さぶろう';
   layoutSeats(S.total);
-  document.body.classList.toggle('demo', kind === 'demo');
+  document.body.classList.toggle('demo', kind !== 'practice');
   document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('active', el.id === 'game'));
-  $('modeLabel').textContent = kind === 'demo' ? '遊び方：見るだけ' : '練習（切腹なし・時間ゆっくり）';
-  $('pad').hidden = kind === 'demo';
+  $('modeLabel').textContent = watch ? `観戦・${S.total}人${death() ? '・デスマッチ' : ''}・${CPU_LABEL[S.cpu]}`
+    : kind === 'demo' ? '遊び方：見るだけ' : '練習（切腹なし・時間ゆっくり）';
+  $('pad').hidden = kind !== 'practice';
   $('voicebox').hidden = true;
   document.querySelectorAll('#pad button').forEach((b) => { b.hidden = false; });
   $('swipeZone').hidden = true;
@@ -3140,8 +3163,8 @@ function startTraining(kind) {
   bgmStop();
   initAudio(S.total);
   buildSeats();
-  coach(kind === 'demo' ? 'CPUだけで遊ぶのを見てみよう。金の枠が親、赤い丸が指された人' : 'あなたの番になったら、下のボタンで言おう。間違えても切腹しないよ');
-  startGame(kind === 'demo' ? 2 : 0);
+  coach(watch ? '' : kind === 'demo' ? 'CPUだけで遊ぶのを見てみよう。金の枠が親、赤い丸が指された人' : 'あなたの番になったら、下のボタンで言おう。間違えても切腹しないよ');
+  startGame(kind === 'practice' ? 0 : Math.floor(Math.random() * S.total));
 }
 function endTraining() {
   if (!S.train) return;
@@ -3665,6 +3688,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.14.1"></script>
+<script src="online.js?v=1.15.0"></script>
 </body>
 </html>
