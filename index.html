@@ -516,6 +516,17 @@ input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-o
 .gacts button.primary { text-align: center; }
 .gacts b { display: block; font-size: 17px; }
 .gacts small { display: block; font-size: 12px; font-weight: 500; opacity: .85; margin-top: 2px; }
+.wq { font-size: 13px; color: var(--muted); margin: 12px 0 6px; font-weight: 800; }
+.wpred { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.wpred button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid var(--line); border-radius: 8px; background: var(--seat); padding: 6px 2px; font-family: inherit; color: inherit; cursor: pointer; font-size: 13px; font-weight: 800; }
+.wpred button svg { width: 42px; height: 42px; }
+.wpred button small { font-size: 10px; color: var(--muted); font-weight: 500; }
+.wpred button.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.wpred button.none { grid-column: 1 / -1; flex-direction: row; justify-content: center; padding: 8px; }
+.ovpred { font-weight: 800; margin: 0 0 10px; font-size: 15px; }
+.ovpred.hit { color: var(--you); } .ovpred.miss { color: var(--muted); }
+.ovpred small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); }
+#speedBtn { font-weight: 800; min-width: 44px; }
 .subrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: -4px 0 14px; }
 .subrow .ghost-btn { margin: 0; padding-left: 4px; padding-right: 4px; }
 .gsub { text-align: center; color: var(--muted); margin: -4px 0 4px !important; font-size: 14px !important; }
@@ -806,6 +817,7 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
   <div class="topbar">
     <span id="modeLabel">セリフボタン</span>
     <span class="topbtns">
+      <button id="speedBtn" hidden>×1</button>
       <button id="stampBtn" hidden>定型文</button>
       <button id="quitBtn" class="quit" aria-label="やめてメニューに戻る">✕ やめる</button>
     </span>
@@ -921,6 +933,19 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
     </div>
   <button class="big" id="ruleDone">決定</button>
 </div>
+<div class="sheet" id="watchSheet" hidden>
+  <div class="sheethead"><b>観戦</b><button class="sheetclose" aria-label="閉じる">×</button></div>
+  <h4 class="wq" id="wPredQ">予想：誰が勝つ？</h4>
+  <div class="wpred" id="wPred"></div>
+  <p class="note" id="wHits" style="margin:6px 0 0"></p>
+  <h4 class="wq">CPUの強さ</h4>
+  <div class="seg mini" id="wMix"><button data-v="0" class="on">ルールのまま</button><button data-v="1">席ごとに混ぜる</button></div>
+  <h4 class="wq">速さ</h4>
+  <div class="seg mini" id="wSpeed"><button data-v="1" class="on">×1</button><button data-v="2">×2</button><button data-v="4">×4</button></div>
+  <div class="row" style="margin-top:10px"><label for="wAuto">自動でつづける<small>決着したら、少しして次の勝負が始まる</small></label><input type="checkbox" id="wAuto" checked></div>
+  <button class="big" id="wGo">観戦をはじめる</button>
+  <p class="note" id="wCount" style="text-align:center;margin:6px 0 0"></p>
+</div>
 <div class="sheet" id="roomRuleSheet" hidden>
   <div class="sheethead"><b>部屋のルールを変える</b><button class="sheetclose" aria-label="閉じる">×</button></div>
   <div class="roomrules" id="onRules"></div>
@@ -999,6 +1024,7 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
       <div class="cnt" id="ovCnt"><span class="n" id="ovN">0</span><span class="u">回つづいた</span></div>
       <div class="ribbon" id="ovNew" hidden></div>
       <div class="ovgot" id="ovGot" hidden></div>
+      <div class="ovpred" id="ovPred" hidden></div>
       <div class="stats" id="ovStats" hidden></div>
       <div id="ovRank" hidden></div>
     </div>
@@ -1015,9 +1041,9 @@ body.demo .seat.bottom .name::before, body.demo .seat.bottom .avatar::before { d
   </div>
 </div>
 
-<script src="firebase-config.js?v=1.15.0"></script>
-<script src="voices.js?v=1.15.0"></script>
-<script src="qrcode.js?v=1.15.0"></script>
+<script src="firebase-config.js?v=1.16.0"></script>
+<script src="voices.js?v=1.16.0"></script>
+<script src="qrcode.js?v=1.16.0"></script>
 <script>
 'use strict';
 
@@ -1073,9 +1099,21 @@ let PROFILES = SEAT_DEFAULTS.map((_, i) => defaultProfile(i));
 const BONUS_STEPS = [0, 0.5, 1, 2]; // ハンデ：制限時間に足す秒数
 /** その人のハンデ（ミリ秒）。人間だけに効く */
 const bonusMs = (i) => (!isHuman(i) ? 0 : (online() ? (S.players[i].bonus || 0) : (PROFILES[i].bonus || 0)) * 1000);
-const APP_VERSION = "1.15.0";
+const APP_VERSION = "1.16.0";
 /** パッチノート（新しい順）：[版, 日付, 見出し, 変更点] */
 const PATCH_NOTES = [
+ [
+  "1.16.0",
+  "2026-11-28",
+  "観戦をもっと楽しく・部屋の掃除",
+  [
+   "観戦の前に「予想」：デスマッチは誰が勝つか、一発勝負は誰が切腹するか。当たったら結果画面でお知らせ、的中の数も記録",
+   "観戦の「CPUの強さ」で「席ごとに混ぜる」：弱い・普通・強いのCPUがまざって戦う（名前の下に強さが出る）",
+   "観戦の速さ：×1・×2・×4。対戦中も右上のボタンで切り替えられる",
+   "観戦の「自動でつづける」：決着したら少しして次の勝負へ（予想の画面が出て6秒で始まる）",
+   "オンライン：12時間動きのない部屋は、誰かが部屋を作るときに自動で消すように（Firebase のルールの貼り直しが必要）"
+  ]
+ ],
  [
   "1.15.0",
   "2026-11-26",
@@ -1723,6 +1761,7 @@ function updateHint() {
 function currentLimit() {
   if (S.train === 'demo') return 9000; // 見本：CPUがゆっくり動いても時間切れにならないように
   if (S.train === 'practice') return (DIFF.easy.limit + 400) * 1.6; // 練習はとてもゆっくり、速くもならない
+  if (S.train === 'watch' && S.speed > 1) { const b0 = DIFF[S.diff].limit; return Math.max(b0 * 0.55, b0 * (1 - S.combo * 0.02)) / S.speed; } // 観戦の倍速
   const base = DIFF[S.diff].limit + (S.mode === 'voice' ? VOICE_EXTRA : 0) + (online() ? ONLINE_EXTRA : 0);
   return Math.max(base * 0.55, base * (1 - S.combo * 0.02));
 }
@@ -2103,7 +2142,8 @@ function seppuku(p, why) {
   }
   seppukuFx(info);
   emitFx({ t: 'sep', ...info });
-  if (!info.final) later(S.overlayDelay + 2150, continueDeath);
+  if (!info.final) later(S.overlayDelay + 2150 / (S.train === 'watch' ? S.speed || 1 : 1), continueDeath);
+  if (info.final && S.train === 'watch') watchEnd(info);
 }
 /** 切腹の演出（ホストもゲストも同じ）：止まる → 間 → 斬られる → 結果 */
 function seppukuFx(info) {
@@ -2112,11 +2152,13 @@ function seppukuFx(info) {
   setHint('');
   flash(p, 'caught');
   beep(220, 0.15, 'square', 0.05);
-  S.overlayDelay = SEPPUKU_PAUSE + (S.movie ? CUT_LEN + 150 : 1300); // ムービーが終わってから結果
-  later(SEPPUKU_PAUSE, () => {
+  const sp = S.train === 'watch' ? S.speed || 1 : 1; // 観戦の倍速
+  const movie = S.movie && sp === 1;
+  S.overlayDelay = (SEPPUKU_PAUSE + (movie ? CUT_LEN + 150 : 1300)) / sp; // ムービーが終わってから結果
+  later(SEPPUKU_PAUSE / sp, () => {
     seatEl(p).classList.add('dead');
     refreshSeats();
-    if (S.movie) playCutMovie(p);
+    if (movie) playCutMovie(p);
     else { gong(); if (seppukuVoice(p)) playLine(p, W.SHAKI); }
   });
   renderResult(info);
@@ -2132,6 +2174,7 @@ function renderResult(info) {
   $('ovWin').textContent = info.win || '';
   $('ovAv').innerHTML = S.players[p] ? seatAvatar(p) : '';
   $('ovWho').innerHTML = esc(info.who) + titleChip(S.players[p] && S.players[p].title);
+  $('ovPred').hidden = true; // 観戦の予想は watchEnd で出す
   $('ovGot').hidden = !gameGot.length;
   $('ovGot').innerHTML = gameGot.length ? `<small>新しい称号</small>${gameGot.map((id) => `<span class="ttl r-${TITLE_BY[id].r}${SPECIAL[id] ? ' ' + SPECIAL[id] : ''}">${esc(TITLE_BY[id].name)}</span>`).join('')}` : '';
   $('ovSep').textContent = info.final ? `切腹 ${info.sep || 1}回目` : '脱落';
@@ -2391,34 +2434,36 @@ function continueDeath() {
 }
 
 /* ================= CPU ================= */
-function pickWeighted() {
-  const weights = CPU_LEVEL[S.cpu].weights;
+/** その席のCPUの強さ（観戦で「混ぜる」ときは席ごとに違う） */
+const lvOf = (p) => (p != null && S.players[p] && S.players[p].lv) || S.cpu;
+function pickWeighted(p) {
+  const weights = CPU_LEVEL[lvOf(p)].weights;
   const total = weights.reduce((s, [, w]) => s + w, 0);
   let r = Math.random() * total;
   for (const [word, w] of weights) { if ((r -= w) < 0) return word; }
   return W.CHIN;
 }
-const cpuMisses = () => !S.cpuSafe && Math.random() < CPU_LEVEL[S.cpu].miss(S.combo);
+const cpuMisses = (p) => !S.cpuSafe && Math.random() < CPU_LEVEL[lvOf(p)].miss(S.combo);
 /** たまにギリギリ（制限時間の82〜92%）で答えて、焦った高い声を出す。強いCPUはめったにしない */
 const CPU_LATE_RATE = { weak: 0.15, normal: 0.12, strong: 0.05 };
-const cpuDelay = (allowLate = true) => {
+const cpuDelay = (allowLate = true, p) => {
   if (S.train === 'demo') return rand(2600, 3400); // 見本：解説を読めるように、ゆっくり
-  if (allowLate && Math.random() < CPU_LATE_RATE[S.cpu]) return rand(S.limitMs * 0.82, S.limitMs * 0.92);
-  const [a, b] = CPU_LEVEL[S.cpu].speed;
+  if (allowLate && Math.random() < CPU_LATE_RATE[lvOf(p)]) return rand(S.limitMs * 0.82, S.limitMs * 0.92);
+  const [a, b] = CPU_LEVEL[lvOf(p)].speed;
   return rand(S.limitMs * a, S.limitMs * b);
 };
 function cpuCall(p) {
-  const miss = cpuMisses();
+  const miss = cpuMisses(p);
   if (miss && Math.random() < 0.5) return; // 固まって時間切れ
   // フェイントは溜める時間があるので、ギリギリには答えない（時間切れにならないように）
   const feint = !miss && S.feint && Math.random() < 0.3;
-  later(cpuDelay(!feint), () => {
+  later(cpuDelay(!feint, p), () => {
     if (!S.players[p].cpu) return; // 人が戻ってきた
     if (miss) { say(p, Math.random() < 0.5 ? W.BIRO : W.SHAKI); return; } // うっかり
     const others = aliveList().filter((i) => i !== p);
     const target = others[Math.floor(Math.random() * others.length)];
     if (feint) return cpuFeint(p, target);
-    say(p, pickWeighted(), target);
+    say(p, pickWeighted(p), target);
   });
 }
 /**
@@ -2443,9 +2488,9 @@ function cpuFeint(p, target) {
   });
 }
 function cpuRespond(p, expect) {
-  const miss = cpuMisses();
+  const miss = cpuMisses(p);
   if (miss && Math.random() < 0.5) return; // 固まって時間切れ
-  later(cpuDelay(), () => {
+  later(cpuDelay(true, p), () => {
     if (!S.players[p].cpu) return; // 人が戻ってきた
     if (miss) {
       const wrong = [W.BIRO, W.SHAKI, W.CS, W.CHIN].filter((w) => w !== expect);
@@ -2999,8 +3044,14 @@ function closeSheets() {
   document.querySelectorAll('.sheet').forEach((el) => { el.hidden = true; });
   $('sheetScrim').hidden = true;
 }
-$('sheetScrim').addEventListener('click', closeSheets);
-document.querySelectorAll('.sheetclose').forEach((b) => b.addEventListener('click', closeSheets));
+/** 下の画面を手で閉じたとき：観戦の始まる前なら、メニューに戻る */
+function closeSheetsByUser() {
+  const watching = !$('watchSheet').hidden && S.train === 'watch' && S.phase === 'idle';
+  closeSheets();
+  if (watching) toMenu();
+}
+$('sheetScrim').addEventListener('click', closeSheetsByUser);
+document.querySelectorAll('.sheetclose').forEach((b) => b.addEventListener('click', closeSheetsByUser));
 $('ruleOpen').addEventListener('click', () => openSheet('ruleSheet'));
 $('ruleDone').addEventListener('click', closeSheets);
 // 「？」を押すと詳しい説明を開く（スイッチは切り替えない）
@@ -3132,6 +3183,77 @@ $('beginnerBtn').addEventListener('click', () => {
   setTimeout(() => { $('beginnerMsg').textContent = ''; }, 2500);
 });
 
+/* ---- 観戦：予想・強さを混ぜる・速さ・自動でつづける ---- */
+const WATCH_KEY = 'chinchin-samurai-watch-v1';
+const WO = (() => { const v = loadJSON(WATCH_KEY) || {}; return { mix: !!v.mix, speed: [1, 2, 4].includes(v.speed) ? v.speed : 1, auto: v.auto !== false, n: v.n || 0, hit: v.hit || 0, pred: -1 }; })();
+const saveWO = () => saveJSON(WATCH_KEY, { mix: WO.mix, speed: WO.speed, auto: WO.auto, n: WO.n, hit: WO.hit });
+let watchTimer = null;
+/** 勝負の前に、予想と設定を選ぶ画面（auto：自動でつづけるときは数秒で始まる） */
+function watchSetup(auto) {
+  clearTimeout(watchTimer); clearInterval(watchSetup.t);
+  newPhase(); S.phase = 'idle';
+  resetBoard('観戦', true);
+  $('overlay').classList.remove('show');
+  $('wPredQ').textContent = death() ? '予想：誰が勝つ？' : '予想：誰が切腹する？';
+  $('wPred').innerHTML = S.players.map((p, i) => `<button data-i="${i}" class="${WO.pred === i ? 'on' : ''}">${seatAvatar(i)}${esc(p.name)}</button>`).join('')
+    + `<button class="none ${WO.pred < 0 ? 'on' : ''}" data-i="-1">予想しない</button>`;
+  $('wPred').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    WO.pred = +b.dataset.i;
+    $('wPred').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    stopCount();
+  }));
+  $('wHits').textContent = WO.n ? `これまでの予想：${WO.n}回中 ${WO.hit}回的中` : '';
+  $('wMix').querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.v === +WO.mix));
+  $('wSpeed').querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.v === WO.speed));
+  $('wAuto').checked = WO.auto;
+  openSheet('watchSheet');
+  $('wCount').textContent = '';
+  if (auto) {
+    let left = 6;
+    $('wCount').textContent = `${left}秒で始まります（さわると止まる）`;
+    watchSetup.t = setInterval(() => {
+      left--;
+      if (left <= 0) { clearInterval(watchSetup.t); watchGo(); } else $('wCount').textContent = `${left}秒で始まります（さわると止まる）`;
+    }, 1000);
+  }
+}
+function stopCount() { clearInterval(watchSetup.t); $('wCount').textContent = ''; }
+function watchGo() {
+  stopCount();
+  closeSheets();
+  S.speed = WO.speed;
+  const lvs = ['weak', 'normal', 'strong'];
+  S.players.forEach((p) => { p.lv = WO.mix ? lvs[Math.floor(Math.random() * 3)] : null; p.title = p.lv ? `CPU ${CPU_LABEL[p.lv]}` : ''; });
+  buildSeats();
+  $('speedBtn').textContent = `×${S.speed}`;
+  startGame(Math.floor(Math.random() * S.total));
+}
+/** 観戦の決着：予想の答え合わせ、自動でつづける */
+function watchEnd(info) {
+  const ans = death() ? info.wn : info.p;
+  const el = $('ovPred');
+  el.hidden = WO.pred < 0;
+  if (WO.pred >= 0) {
+    const hit = ans === WO.pred;
+    WO.n++; if (hit) WO.hit++;
+    saveWO();
+    el.className = `ovpred ${hit ? 'hit' : 'miss'}`;
+    el.innerHTML = (hit ? `🎯 予想的中！（${esc(nameOf(WO.pred))}）` : `予想ははずれ（${esc(nameOf(WO.pred))}）`) + `<small>これまで ${WO.n}回中 ${WO.hit}回的中</small>`;
+  }
+  if (WO.auto) watchTimer = setTimeout(() => { if (S.train === 'watch' && S.phase === 'over') watchSetup(true); }, 4000 + S.overlayDelay);
+}
+$('wMix').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { WO.mix = b.dataset.v === '1'; saveWO(); stopCount(); $('wMix').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); }));
+$('wSpeed').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { WO.speed = +b.dataset.v; saveWO(); stopCount(); $('wSpeed').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); }));
+$('wAuto').addEventListener('change', () => { WO.auto = $('wAuto').checked; saveWO(); stopCount(); });
+$('wGo').addEventListener('click', watchGo);
+$('watchSheet').addEventListener('pointerdown', stopCount);
+// 観戦中の速さボタン：×1 → ×2 → ×4
+$('speedBtn').addEventListener('click', () => {
+  S.speed = WO.speed = { 1: 2, 2: 4, 4: 1 }[S.speed || 1];
+  saveWO();
+  $('speedBtn').textContent = `×${S.speed}`;
+});
+
 /** 見本（demo：CPUだけ・解説つき）と練習（practice：切腹なし） */
 const DEMO_CALLS = 10; // 見本はこれだけ回したら終わる
 function startTraining(kind) {
@@ -3164,10 +3286,16 @@ function startTraining(kind) {
   initAudio(S.total);
   buildSeats();
   coach(watch ? '' : kind === 'demo' ? 'CPUだけで遊ぶのを見てみよう。金の枠が親、赤い丸が指された人' : 'あなたの番になったら、下のボタンで言おう。間違えても切腹しないよ');
+  $('speedBtn').hidden = !watch;
+  if (watch) { WO.pred = -1; watchSetup(false); return; }
   startGame(kind === 'practice' ? 0 : Math.floor(Math.random() * S.total));
 }
 function endTraining() {
   if (!S.train) return;
+  clearTimeout(watchTimer); stopCount();
+  $('speedBtn').hidden = true;
+  $('ovPred').hidden = true;
+  S.speed = 1;
   Object.assign(S, S.trainBak);
   S.train = null;
   document.body.classList.remove('demo');
@@ -3571,7 +3699,7 @@ function toMenu() {
 }
 $('quitBtn').addEventListener('click', toMenu);
 $('menuBtn').addEventListener('click', toMenu);
-$('againBtn').addEventListener('click', () => startGame(Math.floor(Math.random() * S.total)));
+$('againBtn').addEventListener('click', () => { if (S.train === 'watch') { clearTimeout(watchTimer); watchSetup(false); return; } startGame(Math.floor(Math.random() * S.total)); });
 $('contBtn').addEventListener('click', continueDeath);
 $('menuBtn2').addEventListener('click', toMenu);
 segInit('ruleSeg', (v) => {
@@ -3688,6 +3816,6 @@ $('bgmChk').addEventListener('change', () => { if ($('bgmChk').checked) bgmStart
 renderBest();
 requestAnimationFrame(tickTimer);
 </script>
-<script src="online.js?v=1.15.0"></script>
+<script src="online.js?v=1.16.0"></script>
 </body>
 </html>
