@@ -13,6 +13,8 @@
 const FB_VER = '12.19.0';
 const FB_BASE = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
 const MAX_MEMBERS = 6;
+const ROOM_TTL_MS = 12 * 3600 * 1000; // これだけ動きのない部屋は、誰かが部屋を作るときに消す
+const BEAT_MS = 10 * 60 * 1000; // ホストは部屋が生きている印を10分ごとに付ける
 const HOST_AWAY_MS = 45000; // ホストの接続が切れたまま、これだけたったら参加者は抜ける
 const ROOM_KEY = 'chinchin-samurai-room'; // 入っている部屋（閉じても戻れるように）
 const ROOM_KEEP_MS = 3 * 3600 * 1000;
@@ -85,9 +87,22 @@ const Online = {
   detachGame() { this.gameOffs.forEach((f) => { try { f(); } catch (e) { /* noop */ } }); this.gameOffs = []; },
   detach() { this.detachGame(); this.offs.forEach((f) => { try { f(); } catch (e) { /* noop */ } }); this.offs = []; },
 
+  /** 放置された部屋（12時間動きなし）をまとめて消す。失敗しても気にしない */
+  sweep() {
+    const { D, db } = this.ctx;
+    const q = D.query(D.ref(db, 'rooms'), D.orderByChild('meta/at'), D.endAt(Date.now() - ROOM_TTL_MS), D.limitToFirst(20));
+    D.get(q).then((snap) => snap.forEach((c) => { D.remove(c.ref).catch(() => {}); })).catch(() => {});
+  },
+  /** ホスト：部屋が生きている印（meta/at）を付けつづける */
+  beat() {
+    clearInterval(this.beatT);
+    const { D } = this.ctx;
+    this.beatT = setInterval(() => { if (this.role === 'host' && this.code) D.update(this.r('meta'), { at: Date.now() }).catch(() => {}); }, BEAT_MS);
+  },
   /** 部屋を作る（4ケタの番号。空いている番号が見つかるまで試す） */
   async create(member) {
     const { D, uid } = this.ctx;
+    this.sweep();
     for (let k = 0; k < 15; k++) {
       this.code = String(1000 + Math.floor(Math.random() * 9000));
       const set = { total: S.total, rule: S.rule, cpu: S.cpu, diff: S.diff, safe: $('safeChk').checked, feint: $('feintChk').checked, nocpu: false };
@@ -96,6 +111,7 @@ const Online = {
       this.role = 'host';
       this.me = member;
       saveRoom(this.code);
+      this.beat();
       // ホストの通信が切れても部屋は消さず「接続が切れた」印を付ける（別のアプリに切り替えただけで部屋が消えないように）
       await D.onDisconnect(this.r('meta/away')).set(D.serverTimestamp());
       await D.set(this.r(`members/${uid}`), { ...member, at: D.serverTimestamp() });
@@ -135,7 +151,8 @@ const Online = {
     this.me = member;
     saveRoom(this.code);
     await D.onDisconnect(this.r('meta/away')).set(D.serverTimestamp());
-    await D.update(this.r('meta'), { away: null, ...(meta.status === 'play' ? { status: 'lobby', roster: null, seats: null } : {}) });
+    await D.update(this.r('meta'), { away: null, at: Date.now(), ...(meta.status === 'play' ? { status: 'lobby', roster: null, seats: null } : {}) });
+    this.beat();
     D.remove(this.r('st')).catch(() => {});
     D.remove(this.r('ev')).catch(() => {});
     D.remove(this.r('acts')).catch(() => {});
@@ -225,13 +242,13 @@ const Online = {
     await D.remove(this.r('ev'));
     await D.remove(this.r('acts'));
     const seats = Object.fromEntries(roster.filter((r) => r.uid).map((r) => [r.uid, true])); // 途中で切れても戻れる人
-    await D.update(this.r('meta'), { status: 'play', roster, seats, set: { ...this.roomSet(), ...set } });
+    await D.update(this.r('meta'), { status: 'play', at: Date.now(), roster, seats, set: { ...this.roomSet(), ...set } });
   },
   /** ホスト：対戦のあと、全員まとめて待合室に戻す */
   async backToLobby() {
     if (this.role !== 'host') return;
     const { D } = this.ctx;
-    await D.update(this.r('meta'), { status: 'lobby', roster: null, seats: null });
+    await D.update(this.r('meta'), { status: 'lobby', at: Date.now(), roster: null, seats: null });
     D.remove(this.r('st')).catch(() => {});
     D.remove(this.r('ev')).catch(() => {});
     D.remove(this.r('acts')).catch(() => {});
@@ -323,6 +340,7 @@ const Online = {
   /** 部屋を出る（ホストなら部屋ごと消す） */
   leave(msg) {
     const wasBegun = this.begun;
+    clearInterval(this.beatT);
     this.detach();
     clearTimeout(this.awayTimer); this.awayTimer = null;
     if (this.ctx && this.code) {
