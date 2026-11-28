@@ -57,7 +57,7 @@ Firebase の無料プラン（Spark）だけで動きます。クレジットカ
 6. GitHub Pages に反映されたら、タイトルに「オンライン対戦」ボタンが出る
 
 - `firebase-config.js` の値は公開して大丈夫なもの（データの守りは `database.rules.json` で行う）
-- `database.rules.json` を変えたら、Realtime Database の「ルール」タブに貼り直して「公開」する（ver 1.1.0 でチャット用、ver 1.16.0 で途中から戻る用に変更あり）
+- `database.rules.json` を変えたら、Realtime Database の「ルール」タブに貼り直して「公開」する（変更があった版：1.1.0 チャット／1.7.0 途中から戻る／1.16.0 古い部屋の掃除）
 - 無料枠の目安：同時接続100、保存1GB、ダウンロード月10GB。1試合のやり取りは数十KB程度なので、仲間内で遊ぶ分には十分
 - `firebase-config.js` が `null` のままなら、オンライン対戦のボタンは出ず、ほかの機能はそのまま使える
 
